@@ -129,6 +129,7 @@ function insertNodeAtCursor(node, targetElement) {
  * @param {string} base64Data - 图像的 base64 编码数据。
  */
 function _addImageToInputAndPreview(dataUrl, mimeType, base64Data) {
+    console.log("[InputController] _addImageToInputAndPreview called. Image ID prefix:", `pasted-img-${Date.now()}`);
     const imageId = `pasted-img-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`; // Unique ID
 
     // 为 contenteditable 输入创建图像
@@ -162,6 +163,9 @@ function _addImageToInputAndPreview(dataUrl, mimeType, base64Data) {
         previewWrapper.appendChild(imgInPreview);
         previewWrapper.appendChild(deleteBtn);
         imagePreviewAreaElement.appendChild(previewWrapper);
+        console.log("[InputController] Preview wrapper appended to imagePreviewAreaElement:", previewWrapper);
+    } else {
+         console.warn("[InputController] imagePreviewAreaElement not found, cannot add preview image.");
     }
 
     // 通过 ui 模块更新占位符
@@ -180,16 +184,25 @@ function handlePaste(event) {
             foundImage = true;
             event.preventDefault(); // Prevent default image paste
             const blob = items[i].getAsFile();
+            console.log("[InputController] Image detected in paste. Blob:", blob);
             if (blob) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
+                    console.log("[InputController] FileReader onload triggered for pasted image.");
                     const dataUrl = e.target.result;
                     const mimeType = dataUrl.substring(dataUrl.indexOf(":") + 1, dataUrl.indexOf(";"));
                     const base64Data = dataUrl.substring(dataUrl.indexOf(",") + 1);
                     // 调用重构后的函数来处理图像添加
                     _addImageToInputAndPreview(dataUrl, mimeType, base64Data);
                 };
+                 reader.onerror = (e) => { // Add specific error handling for paste reader
+                     console.error("[InputController] FileReader error on paste:", e);
+                     alert("读取粘贴的图片数据时出错。");
+                 };
+                console.log("[InputController] Calling reader.readAsDataURL for pasted blob.");
                 reader.readAsDataURL(blob);
+            } else {
+                 console.warn("[InputController] Could not get blob from pasted image item.");
             }
         }
     }
@@ -228,36 +241,60 @@ function handleFileUpload(event) {
 }
 
 
-function handleFocus() {
-    if (chatInputElement) {
-        chatInputElement.classList.remove('is-placeholder-showing');
-    }
+function handleFocus(event) {
+    console.log("[InputController] handleFocus triggered.");
+    // Let's NOT manipulate class directly here. Rely on input/blur events.
+    // The CSS :focus state can handle visual changes if needed,
+    // but the placeholder visibility should depend on content.
+    // if (chatInputElement) {
+    //     chatInputElement.classList.remove('is-placeholder-showing');
+    // }
 }
 
-function handleBlur() {
+function handleBlur(event) {
+    console.log("[InputController] handleBlur triggered. Updating placeholder.");
     // Update placeholder state visually via ui module
     updateChatInputPlaceholderVisually();
 }
 
-function handleInput() {
+function handleInput(event) {
+    console.log("[InputController] handleInput triggered. Updating placeholder.");
     // Update placeholder state visually via ui module
     updateChatInputPlaceholderVisually();
 }
 
 function handleSendTrigger() {
-    if (!chatInputElement || !onSendCallback) return;
+    console.log("[InputController] handleSendTrigger called.");
+    if (!chatInputElement) {
+        console.error("[InputController] Send trigger failed: chatInputElement is null.");
+        return;
+    }
+     if (!onSendCallback) {
+        console.error("[InputController] Send trigger failed: onSendCallback is null.");
+        return;
+    }
 
+    console.log("[InputController] Extracting content...");
     const contentParts = extractContentFromInput(chatInputElement);
+    console.log("[InputController] Extracted contentParts:", JSON.stringify(contentParts)); // Log extracted content
 
     if (contentParts.length === 0) {
+        console.log("[InputController] No content extracted, showing alert.");
         alert('请输入要发送的内容或粘贴图片！');
         return;
     }
 
+    console.log("[InputController] Content found, calling onSendCallback...");
     // Call the provided onSend callback with the extracted content
     // The callback (in main.js) will handle UI updates (loading, disable button),
     // state updates, API calls, etc.
-    onSendCallback(contentParts);
+    try {
+        onSendCallback(contentParts);
+        console.log("[InputController] onSendCallback completed.");
+    } catch (e) {
+        console.error("[InputController] Error during onSendCallback execution:", e);
+        // Attempt to re-enable button etc. if callback failed badly? Or rely on main.js finally block.
+    }
 }
 
 function handleKeyDown(event) {
@@ -310,18 +347,15 @@ export function initInputHandling({ onSend }) {
     chatInputElement = getElement('chatInput');
     imagePreviewAreaElement = getElement('imagePreviewArea');
     sendButtonElement = getElement('sendButton');
-    // Get references to the new elements by ID
-    uploadImageButtonElement = document.getElementById('upload-image-button');
+    // Get reference only to the hidden file input, as the button was removed
+    // uploadImageButtonElement = document.getElementById('upload-image-button'); // REMOVED - Button no longer exists
     imageUploadInputElement = document.getElementById('image-upload-input');
 
 
-    if (!chatInputElement || !sendButtonElement || !uploadImageButtonElement || !imageUploadInputElement) {
-        console.error("InputController Error: Required input elements (chat, send, upload button, file input) not found.");
-        // Optionally disable upload button if input element is missing
-        if (uploadImageButtonElement && !imageUploadInputElement) {
-             uploadImageButtonElement.disabled = true;
-             uploadImageButtonElement.title = "文件上传功能不可用";
-        }
+    // Update the check: remove uploadImageButtonElement
+    if (!chatInputElement || !sendButtonElement || !imageUploadInputElement) {
+        console.error("InputController Error: Required input elements (chat, send, file input) not found. Check IDs: chat-input, send-button, image-upload-input");
+        // No need to disable the non-existent button
         return; // Stop initialization if critical elements are missing
     }
      if (!imagePreviewAreaElement) {
@@ -344,49 +378,61 @@ export function initInputHandling({ onSend }) {
 
     // Combined click listener for image preview area (handles both upload trigger and delete)
     if (imagePreviewAreaElement) {
+        // Get placeholder reference within this scope
+        const previewPlaceholderElement = imagePreviewAreaElement.querySelector('.placeholder-text');
+
         imagePreviewAreaElement.addEventListener('click', (event) => {
-            console.log("Click detected on image preview area. Target:", event.target);
+            console.log("[InputController] Click detected on image preview area.");
+            console.log("[InputController] Target Element:", event.target);
+            // console.log("[InputController] Target Tag:", event.target.tagName, "Target Class:", event.target.className);
 
             // Check if the click was on a delete button
             const deleteButton = event.target.closest('.delete-image-btn');
             if (deleteButton) {
-                console.log("Delete button clicked.");
-                // Call the delete handler logic directly or ensure handleDeleteImage handles event delegation correctly
-                // Assuming handleDeleteImage checks the target internally:
-                handleDeleteImage(event);
-                return; // Stop further processing for this click
+                console.log("[InputController] Delete button clicked. Calling handleDeleteImage.");
+                handleDeleteImage(event); // Call the delete handler
+                return; // Stop further processing
             }
 
-            // Check if the click was on an existing image preview item's content (image, wrapper)
-            const previewItem = event.target.closest('.image-preview-item');
-            if (previewItem) {
-                console.log("Clicked on an existing preview item, not triggering upload.");
-                // Do nothing more for upload trigger.
-                // Allow default behavior or other listeners (like potential lightbox).
-                return;
+            // Check if the click was specifically on an image within a preview item
+            if (event.target.tagName === 'IMG' && event.target.closest('.image-preview-item')) {
+                 console.log("[InputController] Clicked on an existing preview image. Ignoring for upload trigger.");
+                 // Allow other actions like lightbox
+                 return;
             }
 
-            // If the click was not on delete or an existing item, assume it's on the background or placeholder.
-            // Attempt to trigger the file upload.
-            console.log("Click appears to be on background or placeholder, attempting to trigger upload.");
+            // Check if the click was on the wrapper div of a preview item (but not the delete button handled above)
+            if (event.target.classList.contains('image-preview-item')) {
+                 console.log("[InputController] Clicked on a preview item wrapper. Ignoring for upload trigger.");
+                 return;
+            }
+
+            // If the click target is anything else within the preview area (background, placeholder span), trigger upload.
+            console.log("[InputController] Click target is neither delete nor existing item. Attempting to trigger upload.");
+
             if (imageUploadInputElement) {
-                imageUploadInputElement.click(); // Trigger the hidden file input
+                console.log("[InputController] Attempting to click hidden file input:", imageUploadInputElement);
+                try {
+                     imageUploadInputElement.click(); // Trigger the hidden file input
+                     console.log("[InputController] Hidden file input .click() called successfully.");
+                } catch (e) {
+                     console.error("[InputController] Error clicking hidden file input:", e);
+                     alert("无法打开文件选择对话框。");
+                }
             } else {
-                console.error("Cannot trigger upload: Hidden file input element (#image-upload-input) not found or not initialized.");
+                console.error("[InputController] Cannot trigger upload: Hidden file input element (#image-upload-input) not found or not initialized.");
                 alert("图片上传功能当前不可用。");
             }
         });
-        // We no longer need the separate listener for handleDeleteImage as it's handled above.
-        // // Add delegated listener for delete buttons in the preview area
-        // if (imagePreviewAreaElement) {
-        //     imagePreviewAreaElement.addEventListener('click', handleDeleteImage); // REMOVED
-        // }
+        // The single listener above handles both delete and upload trigger logic.
     }
 
-    // Add listener for the upload button
-    uploadImageButtonElement.addEventListener('click', () => {
-        imageUploadInputElement.click(); // Trigger hidden file input
-    });
+    // Remove listener for the non-existent upload button
+    // uploadImageButtonElement.addEventListener('click', () => {
+    //     if (imageUploadInputElement) {
+    //          imageUploadInputElement.click(); // Trigger hidden file input
+    //     }
+    // });
 
     // Add listener for the hidden file input
     imageUploadInputElement.addEventListener('change', handleFileUpload);

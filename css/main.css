@@ -148,7 +148,7 @@ body {
 }
 
 .session-delete-btn:hover {
-    background-color: rgba(220, 53, 69, 0.1); /* Light red background on hover */
+    background-color: #f8d7da; /* Solid light red background */
     color: #a02734; /* Darker red on hover */
 }
 
@@ -159,7 +159,7 @@ body {
 }
 
 .session-edit-btn:hover {
-    background-color: rgba(108, 117, 125, 0.1); /* Light grey background on hover */
+    background-color: #e2e6ea; /* Solid light grey background */
     color: #495057; /* Darker grey on hover */
 }
 
@@ -697,3 +697,130 @@ h2 { /* Removed h1 styling */
     align-items: center;
     color: #555; /* Style loading text */
 }
+/* --- Edit Session Modal Styles --- */
+.modal-overlay {
+    position: fixed; /* Stay in place */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* Dark overlay */
+    display: flex; /* Center content */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* On top */
+    opacity: 0; /* Start hidden */
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.modal-overlay.visible { /* Class to show modal */
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background-color: #ffffff;
+    padding: 25px 30px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 550px; /* Adjust max width as needed */
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Spacing */
+    transform: scale(0.95); /* Start slightly smaller */
+    transition: transform 0.3s ease;
+}
+
+.modal-overlay.visible .modal-content {
+    transform: scale(1); /* Scale to full size when visible */
+}
+
+
+.modal-content h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    text-align: center;
+    color: #333;
+    font-size: 1.3em;
+}
+
+.modal-content .form-group {
+    margin-bottom: 15px;
+}
+.modal-content .form-group:last-of-type {
+     margin-bottom: 0; /* No margin on last form group before actions */
+}
+
+
+.modal-content label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600; /* Slightly bolder label */
+    color: #444;
+    font-size: 0.9em;
+}
+
+.modal-content input[type="text"],
+.modal-content textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 1em;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.modal-content input[type="text"]:focus,
+.modal-content textarea:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+
+.modal-content textarea {
+    resize: vertical;
+    min-height: 80px;
+    font-family: inherit; /* Ensure textarea uses same font */
+    line-height: 1.5;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+    gap: 10px;
+    margin-top: 20px; /* More space before actions */
+    padding-top: 15px; /* Add padding above actions */
+    border-top: 1px solid #eee; /* Separator line */
+}
+
+.modal-actions button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.95em;
+    font-weight: 500;
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.modal-actions .button-primary {
+    background-color: #007bff;
+    color: white;
+}
+.modal-actions .button-primary:hover {
+    background-color: #0056b3;
+    box-shadow: 0 2px 5px rgba(0, 123, 255, 0.3);
+}
+
+.modal-actions .button-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+.modal-actions .button-secondary:hover {
+    background-color: #5a6268;
+    box-shadow: 0 2px 5px rgba(108, 117, 125, 0.3);
+}
+/* --- End Modal Styles --- */

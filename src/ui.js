@@ -11,8 +11,12 @@ let aiResponsePlaceholder = null;
 let loadingIndicator = null;
 let chatTitleElement = null; // Reference for chat title H2
 let sessionListElement = null; // Reference for session list UL
-// aiResponseArea was missing from the top-level declarations, ensure it's here
-// let aiResponseArea = null; // Already declared above (line 9)
+// Edit Modal Elements
+let editModalOverlay = null;
+let editModalForm = null;
+let editModalNameInput = null;
+let editModalPromptTextarea = null;
+let editModalCancelBtn = null;
 
 /**
  * Initializes the UI module by getting references to DOM elements.
@@ -28,10 +32,25 @@ export function initUI() {
     chatTitleElement = document.getElementById('chat-title'); // Fetch title element
     sessionListElement = document.getElementById('session-list'); // Fetch session list element
 
-    // Check if essential elements exist (including the new ones)
-    if (!chatInput || !imagePreviewArea || !sendButton || !aiResponseArea || !loadingIndicator || !chatTitleElement || !sessionListElement) {
-        console.error("Fatal Error: Required UI elements not found in the DOM. Check IDs: chat-input, input-image-preview, send-button, ai-response, loading, chat-title, session-list");
-        alert("应用程序初始化失败：缺少必要的界面元素。请检查控制台获取详细信息。"); // Simple user feedback
+    // Get Edit Modal elements
+    editModalOverlay = document.getElementById('edit-modal-overlay');
+    editModalForm = document.getElementById('edit-session-form');
+    editModalNameInput = document.getElementById('edit-session-name');
+    editModalPromptTextarea = document.getElementById('edit-system-prompt');
+    editModalCancelBtn = document.getElementById('edit-modal-cancel-btn');
+
+
+    // Check if essential elements exist (including the new ones + modal elements)
+    const essentialElements = [
+        chatInput, imagePreviewArea, sendButton, aiResponseArea, loadingIndicator,
+        chatTitleElement, sessionListElement, editModalOverlay, editModalForm,
+        editModalNameInput, editModalPromptTextarea, editModalCancelBtn
+    ];
+    const missingElement = essentialElements.some(el => !el);
+
+    if (missingElement) {
+        console.error("Fatal Error: Required UI elements (including modal) not found in the DOM. Check element IDs.");
+        alert("应用程序初始化失败：缺少必要的界面元素（包括编辑对话框）。请检查控制台获取详细信息。"); // Simple user feedback
         return false;
     }
 
@@ -121,10 +140,15 @@ export function getElement(elementName) {
 
 function isChatInputEmpty() {
     // Ensure chatInput is initialized before accessing its properties
-    if (!chatInput) return true;
+    if (!chatInput) {
+        console.log("[isChatInputEmpty] Chat input element not found, returning true.");
+        return true;
+    }
     const hasImages = chatInput.querySelector('img') !== null;
     const text = chatInput.textContent.trim();
-    return text === '' && !hasImages;
+    const isEmpty = text === '' && !hasImages;
+    // console.log(`[isChatInputEmpty] Text: "${text}", Has Images: ${hasImages}, Is Empty: ${isEmpty}`); // Verbose logging
+    return isEmpty;
 }
 
 /**
@@ -144,18 +168,31 @@ export function updateChatInputPlaceholderVisually() {
  * Updates the visibility of the image preview placeholder.
  */
 export function updatePreviewPlaceholderVisually() {
-    if (!imagePreviewArea || !previewPlaceholder) return;
-    // Check if preview area contains anything other than the placeholder itself
+    // console.log("[UI] updatePreviewPlaceholderVisually called."); // Can be noisy
+    if (!imagePreviewArea) {
+        // console.warn("[UI] updatePreviewPlaceholderVisually: imagePreviewArea not found.");
+        return;
+    }
+     if (!previewPlaceholder) {
+         // console.warn("[UI] updatePreviewPlaceholderVisually: previewPlaceholder not found.");
+         // If placeholder doesn't exist, we can't add/remove it, but function can still proceed.
+         // This might happen if the placeholder span was missing from index.html initially.
+     }
+
+    // Check if preview area contains any element that is NOT the placeholder
     const hasContent = Array.from(imagePreviewArea.children).some(child => child !== previewPlaceholder);
+    // console.log(`[UI] updatePreviewPlaceholderVisually: hasContent = ${hasContent}`);
 
     if (hasContent) {
-        // If content exists and placeholder is there, remove placeholder
-        if (imagePreviewArea.contains(previewPlaceholder)) {
+        // If content exists AND the placeholder is currently a child, remove placeholder
+        if (previewPlaceholder && imagePreviewArea.contains(previewPlaceholder)) {
+            // console.log("[UI] updatePreviewPlaceholderVisually: Removing placeholder.");
             imagePreviewArea.removeChild(previewPlaceholder);
         }
     } else {
-        // If no content and placeholder is missing, add it back
-        if (!imagePreviewArea.contains(previewPlaceholder)) {
+        // If NO content AND the placeholder exists BUT is NOT currently a child, add it back
+        if (previewPlaceholder && !imagePreviewArea.contains(previewPlaceholder)) {
+            // console.log("[UI] updatePreviewPlaceholderVisually: Adding placeholder back.");
             imagePreviewArea.appendChild(previewPlaceholder);
         }
     }
@@ -613,4 +650,68 @@ export function updateChatTitle(title) {
     } else {
         console.warn("UI: updateChatTitle called but chatTitleElement is not initialized.");
     }
+}
+
+
+// --- Edit Session Modal Functions ---
+
+/** Shows the edit session modal */
+export function showEditModal() {
+    if (editModalOverlay) {
+        editModalOverlay.classList.add('visible');
+        // Optionally focus the first input
+        editModalNameInput?.focus();
+    } else {
+        console.error("UI Error: Cannot show edit modal, overlay element not found.");
+    }
+}
+
+/** Hides the edit session modal */
+export function hideEditModal() {
+     if (editModalOverlay) {
+        editModalOverlay.classList.remove('visible');
+    } else {
+        console.error("UI Error: Cannot hide edit modal, overlay element not found.");
+    }
+}
+
+/**
+ * Sets the initial values for the edit modal inputs.
+ * @param {string} name - The current session name.
+ * @param {string} prompt - The current system prompt.
+ */
+export function setEditModalValues(name, prompt) {
+    if (editModalNameInput) {
+        editModalNameInput.value = name;
+    }
+    if (editModalPromptTextarea) {
+        editModalPromptTextarea.value = prompt;
+    }
+}
+
+/**
+ * Gets the current values from the edit modal inputs.
+ * @returns {{name: string, prompt: string}|null} An object with name and prompt, or null if elements not found.
+ */
+export function getEditModalValues() {
+    if (editModalNameInput && editModalPromptTextarea) {
+        return {
+            name: editModalNameInput.value.trim(), // Trim whitespace from name
+            prompt: editModalPromptTextarea.value
+        };
+    }
+    console.error("UI Error: Cannot get modal values, input elements not found.");
+    return null;
+}
+
+/**
+ * Gets references to the modal form and cancel button for attaching/detaching listeners.
+ * @returns {{form: HTMLFormElement, cancelBtn: HTMLButtonElement}|null}
+ */
+export function getEditModalFormElements() {
+    if (editModalForm && editModalCancelBtn) {
+        return { form: editModalForm, cancelBtn: editModalCancelBtn };
+    }
+    console.error("UI Error: Cannot get modal form elements.");
+    return null;
 }

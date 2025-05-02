@@ -56,9 +56,10 @@ function renderChatForActiveSession() {
  * @param {Array<object>} contentParts - 从输入控制器提取的内容部分。
  */
 async function handleSend(contentParts) {
+    console.log("[Main] handleSend called with contentParts:", JSON.stringify(contentParts)); // Log entry and content
     const activeId = state.getActiveSessionId();
     if (!activeId) {
-        console.error("Cannot send message, no active session.");
+        console.error("[Main] Cannot send message, no active session ID.");
         ui.displayError("无法发送消息，没有活动的会话。");
         return;
     }
@@ -139,10 +140,10 @@ async function handleSend(contentParts) {
  */
 function handleEditSession(sessionId) {
     if (!sessionId) {
-        console.error("handleEditSession: No session ID provided.");
+        console.error("[Main] handleEditSession: No session ID provided.");
         return;
     }
-    console.log(`Attempting to edit session: ${sessionId}`);
+    console.log(`[Main] Opening edit modal for session: ${sessionId}`);
 
     const session = state.getSession(sessionId);
     if (!session) {
@@ -150,48 +151,99 @@ function handleEditSession(sessionId) {
         return;
     }
 
+    // Get modal elements using the new UI function
+    const modalElements = ui.getEditModalFormElements();
+    if (!modalElements) {
+        alert("无法初始化编辑对话框。");
+        return;
+    }
+    const { form, cancelBtn } = modalElements;
+
     // Find the current system prompt content
     const systemMessage = session.messages.find(m => m.role === 'system');
     const currentSystemPrompt = systemMessage ? systemMessage.content : '';
+    const currentName = session.name;
 
-    let nameChanged = false;
-    let promptChanged = false;
+    // Define handlers within this scope to close over necessary variables (sessionId, elements)
+    const submitHandler = (event) => {
+        event.preventDefault();
+        console.log("[Main] Edit modal submitted.");
+        const newValues = ui.getEditModalValues(); // Get values from modal inputs
 
-    // 1. Edit Name using prompt()
-    const newName = prompt("编辑会话名称：", session.name);
-    if (newName !== null) { // Check if user cancelled
-        const trimmedName = newName.trim();
-        if (trimmedName && trimmedName !== session.name) {
-            if (state.updateSessionName(sessionId, trimmedName)) {
+        if (!newValues) {
+             console.error("[Main] Failed to get values from edit modal.");
+             cleanupAndHide(); // Hide modal even if getting values failed
+             return;
+        }
+
+        let nameChanged = false;
+        let promptChanged = false;
+
+        // Validate and update name
+        if (!newValues.name) { // Check for empty name
+            alert("会话名称不能为空。");
+            // Optionally focus the name input: ui.getElement('editModalNameInput')?.focus();
+            return; // Keep modal open if validation fails
+        }
+        if (newValues.name !== currentName) {
+            if (state.updateSessionName(sessionId, newValues.name)) {
                 nameChanged = true;
-            } else { alert("更新会话名称失败。"); }
-        } else if (!trimmedName) { alert("会话名称不能为空。"); }
-    }
+            } else {
+                alert("更新会话名称失败。");
+                // Decide if modal should stay open on failure
+            }
+        }
 
-    // 2. Edit System Prompt using prompt()
-    const newPrompt = prompt("编辑系统提示 (System Prompt)：", currentSystemPrompt);
-     if (newPrompt !== null) { // Check if user cancelled
-         if (newPrompt !== currentSystemPrompt) { // Only update if changed
-             if (state.updateSystemPrompt(sessionId, newPrompt)) {
+        // Update prompt if changed (allow empty prompt?)
+        if (newValues.prompt !== currentSystemPrompt) {
+             if (state.updateSystemPrompt(sessionId, newValues.prompt)) {
                  promptChanged = true;
-             } else { alert("更新系统提示失败。"); }
-         }
-     }
-
-    // 3. Refresh UI if changes were made
-    if (nameChanged || promptChanged) {
-         console.log("会话已更新，正在刷新 UI...");
-         const currentActiveId = state.getActiveSessionId(); // Get current active ID for rendering list highlight
-         ui.renderSessionList(state.getAllSessions(), currentActiveId);
-         // Update chat title ONLY if the edited session is the currently active one
-         if (sessionId === currentActiveId) {
-             const updatedSession = state.getSession(sessionId); // Re-fetch session data for updated name
-             if (updatedSession) {
-                ui.updateChatTitle(updatedSession.name);
+             } else {
+                 alert("更新系统提示失败。");
+                  // Decide if modal should stay open on failure
              }
-         }
-         // Consider adding a small visual confirmation to the user
+        }
+
+        // Refresh UI if changes were successfully made
+        if (nameChanged || promptChanged) {
+             console.log("[Main] Session updated, refreshing UI...");
+             const currentActiveId = state.getActiveSessionId();
+             ui.renderSessionList(state.getAllSessions(), currentActiveId);
+             // Update chat title ONLY if the edited session is the currently active one
+             if (sessionId === currentActiveId) {
+                 const updatedSession = state.getSession(sessionId); // Re-fetch session data for updated name
+                 if (updatedSession) {
+                    ui.updateChatTitle(updatedSession.name);
+                 }
+             }
+        }
+
+        cleanupAndHide(); // Hide modal and remove listeners
+    };
+
+    const cancelHandler = () => {
+        console.log("[Main] Edit modal cancelled.");
+        cleanupAndHide(); // Hide modal and remove listeners
+    };
+
+    // Function to remove listeners and hide modal
+    const cleanupAndHide = () => {
+         console.log("[Main] Cleaning up edit modal listeners.");
+         form.removeEventListener('submit', submitHandler);
+         cancelBtn.removeEventListener('click', cancelHandler);
+         ui.hideEditModal();
     }
+
+    // --- Logic to show and setup modal ---
+    // Set initial values in the modal
+    ui.setEditModalValues(currentName, currentSystemPrompt);
+
+    // Attach listeners (only once per modal opening)
+    form.addEventListener('submit', submitHandler);
+    cancelBtn.addEventListener('click', cancelHandler);
+
+    // Show the modal
+    ui.showEditModal();
 }
 
 /**
