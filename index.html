@@ -9,26 +9,45 @@
     <link rel="stylesheet" href="./css/github.min.css">
 </head>
 <body>
+<div class="app-container">
+    <aside id="sidebar">
+        <h3>会话列表</h3>
+        <ul id="session-list">
+            <!-- Session list items will be populated by JS -->
+            <li class="placeholder-text">加载中...</li>
+        </ul>
+        <button type="button" id="add-session-btn" class="sidebar-button">+ 新会话</button> <!-- Added type and class -->
+    </aside>
 
-    <!-- 聊天交互区域 -->
-    <div class="section" id="chat-container">
-        <h2>与 AI 对话</h2>
-        <div id="ai-response">
-             <span class="placeholder-text">对话历史将显示在此处...</span>
-        </div>
-
-        <!-- 统一输入区域 -->
-        <div id="chat-input-container">
-            <div id="chat-input" contenteditable="true" data-placeholder="在此处输入消息，shift + enter 提交..."></div>
-            <div id="input-image-preview">
-                 <span class="placeholder-text">粘贴的图片将在此预览...</span>
+    <main id="main-content">
+        <!-- 聊天交互区域 -->
+        <div class="section" id="chat-container">
+            <div class="chat-header"> <!-- Added header wrapper -->
+                 <h2 id="chat-title">与 AI 对话</h2>
+                 <button type="button" id="edit-session-btn" title="编辑会话名称/提示" class="control-button icon-button">✏️</button> <!-- Edit Button Added -->
             </div>
+            <div id="ai-response">
+                 <span class="placeholder-text">对话历史将显示在此处...</span>
+            </div>
+
+            <!-- 统一输入区域 -->
+            <div id="chat-input-container">
+                <div id="chat-input" contenteditable="true" data-placeholder="在此处输入消息，shift + enter 提交..."></div>
+                <div id="input-image-preview">
+                     <span class="placeholder-text">粘贴的图片将在此预览...</span>
+                </div>
+            </div>
+             <div id="input-controls">
+                 <span id="loading" class="loading-indicator" style="display: none;">AI 正在回复中...</span>
+                 <button type="button" id="upload-image-button" title="上传图片" class="control-button">📎</button>
+                 <button type="button" id="send-button" class="control-button">发送</button>
+             </div>
         </div>
-         <div id="input-controls">
-             <span id="loading" class="loading-indicator" style="display: none;">AI 正在回复中...</span>
-             <button id="send-button">发送</button>
-         </div>
-    </div>
+    </main>
+</div>
+
+<!-- Hidden File Input for Upload -->
+    <input type="file" id="image-upload-input" accept="image/*" style="display: none;">
 
     <!-- External Libraries (Keep these as modules rely on globals for now) -->
     <script src="./js/marked.min.js" defer></script>

@@ -6,6 +6,8 @@ let chatInputElement = null;
 let imagePreviewAreaElement = null;
 let sendButtonElement = null;
 let onSendCallback = null;
+let uploadImageButtonElement = null; // Reference for upload button
+let imageUploadInputElement = null; // Reference for hidden file input
 
 // --- Helper Functions (Moved from index.html) ---
 
@@ -119,6 +121,55 @@ function insertNodeAtCursor(node, targetElement) {
 }
 
 
+/**
+ * 将图像添加到 contenteditable 输入和预览区域。
+ * 包括添加唯一 ID 和预览区域中的删除按钮。
+ * @param {string} dataUrl - 图像的 Data URL。
+ * @param {string} mimeType - 图像的 MIME 类型。
+ * @param {string} base64Data - 图像的 base64 编码数据。
+ */
+function _addImageToInputAndPreview(dataUrl, mimeType, base64Data) {
+    const imageId = `pasted-img-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`; // Unique ID
+
+    // 为 contenteditable 输入创建图像
+    if (chatInputElement) {
+        const imgInInput = document.createElement('img');
+        imgInInput.src = dataUrl;
+        imgInInput.alt = '用户图片'; // 更通用的 alt 文本
+        imgInInput.setAttribute('data-base64', base64Data);
+        imgInInput.setAttribute('data-mime-type', mimeType);
+        imgInInput.setAttribute('data-image-id', imageId); // 添加唯一 ID
+        insertNodeAtCursor(imgInInput, chatInputElement); // 使用辅助函数插入
+    }
+
+
+    // 为预览区域创建图像和删除按钮
+    if (imagePreviewAreaElement) {
+        const previewWrapper = document.createElement('div');
+        previewWrapper.className = 'image-preview-item';
+        previewWrapper.setAttribute('data-image-id', imageId); // ID 在包装器上
+
+        const imgInPreview = document.createElement('img');
+        imgInPreview.src = dataUrl;
+        imgInPreview.alt = '图片预览';
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-image-btn';
+        deleteBtn.textContent = '×'; // 使用 '×' 符号表示删除
+        deleteBtn.title = '移除图片';
+        deleteBtn.setAttribute('data-target-id', imageId); // 将按钮链接到 ID
+
+        previewWrapper.appendChild(imgInPreview);
+        previewWrapper.appendChild(deleteBtn);
+        imagePreviewAreaElement.appendChild(previewWrapper);
+    }
+
+    // 通过 ui 模块更新占位符
+    updatePreviewPlaceholderVisually();
+    updateChatInputPlaceholderVisually();
+}
+
+
 // --- Event Handlers ---
 
 function handlePaste(event) {
@@ -135,42 +186,8 @@ function handlePaste(event) {
                     const dataUrl = e.target.result;
                     const mimeType = dataUrl.substring(dataUrl.indexOf(":") + 1, dataUrl.indexOf(";"));
                     const base64Data = dataUrl.substring(dataUrl.indexOf(",") + 1);
-                    const imageId = `pasted-img-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`; // Unique ID
-
-                    // Create image for contenteditable input
-                    const imgInInput = document.createElement('img');
-                    imgInInput.src = dataUrl;
-                    imgInInput.alt = '粘贴的图片';
-                    imgInInput.setAttribute('data-base64', base64Data);
-                    imgInInput.setAttribute('data-mime-type', mimeType);
-                    imgInInput.setAttribute('data-image-id', imageId); // Add unique ID
-                    insertNodeAtCursor(imgInInput, chatInputElement); // Use helper
-
-                    // Create image and delete button for preview area
-                    if (imagePreviewAreaElement) {
-                        const previewWrapper = document.createElement('div');
-                        previewWrapper.className = 'image-preview-item';
-                        previewWrapper.setAttribute('data-image-id', imageId); // ID on wrapper
-
-                        const imgInPreview = document.createElement('img');
-                        imgInPreview.src = dataUrl;
-                        imgInPreview.alt = '图片预览';
-                        // imgInPreview.setAttribute('data-image-id', imageId); // ID on wrapper is enough
-
-                        const deleteBtn = document.createElement('button');
-                        deleteBtn.className = 'delete-image-btn';
-                        deleteBtn.textContent = '×'; // Use '×' symbol for delete
-                        deleteBtn.title = '移除图片';
-                        deleteBtn.setAttribute('data-target-id', imageId); // Link button to ID
-
-                        previewWrapper.appendChild(imgInPreview);
-                        previewWrapper.appendChild(deleteBtn);
-                        imagePreviewAreaElement.appendChild(previewWrapper);
-                    }
-
-                    // Update placeholders via ui module
-                    updatePreviewPlaceholderVisually();
-                    updateChatInputPlaceholderVisually();
+                    // 调用重构后的函数来处理图像添加
+                    _addImageToInputAndPreview(dataUrl, mimeType, base64Data);
                 };
                 reader.readAsDataURL(blob);
             }
@@ -179,6 +196,37 @@ function handlePaste(event) {
     // Allow default paste for text
     // Input event listener will handle placeholder update for text paste
 }
+
+function handleFileUpload(event) {
+    const file = event.target.files?.[0];
+    if (!file || !file.type.startsWith('image/')) {
+        if (file) { // Only alert if a file was selected but wasn't an image
+             alert('请选择一个图片文件。');
+        }
+        // Reset file input value in case user selected non-image then cancels next time
+        event.target.value = null;
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const dataUrl = e.target.result;
+        // Extract mimeType and base64Data (could be helper function)
+        const mimeType = dataUrl.substring(dataUrl.indexOf(":") + 1, dataUrl.indexOf(";"));
+        const base64Data = dataUrl.substring(dataUrl.indexOf(",") + 1);
+        // Use the refactored function to add the image
+        _addImageToInputAndPreview(dataUrl, mimeType, base64Data);
+    };
+    reader.onerror = (e) => {
+        console.error("FileReader error:", e);
+        alert("读取文件时出错。");
+    };
+    reader.readAsDataURL(file);
+
+    // Reset file input value to allow uploading the same file again
+    event.target.value = null;
+}
+
 
 function handleFocus() {
     if (chatInputElement) {
@@ -262,10 +310,19 @@ export function initInputHandling({ onSend }) {
     chatInputElement = getElement('chatInput');
     imagePreviewAreaElement = getElement('imagePreviewArea');
     sendButtonElement = getElement('sendButton');
+    // Get references to the new elements by ID
+    uploadImageButtonElement = document.getElementById('upload-image-button');
+    imageUploadInputElement = document.getElementById('image-upload-input');
 
-    if (!chatInputElement || !sendButtonElement) {
-        console.error("InputController Error: Chat input or send button element not found via ui.getElement().");
-        return;
+
+    if (!chatInputElement || !sendButtonElement || !uploadImageButtonElement || !imageUploadInputElement) {
+        console.error("InputController Error: Required input elements (chat, send, upload button, file input) not found.");
+        // Optionally disable upload button if input element is missing
+        if (uploadImageButtonElement && !imageUploadInputElement) {
+             uploadImageButtonElement.disabled = true;
+             uploadImageButtonElement.title = "文件上传功能不可用";
+        }
+        return; // Stop initialization if critical elements are missing
     }
      if (!imagePreviewAreaElement) {
          console.warn("InputController Warning: Image preview area element not found via ui.getElement(). Paste preview might not work.");
@@ -289,6 +346,15 @@ export function initInputHandling({ onSend }) {
     if (imagePreviewAreaElement) {
         imagePreviewAreaElement.addEventListener('click', handleDeleteImage);
     }
+
+    // Add listener for the upload button
+    uploadImageButtonElement.addEventListener('click', () => {
+        imageUploadInputElement.click(); // Trigger hidden file input
+    });
+
+    // Add listener for the hidden file input
+    imageUploadInputElement.addEventListener('change', handleFileUpload);
+
 
     console.log("Input Controller Initialized.");
 }
