@@ -1,0 +1,294 @@
+body {
+    font-family: sans-serif;
+    padding: 20px;
+    background-color: #e5ddd5; /* 类似聊天应用的背景色 */
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    height: 100vh; /* 使 body 占满视口高度 */
+    box-sizing: border-box;
+}
+h1, h2 {
+    color: #333;
+    text-align: center;
+    margin-bottom: 15px;
+    flex-shrink: 0; /* 防止标题被压缩 */
+}
+.section {
+    background-color: #f4f4f4; /* 内部区域背景 */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+}
+#chat-container {
+     flex-grow: 1; /* 让聊天容器占据剩余空间 */
+     overflow: hidden; /* 防止内容溢出 */
+     background-color: transparent; /* 聊天容器透明，使用 body 背景 */
+     padding: 10px; /* 减少内边距 */
+     box-shadow: none; /* 移除阴影 */
+}
+#chat-container h2 {
+    margin-bottom: 10px;
+}
+#ai-response {
+    border: none; /* 移除边框 */
+    background-color: transparent; /* 透明背景 */
+    padding: 10px 0; /* 调整内边距 */
+    flex-grow: 1; /* 占据聊天容器剩余空间 */
+    overflow-y: auto; /* 内部滚动 */
+    margin-bottom: 15px;
+    border-radius: 0; /* 移除圆角 */
+    display: flex; /* 使用 Flexbox 排列气泡 */
+    flex-direction: column; /* 垂直排列 */
+    gap: 10px; /* 气泡之间的间隙 */
+}
+
+/* --- 聊天气泡样式 --- */
+.message-bubble {
+    padding: 10px 15px;
+    border-radius: 18px; /* 更圆的边角 */
+    max-width: 75%; /* 气泡最大宽度 */
+    word-wrap: break-word; /* 允许长单词换行 */
+    position: relative; /* 用于复制按钮定位 */
+    box-shadow: 0 1px 1px rgba(0,0,0,0.1); /* 轻微阴影 */
+    line-height: 1.5; /* 调整行高 */
+}
+.user-bubble {
+    background-color: #dcf8c6; /* 用户的浅绿色气泡 */
+    align-self: flex-end; /* 用户靠右 */
+    border-bottom-right-radius: 5px; /* 右下角略方 */
+    margin-left: auto; /* 确保靠右 */
+}
+.assistant-bubble {
+    background-color: #ffffff; /* 助手的白色气泡 */
+    align-self: flex-start; /* 助手靠左 */
+    border: 1px solid #eee;
+    border-bottom-left-radius: 5px; /* 左下角略方 */
+    margin-right: auto; /* 确保靠左 */
+    padding-right: 40px; /* 为消息复制按钮留出空间 */
+}
+.message-bubble strong { /* 发送者前缀 */
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.85em;
+    font-weight: bold;
+    color: #555;
+}
+.user-bubble strong {
+    color: #075e54; /* 用户前缀颜色 */
+}
+.assistant-bubble strong {
+     color: #4a4a4a; /* 助手前缀颜色 */
+}
+.user-bubble .user-message-content img { /* 用户发送的图片 */
+     max-width: 100px;
+     max-height: 100px;
+     vertical-align: middle;
+     margin: 5px 5px 5px 0;
+     border: 1px solid #ddd;
+     border-radius: 4px;
+     display: inline-block; /* 让图片和文本能在同一行 */
+}
+.assistant-bubble .assistant-message-content { /* 助手消息内容容器 */
+    white-space: normal; /* 允许 Markdown 换行 */
+}
+.assistant-bubble .assistant-message-content p:last-child {
+     margin-bottom: 0; /* 移除气泡内最后一个段落的下边距 */
+}
+/* Markdown 基础样式 (在气泡内) */
+.assistant-message-content p { margin-top: 0; margin-bottom: 0.8em; }
+.assistant-message-content ul, .assistant-message-content ol { padding-left: 1.5em; margin-bottom: 0.8em; }
+.assistant-message-content li { margin-bottom: 0.4em; }
+.assistant-message-content blockquote { margin-left: 0.5em; padding-left: 0.8em; border-left: 3px solid #ccc; color: #666; margin-bottom: 0.8em; }
+.assistant-message-content pre {
+    background-color: #f5f5f5;
+    padding: 0.8em;
+    padding-top: 2.2em; /* 增加顶部内边距为标签留空间 */
+    border-radius: 4px;
+    overflow-x: auto;
+    margin-bottom: 0.8em;
+    position:relative; /* 相对定位，用于内部绝对定位 */
+ }
+.assistant-message-content code { font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace; font-size: 0.9em; }
+.assistant-message-content pre code { display: block; padding: 0; background: none; color: inherit; }
+
+/* 消息复制按钮样式 */
+.copy-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    color: #555;
+    padding: 2px 6px;
+    font-size: 0.75em;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0; /* 默认隐藏 */
+    transition: opacity 0.2s, background-color 0.2s;
+    z-index: 10; /* 确保在内容之上 */
+}
+.assistant-bubble:hover .copy-button {
+    opacity: 0.7; /* 悬停时显示 */
+}
+.copy-button:hover {
+    background-color: #e0e0e0;
+    opacity: 1;
+}
+.copy-button:active {
+    background-color: #d0d0d0;
+}
+
+/* 代码块语言标签样式 */
+.code-language-label {
+    position: absolute;
+    top: 0;
+    left: 0; /* 改为左上角 */
+    font-size: 0.8em;
+    color: #888;
+    background-color: #e0e0e0; /* 标签背景 */
+    padding: 2px 6px;
+    border-bottom-right-radius: 4px; /* 右下角圆角 */
+    z-index: 5; /* 在代码复制按钮之下 */
+    text-transform: lowercase;
+}
+
+/* 代码块复制按钮样式 */
+.code-copy-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: #e0e0e0; /* 稍有区别 */
+    border: 1px solid #bbb;
+    color: #333;
+    padding: 2px 6px;
+    font-size: 0.75em;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0; /* 默认隐藏 */
+    transition: opacity 0.2s, background-color 0.2s;
+    z-index: 10;
+}
+.assistant-message-content pre:hover .code-copy-button {
+    opacity: 0.8; /* 在 pre 悬停时显示 */
+}
+.code-copy-button:hover {
+    background-color: #d0d0d0;
+    opacity: 1;
+}
+.code-copy-button:active {
+    background-color: #c0c0c0;
+}
+/* --- 结束聊天气泡样式 --- */
+
+
+#chat-input-container {
+    border: 1px solid #ccc;
+    border-radius: 25px; /* 更圆的输入框容器 */
+    padding: 0;
+    background-color: #fff;
+    display: flex; /* 使用 Flexbox 排列内部元素 */
+    flex-direction: column; /* 垂直排列 */
+    flex-shrink: 0; /* 防止输入区域被压缩 */
+    position: relative; /* 用于 placeholder 定位 */
+}
+#chat-input { /* contenteditable div */
+    min-height: 50px; /* 减少最小高度 */
+    max-height: 150px; /* 限制最大高度 */
+    padding: 12px 15px; /* 调整内边距 */
+    box-sizing: border-box;
+    width: 100%;
+    font-size: 16px;
+    line-height: 1.5;
+    border: none;
+    outline: none;
+    resize: none; /* 禁止调整大小 */
+    overflow-y: auto;
+    background: transparent; /* 透明背景 */
+    position: relative; /* 确保在 placeholder 之上 */
+    z-index: 2;
+}
+/* --- 输入框 Placeholder 样式 --- */
+#chat-input::before {
+    content: attr(data-placeholder); /* 从 data 属性获取文本 */
+    color: #aaa;
+    font-style: italic;
+    position: absolute;
+    top: 12px; /* 与 #chat-input 内边距匹配 */
+    left: 15px; /* 与 #chat-input 内边距匹配 */
+    pointer-events: none; /* 允许点击穿透 */
+    display: none; /* 默认隐藏 */
+    z-index: 1; /* 在输入内容之下 */
+    font-size: 16px; /* 匹配输入框字体 */
+    line-height: 1.5; /* 匹配输入框行高 */
+}
+#chat-input.is-placeholder-showing::before {
+    display: block; /* 当类存在时显示 */
+}
+/* --- 结束 Placeholder 样式 --- */
+
+#chat-input img { /* 输入区域内图片的样式 */
+    max-width: 60px; /* 缩小图片 */
+    max-height: 60px;
+    vertical-align: middle;
+    margin: 2px;
+    border: 1px solid #eee;
+    border-radius: 3px;
+}
+#input-image-preview { /* 输入下方用于预览的区域 */
+    padding: 8px 15px; /* 调整内边距 */
+    min-height: 40px;
+    background-color: #f8f8f8;
+    border-top: 1px dashed #ddd;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    align-items: center;
+    border-bottom-left-radius: 25px; /* 匹配容器圆角 */
+    border-bottom-right-radius: 25px;
+}
+#input-image-preview img { /* 预览区域图片的样式 */
+    max-width: 40px; /* 缩小预览图 */
+    max-height: 40px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+#input-controls { /* 包裹按钮和加载指示 */
+     display: flex;
+     justify-content: flex-end; /* 按钮靠右 */
+     align-items: center;
+     padding: 0 10px 10px 10px; /* 按钮区域的内边距 */
+     flex-shrink: 0;
+}
+#send-button {
+    padding: 8px 18px; /* 调整按钮大小 */
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 20px; /* 圆角按钮 */
+    cursor: pointer;
+    font-size: 15px;
+    transition: background-color 0.2s ease;
+    margin-top: 0; /* 移除上边距 */
+    margin-left: 10px; /* 与加载指示的间距 */
+}
+#send-button:hover {
+    background-color: #0056b3;
+}
+#send-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+.placeholder-text { /* 用于其他区域的占位符 */
+    color: #aaa;
+    font-style: italic;
+    font-size: 0.9em;
+}
+.loading-indicator {
+    display: inline-block;
+    font-style: italic;
+    color: #888;
+    font-size: 0.9em;
+}
