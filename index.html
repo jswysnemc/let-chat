@@ -40,7 +40,7 @@
                 </div>
                 <!-- Send button and loading indicator moved next to the input container -->
                 <button type="button" id="send-button" class="control-button">发送</button>
-                <span id="loading" class="loading-indicator" style="display: none;">AI 正在回复中...</span>
+                <span id="loading" class="loading-indicator display-none">AI 正在回复中...</span>
                 <!-- Upload button removed -->
             </div>
         </div>
@@ -48,7 +48,8 @@
 </div>
 
 <!-- Hidden File Input for Upload -->
-    <input type="file" id="image-upload-input" accept="image/*" style="display: none;">
+    <label for="image-upload-input" class="visually-hidden">上传图片</label>
+    <input type="file" id="image-upload-input" accept="image/*" class="display-none hidden" title="选择图片文件进行上传">
 
     <!-- External Libraries (Keep these as modules rely on globals for now) -->
     <script src="./js/marked.min.js" defer></script>

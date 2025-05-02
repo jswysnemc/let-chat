@@ -823,4 +823,8 @@ h2 { /* Removed h1 styling */
     background-color: #5a6268;
     box-shadow: 0 2px 5px rgba(108, 117, 125, 0.3);
 }
+
+.display-none {
+    display: none; /* Hide elements */
+}
 /* --- End Modal Styles --- */
