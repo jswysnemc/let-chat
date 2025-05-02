@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>多模态 AI 交互示例 (代码块增强)</title>
+    <title>多模态 AI 交互示例 (输入增强)</title>
     <!-- Highlight.js CSS (例如：GitHub 主题) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
     <style>
@@ -201,6 +201,7 @@
             display: flex; /* 使用 Flexbox 排列内部元素 */
             flex-direction: column; /* 垂直排列 */
             flex-shrink: 0; /* 防止输入区域被压缩 */
+            position: relative; /* 用于 placeholder 定位 */
         }
         #chat-input { /* contenteditable div */
             min-height: 50px; /* 减少最小高度 */
@@ -215,7 +216,28 @@
             resize: none; /* 禁止调整大小 */
             overflow-y: auto;
             background: transparent; /* 透明背景 */
+            position: relative; /* 确保在 placeholder 之上 */
+            z-index: 2;
         }
+        /* --- 输入框 Placeholder 样式 --- */
+        #chat-input::before {
+            content: attr(data-placeholder); /* 从 data 属性获取文本 */
+            color: #aaa;
+            font-style: italic;
+            position: absolute;
+            top: 12px; /* 与 #chat-input 内边距匹配 */
+            left: 15px; /* 与 #chat-input 内边距匹配 */
+            pointer-events: none; /* 允许点击穿透 */
+            display: none; /* 默认隐藏 */
+            z-index: 1; /* 在输入内容之下 */
+            font-size: 16px; /* 匹配输入框字体 */
+            line-height: 1.5; /* 匹配输入框行高 */
+        }
+        #chat-input.is-placeholder-showing::before {
+            display: block; /* 当类存在时显示 */
+        }
+        /* --- 结束 Placeholder 样式 --- */
+
         #chat-input img { /* 输入区域内图片的样式 */
             max-width: 60px; /* 缩小图片 */
             max-height: 60px;
@@ -268,23 +290,26 @@
             background-color: #cccccc;
             cursor: not-allowed;
         }
-        .placeholder-text {
+        .placeholder-text { /* 用于其他区域的占位符 */
             color: #aaa;
             font-style: italic;
-            font-size: 0.9em; /* 缩小占位符字体 */
+            font-size: 0.9em;
         }
         .loading-indicator {
-            display: none; /* Initially hidden */
-            /* display: inline-block; */ /* JS will set this when needed */
+            display: inline-block;
             font-style: italic;
             color: #888;
             font-size: 0.9em;
+        }
+
+        .display-none {
+            display: none; /* 隐藏元素 */
         }
     </style>
 </head>
 <body>
 
-    <!-- <h1>多模态 AI 交互示例 (代码块增强)</h1> -->
+    <h1>多模态 AI 交互示例 (输入增强)</h1>
 
     <!-- 聊天交互区域 -->
     <div class="section" id="chat-container">
@@ -295,13 +320,13 @@
 
         <!-- 统一输入区域 -->
         <div id="chat-input-container">
-            <div id="chat-input" contenteditable="true"></div>
+            <div id="chat-input" contenteditable="true" data-placeholder="在此处输入消息，shift + enter 提交..."></div>
             <div id="input-image-preview">
                  <span class="placeholder-text">粘贴的图片将在此预览...</span>
             </div>
         </div>
          <div id="input-controls">
-             <span id="loading" class="loading-indicator">AI 正在回复中...</span>
+             <span id="loading" class="loading-indicator display-none" >AI 正在回复中...</span>
              <button id="send-button">发送</button>
          </div>
     </div>
@@ -360,6 +385,31 @@
         }
 
         /**
+         * 聊天输入区域 Placeholder 相关函数
+         */
+        function isChatInputEmpty(element) {
+            // 检查修剪后的文本内容和是否存在图片元素
+            const hasImages = element.querySelector('img') !== null;
+            const text = element.textContent.trim();
+            return text === '' && !hasImages;
+        }
+
+        function updateChatInputPlaceholder() {
+            if (isChatInputEmpty(chatInput)) {
+                chatInput.classList.add('is-placeholder-showing');
+            } else {
+                chatInput.classList.remove('is-placeholder-showing');
+            }
+        }
+
+        chatInput.addEventListener('focus', () => {
+            chatInput.classList.remove('is-placeholder-showing');
+        });
+        chatInput.addEventListener('blur', updateChatInputPlaceholder);
+        chatInput.addEventListener('input', updateChatInputPlaceholder); // 处理输入/删除/粘贴
+
+
+        /**
          * 聊天输入区域的粘贴事件监听器
          */
         chatInput.addEventListener('paste', (event) => {
@@ -394,12 +444,14 @@
                             imgInPreview.alt = '图片预览';
                             imagePreviewArea.appendChild(imgInPreview);
                             handlePreviewPlaceholder(); // 更新预览区占位符
+                            updateChatInputPlaceholder(); // 图片粘贴后也需要更新输入框 placeholder 状态
                         };
                         reader.readAsDataURL(blob);
                     }
                 }
             }
             // 如果粘贴的是文本，则允许默认行为（因为我们只阻止了图片的默认行为）
+            // 粘贴文本后也需要更新 placeholder 状态，input 事件会处理
         });
 
         /**
@@ -443,7 +495,7 @@
         sendButton.addEventListener('click', async () => {
             const contentParts = extractContentFromInput(chatInput);
 
-            if (contentParts.length === 0 || (contentParts.length === 1 && contentParts[0].type === 'text' && !contentParts[0].text.trim())) {
+            if (contentParts.length === 0) { // 简化检查，因为 extractContentFromInput 会过滤空文本
                  alert('请输入要发送的内容或粘贴图片！');
                  return;
             }
@@ -465,6 +517,7 @@
             chatInput.innerHTML = '';
             imagePreviewArea.innerHTML = ''; // 清空预览
             handlePreviewPlaceholder(); // 将占位符添加回预览区
+            updateChatInputPlaceholder(); // 更新输入框 placeholder 状态
 
             try {
                 // 获取 AI 响应
@@ -478,6 +531,20 @@
                 loadingIndicator.style.display = 'none';
             }
         });
+
+        /**
+         * Shift + Enter 提交快捷键监听器
+         */
+        chatInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' && event.shiftKey) {
+                event.preventDefault(); // 阻止默认换行行为
+                if (!sendButton.disabled) { // 仅在按钮可用时触发
+                    sendButton.click(); // 模拟点击发送按钮
+                }
+            }
+            // 单独按 Enter 键会执行默认行为（在 contenteditable 中通常是换行或插入 div/br）
+        });
+
 
         /**
          * 从 contenteditable div 中提取文本和图片数据
@@ -532,7 +599,10 @@
                 } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'BR') {
                      // 处理换行符 - 如果需要，在文本中添加换行符
                      if (parts.length > 0 && parts[parts.length - 1].type === 'text') {
-                         parts[parts.length - 1].text += '\n';
+                         // 确保不在文本末尾添加多余的换行符，除非它是唯一的换行
+                         if (parts[parts.length - 1].text !== '\n') {
+                              parts[parts.length - 1].text += '\n';
+                         }
                      } else {
                          parts.push({ type: 'text', text: '\n' });
                      }
@@ -542,10 +612,11 @@
              // 修剪文本部分开头/结尾的空白并移除空的文本部分
              return parts.map(part => {
                  if (part.type === 'text') {
-                     part.text = part.text.trim(); // 修剪文本块周围的空白
+                     // 移除可能由 contenteditable 插入的多余换行符，但保留用户意图的换行
+                     part.text = part.text.replace(/\n{3,}/g, '\n\n').trim(); // 最多保留双换行
                  }
                  return part;
-             }).filter(part => part.type !== 'text' || part.text.length > 0); // 移除空的文本部分
+             }).filter(part => part.type !== 'text' || part.text.length > 0); // 移除完全是空白的文本部分
         }
 
 
@@ -566,8 +637,10 @@
             // 将内容添加到气泡中
             contentParts.forEach(part => {
                 if (part.type === 'text') {
-                    // 追加文本节点
-                     bubbleDiv.appendChild(document.createTextNode(part.text + ' ')); // 在文本后添加空格
+                    // 追加文本节点 (保留换行符)
+                     const textNode = document.createTextNode(part.text + ' '); // 在文本后添加空格
+                     bubbleDiv.appendChild(textNode);
+                     // 如果需要显式处理换行，可以在这里将 \n 替换为 <br>，但 CSS white-space: pre-wrap 应该能处理
                 } else if (part.type === 'image_url') { // 检查新的类型
                     // 追加图片元素
                     const img = document.createElement('img');
@@ -672,7 +745,7 @@
                                  }
                                  // 启用消息复制按钮并添加事件监听器
                                  enableCopyButton(messageCopyButton, contentContainer, accumulatedContent);
-                                 // 最终处理代码块（如果需要确保最后状态）
+                                 // 最终处理代码块（确保状态正确）
                                  processCodeBlocks(contentContainer);
                                  aiResponseArea.scrollTop = aiResponseArea.scrollHeight;
                                  return; // 明确退出函数
@@ -731,60 +804,67 @@
 
             container.querySelectorAll('pre').forEach(preElement => {
                 // 防止重复添加按钮和标签
-                if (preElement.querySelector('.code-copy-button')) return;
+                const existingCopyBtn = preElement.querySelector('.code-copy-button');
+                const existingLangLabel = preElement.querySelector('.code-language-label');
+                if (existingCopyBtn && existingLangLabel) return; // 如果都有了，就跳过
 
                 const codeBlock = preElement.querySelector('code');
                 if (!codeBlock) return;
 
-                // 1. 应用高亮
-                hljs.highlightElement(codeBlock);
-
-                // 2. 添加语言标签
-                let language = '';
-                codeBlock.classList.forEach(className => {
-                    if (className.startsWith('language-')) {
-                        language = className.replace('language-', '');
-                        // Handle common aliases or inconsistencies if needed
-                        if (language === 'js') language = 'javascript';
-                        if (language === 'py') language = 'python';
-                        // etc.
-                    }
-                });
-                 // 如果没有检测到语言，尝试从 ```python 格式中提取
-                 if (!language && codeBlock.textContent.startsWith('python\n')) language = 'python';
-                 if (!language && codeBlock.textContent.startsWith('javascript\n')) language = 'javascript';
-                 // ... 其他常见语言
-
-                if (language) {
-                    const langLabel = document.createElement('span');
-                    langLabel.className = 'code-language-label';
-                    langLabel.textContent = language;
-                    preElement.prepend(langLabel); // 添加标签
+                // 1. 应用高亮 (如果尚未高亮)
+                if (!preElement.dataset.highlighted) {
+                     hljs.highlightElement(codeBlock);
+                     preElement.dataset.highlighted = 'true'; // 标记已高亮
                 }
 
-                // 3. 添加代码块复制按钮
-                const copyBtn = document.createElement('button');
-                copyBtn.className = 'code-copy-button';
-                copyBtn.textContent = '复制';
-                copyBtn.title = '复制代码';
-                preElement.appendChild(copyBtn); // 添加按钮
 
-                copyBtn.addEventListener('click', (e) => {
-                    e.stopPropagation(); // 防止触发气泡的其他事件（如果未来有）
-                    const codeToCopy = codeBlock.textContent;
-                    navigator.clipboard.writeText(codeToCopy).then(() => {
-                        const originalText = copyBtn.textContent;
-                        copyBtn.textContent = '已复制!';
-                        copyBtn.disabled = true;
-                        setTimeout(() => {
-                            copyBtn.textContent = originalText;
-                            copyBtn.disabled = false;
-                        }, 2000);
-                    }).catch(err => {
-                        console.error('无法复制代码: ', err);
-                        alert('复制失败!');
+                // 2. 添加语言标签 (如果不存在)
+                if (!existingLangLabel) {
+                    let language = '';
+                    codeBlock.classList.forEach(className => {
+                        if (className.startsWith('language-')) {
+                            language = className.replace('language-', '');
+                            if (language === 'js') language = 'javascript';
+                            if (language === 'py') language = 'python';
+                        }
                     });
-                });
+                    if (!language && codeBlock.textContent.startsWith('python\n')) language = 'python';
+                    if (!language && codeBlock.textContent.startsWith('javascript\n')) language = 'javascript';
+
+                    if (language) {
+                        const langLabel = document.createElement('span');
+                        langLabel.className = 'code-language-label';
+                        langLabel.textContent = language;
+                        preElement.prepend(langLabel); // 添加标签
+                    }
+                }
+
+
+                // 3. 添加代码块复制按钮 (如果不存在)
+                if (!existingCopyBtn) {
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = 'code-copy-button';
+                    copyBtn.textContent = '复制';
+                    copyBtn.title = '复制代码';
+                    preElement.appendChild(copyBtn); // 添加按钮
+
+                    copyBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const codeToCopy = codeBlock.textContent;
+                        navigator.clipboard.writeText(codeToCopy).then(() => {
+                            const originalText = copyBtn.textContent;
+                            copyBtn.textContent = '已复制!';
+                            copyBtn.disabled = true;
+                            setTimeout(() => {
+                                copyBtn.textContent = originalText;
+                                copyBtn.disabled = false;
+                            }, 2000);
+                        }).catch(err => {
+                            console.error('无法复制代码: ', err);
+                            alert('复制失败!');
+                        });
+                    });
+                }
             });
         }
 
@@ -800,7 +880,7 @@
             button.disabled = false; // 启用按钮
             button.dataset.fullText = fullText; // 存储完整文本
 
-            // 防止重复添加监听器 (如果可能被多次调用)
+            // 防止重复添加监听器
             if (button.dataset.listenerAttached) return;
             button.dataset.listenerAttached = 'true';
 
@@ -825,6 +905,7 @@
         // 初始占位符设置
         handlePreviewPlaceholder();
         handleAiResponsePlaceholder();
+        updateChatInputPlaceholder(); // 初始检查输入框 placeholder
 
     </script>
 
