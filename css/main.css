@@ -141,6 +141,11 @@ body {
     transition: background-color 0.2s, color 0.2s;
 }
 
+/* Common hover background for control buttons */
+.session-control-button:hover {
+    background-color: rgba(0, 123, 255, 0.1); /* Light transparent blue background */
+}
+
 /* Specific style for delete button */
 .session-delete-btn {
     /* Inherits from .session-control-button */
@@ -148,8 +153,8 @@ body {
 }
 
 .session-delete-btn:hover {
-    background-color: #f8d7da; /* Solid light red background */
-    color: #a02734; /* Darker red on hover */
+    /* background-color: #f8d7da; */ /* Use common hover background */
+    color: #a02734; /* Keep darker red text on hover */
 }
 
 /* Specific style for edit button */
@@ -159,8 +164,8 @@ body {
 }
 
 .session-edit-btn:hover {
-    background-color: #e2e6ea; /* Solid light grey background */
-    color: #495057; /* Darker grey on hover */
+    /* background-color: #e2e6ea; */ /* Use common hover background */
+    color: #495057; /* Keep darker grey text on hover */
 }
 
 
