@@ -1,14 +1,26 @@
+html {
+    height: 100%;
+    overflow: hidden; /* Prevent outer scroll */
+    margin: 0;
+    box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit; /* Ensure box-sizing is inherited */
+}
+
 body {
     font-family: sans-serif;
-    padding: 20px;
+    /* padding: 20px; */ /* Removed padding */
+    margin: 0; /* Ensure no margin */
     background-color: #e5ddd5; /* 类似聊天应用的背景色 */
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    height: 100vh; /* 使 body 占满视口高度 */
-    box-sizing: border-box;
+    gap: 10px; /* Reduced gap */
+    height: 100%; /* Use 100% to fill html */
+    /* box-sizing: border-box; */ /* Inherited */
+    overflow: hidden; /* Prevent body scroll */
 }
-h1, h2 {
+h2 { /* Removed h1 styling */
     color: #333;
     text-align: center;
     margin-bottom: 15px;
@@ -24,22 +36,27 @@ h1, h2 {
 }
 #chat-container {
      flex-grow: 1; /* 让聊天容器占据剩余空间 */
-     overflow: hidden; /* 防止内容溢出 */
-     background-color: transparent; /* 聊天容器透明，使用 body 背景 */
-     padding: 10px; /* 减少内边距 */
-     box-shadow: none; /* 移除阴影 */
+     overflow: hidden; /* Prevent this container from scrolling */
+     background-color: #f4f4f4; /* Add background back, remove transparency */
+     padding: 15px; /* Add padding here instead of body */
+     border-radius: 8px; /* Add radius back */
+     box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* Add shadow back */
+     display: flex; /* Ensure it's still a flex container */
+     flex-direction: column; /* Stack children vertically */
+     margin: 10px; /* Add some margin around the container */
+     height: calc(100% - 20px); /* Adjust height considering margin */
 }
 #chat-container h2 {
     margin-bottom: 10px;
 }
 #ai-response {
-    border: none; /* 移除边框 */
-    background-color: transparent; /* 透明背景 */
-    padding: 10px 0; /* 调整内边距 */
+    border: 1px solid #e0e0e0; /* Add a subtle border */
+    background-color: #ffffff; /* White background for contrast */
+    padding: 15px; /* Add padding */
     flex-grow: 1; /* 占据聊天容器剩余空间 */
-    overflow-y: auto; /* 内部滚动 */
-    margin-bottom: 15px;
-    border-radius: 0; /* 移除圆角 */
+    overflow-y: auto; /* THE single scrollbar */
+    margin-bottom: 10px; /* Reduced margin */
+    border-radius: 6px; /* Add slight radius */
     display: flex; /* 使用 Flexbox 排列气泡 */
     flex-direction: column; /* 垂直排列 */
     gap: 10px; /* 气泡之间的间隙 */
@@ -258,9 +275,70 @@ h1, h2 {
 #input-controls { /* 包裹按钮和加载指示 */
      display: flex;
      justify-content: flex-end; /* 按钮靠右 */
-     align-items: center;
-     padding: 0 10px 10px 10px; /* 按钮区域的内边距 */
+     align-items: center; /* 垂直居中对齐加载指示和按钮 */
+     padding: 5px 15px 8px 15px; /* 调整内边距 (上 右 下 左)，减少底部padding */
      flex-shrink: 0;
+     min-height: 40px; /* 给控件区域一个最小高度，确保按钮不会跳动 */
+     box-sizing: border-box;
+}
+
+/* --- Image Preview Item Styles --- */
+.image-preview-item {
+    position: relative; /* For absolute positioning of delete button */
+    display: inline-block; /* Align items inline */
+    margin: 2px; /* Spacing between items */
+    vertical-align: top; /* Align wrappers nicely if they wrap */
+}
+
+.image-preview-item img { /* Style image inside the wrapper */
+    display: block; /* Prevent extra space below image */
+    max-width: 45px; /* Consistent size */
+    max-height: 45px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+.delete-image-btn {
+    position: absolute;
+    top: -5px; /* Position slightly above the top right */
+    right: -5px;
+    width: 18px;
+    height: 18px;
+    background-color: rgba(0, 0, 0, 0.6); /* Dark semi-transparent background */
+    color: white;
+    border: none;
+    border-radius: 50%; /* Circular button */
+    font-size: 12px;
+    font-weight: bold; /* Make '×' bolder */
+    line-height: 16px; /* Center the '×' */
+    text-align: center;
+    cursor: pointer;
+    padding: 0;
+    opacity: 0.7;
+    transition: opacity 0.2s, background-color 0.2s;
+    z-index: 1; /* Ensure it's above the image */
+    box-shadow: 0 0 2px rgba(0,0,0,0.5); /* Add slight shadow for visibility */
+}
+
+.delete-image-btn:hover {
+    background-color: rgba(200, 0, 0, 0.8); /* Redder on hover */
+    opacity: 1;
+}
+
+/* --- User Message Content Layout --- */
+.user-bubble .message-content-wrapper {
+    display: flex;
+    flex-wrap: wrap; /* Allow items to wrap to the next line */
+    align-items: center; /* Align items vertically */
+    gap: 5px; /* Add spacing between text and images */
+}
+
+.user-bubble .message-image {
+    max-width: 80px; /* Make images smaller */
+    max-height: 80px;
+    border-radius: 4px;
+    vertical-align: middle; /* Helps alignment with text */
+    border: 1px solid rgba(0,0,0,0.1); /* Add subtle border */
 }
 #send-button {
     padding: 8px 18px; /* 调整按钮大小 */
