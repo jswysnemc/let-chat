@@ -1,4 +1,5 @@
 // src/ui.js
+import { renderMarkdown, highlightCodeBlocks } from './markdownRenderer.js'; // Import renderer functions
 
 // Module-scoped variables to hold element references
 let chatInput = null;
@@ -8,6 +9,10 @@ let sendButton = null;
 let aiResponseArea = null;
 let aiResponsePlaceholder = null;
 let loadingIndicator = null;
+let chatTitleElement = null; // Reference for chat title H2
+let sessionListElement = null; // Reference for session list UL
+// aiResponseArea was missing from the top-level declarations, ensure it's here
+// let aiResponseArea = null; // Already declared above (line 9)
 
 /**
  * Initializes the UI module by getting references to DOM elements.
@@ -18,13 +23,15 @@ export function initUI() {
     chatInput = document.getElementById('chat-input');
     imagePreviewArea = document.getElementById('input-image-preview');
     sendButton = document.getElementById('send-button');
-    aiResponseArea = document.getElementById('ai-response');
+    aiResponseArea = document.getElementById('ai-response'); // Ensure aiResponseArea is fetched
     loadingIndicator = document.getElementById('loading');
+    chatTitleElement = document.getElementById('chat-title'); // Fetch title element
+    sessionListElement = document.getElementById('session-list'); // Fetch session list element
 
-    // Check if essential elements exist
-    if (!chatInput || !imagePreviewArea || !sendButton || !aiResponseArea || !loadingIndicator) {
-        console.error("Fatal Error: Required UI elements not found in the DOM.");
-        alert("应用程序初始化失败：缺少必要的界面元素。"); // Simple user feedback
+    // Check if essential elements exist (including the new ones)
+    if (!chatInput || !imagePreviewArea || !sendButton || !aiResponseArea || !loadingIndicator || !chatTitleElement || !sessionListElement) {
+        console.error("Fatal Error: Required UI elements not found in the DOM. Check IDs: chat-input, input-image-preview, send-button, ai-response, loading, chat-title, session-list");
+        alert("应用程序初始化失败：缺少必要的界面元素。请检查控制台获取详细信息。"); // Simple user feedback
         return false;
     }
 
@@ -45,6 +52,48 @@ export function initUI() {
     updateAiResponsePlaceholderVisually();
 
     console.log("UI Initialized successfully.");
+
+
+    // --- Add Lightbox Trigger Listeners ---
+    const handleImageClick = (event) => {
+        // Check if the clicked element is an image within the desired areas
+        const clickedImage = event.target.closest('img'); // Find nearest img ancestor/self
+        if (!clickedImage) return; // Not an image click
+
+        // Check if the image is within the response area or preview area
+        const isInResponseArea = aiResponseArea?.contains(clickedImage);
+        const isInPreviewArea = imagePreviewArea?.contains(clickedImage); // Corrected variable name
+
+        // Only open lightbox for images in specified areas (e.g., exclude input area images)
+        // Also check if the image has a src to avoid issues with potential placeholder images
+        if ((isInResponseArea || isInPreviewArea) && clickedImage.src && !clickedImage.closest('.delete-image-btn')) { // Ensure not clicking delete btn wrapper
+
+             // Check if it's the preview image wrapper's image
+             const previewItem = clickedImage.closest('.image-preview-item');
+             if (isInPreviewArea && !previewItem) return; // Ignore clicks not on preview item images
+
+             // Check if it's a message image
+             const messageBubble = clickedImage.closest('.message-bubble');
+             if (isInResponseArea && !messageBubble) return; // Ignore clicks not within bubbles
+
+             // Check if it's specifically a message-image class if needed
+             // if (isInResponseArea && !clickedImage.classList.contains('message-image')) return;
+
+
+            event.preventDefault(); // Prevent any default browser behavior for image click
+            openLightbox(clickedImage.src);
+        }
+    };
+
+    if (aiResponseArea) {
+        aiResponseArea.addEventListener('click', handleImageClick);
+    }
+    if (imagePreviewArea) { // Corrected variable name
+        imagePreviewArea.addEventListener('click', handleImageClick);
+    }
+    // ------------------------------------
+
+
     return true; // Indicate successful initialization
 }
 
@@ -60,6 +109,7 @@ export function getElement(elementName) {
         case 'sendButton': return sendButton;
         case 'aiResponseArea': return aiResponseArea;
         case 'loadingIndicator': return loadingIndicator;
+        case 'chatTitle': return chatTitleElement; // Allow getting title element
         default:
             console.warn(`UI Element "${elementName}" not recognized.`);
             return null;
@@ -355,7 +405,202 @@ export function displayError(errorMessage) {
     scrollChatToBottom();
 }
 
+
+/**
+ * Displays a complete assistant message (e.g., from history).
+ * Handles Markdown rendering and code highlighting.
+ * @param {string} content - The full Markdown content of the assistant's message.
+ */
+export function displayAssistantMessage(content) {
+    if (!aiResponseArea) return;
+    updateAiResponsePlaceholderVisually(); // Ensure placeholder is handled
+
+    const bubbleRefs = createAssistantMessageBubble();
+    if (!bubbleRefs) {
+        console.error("UI Error: Failed to create assistant message bubble for historical message.");
+        return; // Failed to create bubble
+    }
+
+    // Render markdown and update content
+    const htmlContent = renderMarkdown(content);
+    updateAssistantMessageContent(bubbleRefs.contentContainer, htmlContent);
+
+    // Highlight code blocks after content is in the DOM
+    // Use try-catch as highlightCodeBlocks might depend on hljs being loaded
+    try {
+        highlightCodeBlocks(bubbleRefs.contentContainer);
+    } catch (e) {
+        console.error("Error highlighting code blocks in historical message:", e);
+    }
+
+
+    // Finalize (enable copy button, etc.) - pass raw content for copy
+    finalizeAssistantMessage(bubbleRefs.bubbleElement, bubbleRefs.copyButton, content);
+
+    // Ensure scroll after adding historical message
+    // scrollChatToBottom(); // updateAssistantMessageContent already scrolls, finalizeAssistantMessage also scrolls
+}
+
+
 // Note: processCodeBlocks (syntax highlighting and code-block copy buttons)
 // should be called from the main logic (e.g., main.js) after
 // updateAssistantMessageContent, using the markdownRenderer module.
 // This ui.js module focuses on creating/updating the bubbles themselves.
+
+
+// --- Lightbox Functionality ---
+
+/**
+ * Handles the Escape key press to close the lightbox.
+ * @param {KeyboardEvent} event
+ */
+function handleLightboxKeydown(event) {
+    if (event.key === 'Escape') {
+        closeLightbox();
+    }
+}
+
+/**
+ * Opens the lightbox with the specified image URL.
+ * @param {string} imageUrl - The URL of the image to display.
+ */
+export function openLightbox(imageUrl) {
+    // Prevent opening multiple lightboxes
+    if (document.querySelector('.lightbox-overlay')) {
+        return;
+    }
+
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'lightbox-overlay';
+    overlay.addEventListener('click', closeLightbox); // Close on overlay click
+
+    // Create content container
+    const content = document.createElement('div');
+    content.className = 'lightbox-content';
+    // Stop propagation to prevent closing when clicking inside content
+    content.addEventListener('click', (e) => e.stopPropagation());
+
+    // Create image
+    const img = document.createElement('img');
+    img.src = imageUrl;
+    img.alt = '放大预览'; // Alt text for enlarged image
+
+    // Create close button
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'lightbox-close';
+    closeBtn.textContent = '×';
+    closeBtn.title = '关闭预览';
+    closeBtn.addEventListener('click', closeLightbox); // Close on button click
+
+    // Assemble
+    content.appendChild(img);
+    content.appendChild(closeBtn);
+    overlay.appendChild(content);
+
+    // Add to body
+    document.body.appendChild(overlay);
+
+    // Add keyboard listener for Escape key
+    document.addEventListener('keydown', handleLightboxKeydown);
+}
+
+/**
+ * Closes and removes the currently open lightbox from the DOM.
+ */
+export function closeLightbox() {
+    const overlay = document.querySelector('.lightbox-overlay');
+    if (overlay) {
+        overlay.remove();
+        // Remove keyboard listener when lightbox closes
+        document.removeEventListener('keydown', handleLightboxKeydown);
+    }
+}
+
+
+// --- Sidebar Rendering ---
+
+/**
+ * Renders the list of sessions in the sidebar.
+ * @param {Array<object>} sessions - Array of session objects from state.js (e.g., [{id, name}, ...]).
+ * @param {string|null} activeSessionId - The ID of the currently active session.
+ */
+export function renderSessionList(sessions, activeSessionId) {
+    if (!sessionListElement) {
+        console.error("UI Error: Session list element (#session-list) not found or not initialized.");
+        return;
+    }
+
+    // Clear current list items
+    sessionListElement.innerHTML = '';
+
+    if (!sessions || sessions.length === 0) {
+        // If no sessions, show placeholder
+        const noSessionsLi = document.createElement('li');
+        noSessionsLi.className = 'placeholder-text';
+        noSessionsLi.textContent = '没有会话。点击下方按钮创建。';
+        sessionListElement.appendChild(noSessionsLi);
+        return;
+    }
+
+    // Add new list items
+    sessions.forEach(session => {
+        const li = document.createElement('li');
+        li.textContent = session.name || `会话 ${session.id.substring(0, 4)}`; // Fallback name
+        li.setAttribute('data-session-id', session.id);
+        li.title = session.name; // Show full name on hover
+
+        if (session.id === activeSessionId) {
+            li.classList.add('active-session');
+        }
+
+        // Add controls container (floated right or flex)
+        const controls = document.createElement('span');
+        controls.className = 'session-controls'; // Style this container
+
+        // Add Delete Button (only if more than one session exists)
+        if (sessions.length > 1) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'session-delete-btn'; // Specific class for styling/event handling
+            deleteBtn.textContent = '🗑️'; // Trash can emoji
+            deleteBtn.title = '删除会话';
+            deleteBtn.setAttribute('data-session-id', session.id); // Set ID on button too for easier event handling
+            controls.appendChild(deleteBtn);
+        }
+
+        // TODO: Add Edit button here later
+        // const editBtn = document.createElement('button'); ...
+
+        // Append controls to the list item
+        li.appendChild(controls);
+
+
+        sessionListElement.appendChild(li);
+    });
+}
+
+/**
+ * Clears the main chat display area (aiResponseArea).
+ */
+export function clearChatArea() {
+    if (aiResponseArea) {
+        aiResponseArea.innerHTML = ''; // Clear all content
+        // Re-add placeholder if it was defined and not already present
+        // updateAiResponsePlaceholderVisually handles adding it back if needed
+        updateAiResponsePlaceholderVisually();
+    } else {
+        console.warn("UI: clearChatArea called but aiResponseArea is not initialized.");
+    }
+}
+
+/**
+ * Updates the chat title text.
+ * @param {string} title - The new title to display.
+ */
+export function updateChatTitle(title) {
+    if (chatTitleElement) {
+        chatTitleElement.textContent = title;
+    } else {
+        console.warn("UI: updateChatTitle called but chatTitleElement is not initialized.");
+    }
+}
