@@ -229,6 +229,80 @@ function main() {
     // ------------------------------------
 
 
+// --- Add Event Listener for Editing Session ---
+    const editSessionButton = document.getElementById('edit-session-btn');
+
+    if (editSessionButton) {
+        editSessionButton.addEventListener('click', () => {
+            const activeId = state.getActiveSessionId();
+            if (!activeId) {
+                alert("没有活动的会话可编辑。");
+                return;
+            }
+
+            const session = state.getSession(activeId);
+            if (!session) {
+                alert("无法加载当前会话数据。");
+                return;
+            }
+
+            // Find the current system prompt content
+            const systemMessage = session.messages.find(m => m.role === 'system');
+            const currentSystemPrompt = systemMessage ? systemMessage.content : ''; // Default if not found
+
+            let nameChanged = false;
+            let promptChanged = false;
+
+            // 1. Edit Name
+            const newName = prompt("编辑会话名称：", session.name);
+            if (newName !== null) { // Check if user cancelled prompt
+                const trimmedName = newName.trim();
+                if (trimmedName && trimmedName !== session.name) {
+                    if (state.updateSessionName(activeId, trimmedName)) {
+                        nameChanged = true;
+                        console.log("会话名称已更新。");
+                    } else {
+                        alert("更新会话名称失败。");
+                    }
+                } else if (!trimmedName) {
+                     alert("会话名称不能为空。");
+                }
+            }
+
+            // 2. Edit System Prompt
+            const newPrompt = prompt("编辑系统提示 (System Prompt)：", currentSystemPrompt);
+             if (newPrompt !== null) { // Check if user cancelled prompt
+                 // Only update if the prompt actually changed
+                 if (newPrompt !== currentSystemPrompt) {
+                     if (state.updateSystemPrompt(activeId, newPrompt)) {
+                         promptChanged = true;
+                         console.log("系统提示已更新。");
+                         // Note: Changes to the system prompt only affect *future* interactions
+                         // within this session. Existing messages are not altered.
+                     } else {
+                         alert("更新系统提示失败。");
+                     }
+                 }
+             }
+
+            // 3. Refresh UI if changes were made
+            if (nameChanged || promptChanged) {
+                 console.log("正在刷新 UI 以反映会话更改...");
+                 // Update sidebar list (especially if name changed)
+                 ui.renderSessionList(state.getAllSessions(), activeId);
+                 // Update chat title (if name changed) - get potentially updated name
+                 const updatedSession = state.getSession(activeId);
+                 if (updatedSession) {
+                    ui.updateChatTitle(updatedSession.name);
+                 }
+                 // Optional: Add a small visual confirmation to the user?
+                 // e.g., a temporary message or highlight.
+            }
+        });
+    } else {
+        console.error("Could not find #edit-session-btn element to attach listener.");
+    }
+    // -------------------------------------------
     console.log("Main: Application initialized and initial render complete.");
 }
 

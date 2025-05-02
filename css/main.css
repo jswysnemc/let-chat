@@ -340,31 +340,47 @@ h2 { /* Removed h1 styling */
 
 
 #chat-input-container {
-    border: 1px solid #ccc;
-    border-radius: 25px; /* 更圆的输入框容器 */
+    /* border: 1px solid #ccc; */ /* Border removed, handled by unified wrapper or input */
+    /* border-radius: 25px; */ /* Radius removed */
     padding: 0;
-    background-color: #fff;
-    display: flex; /* 使用 Flexbox 排列内部元素 */
-    flex-direction: column; /* 垂直排列 */
-    flex-shrink: 0; /* 防止输入区域被压缩 */
-    position: relative; /* 用于 placeholder 定位 */
+    background-color: transparent; /* Let wrapper handle background */
+    display: flex; /* Use Flexbox */
+    flex-direction: column; /* Arrange input and preview vertically */
+    flex-grow: 1; /* Take available horizontal space */
+    /* flex-shrink: 0; */ /* Allow shrinking if needed, though grow=1 dominates */
+    position: relative; /* Keep for internal positioning if needed */
 }
 #chat-input { /* contenteditable div */
-    min-height: 50px; /* 减少最小高度 */
-    max-height: 150px; /* 限制最大高度 */
-    padding: 12px 15px; /* 调整内边距 */
+    min-height: 50px;
+    max-height: 150px;
+    padding: 12px 15px;
     box-sizing: border-box;
     width: 100%;
     font-size: 16px;
     line-height: 1.5;
-    border: none;
+    border: 1px solid #ccc; /* Add border directly to input */
+    border-radius: 18px; /* Add radius to input */
     outline: none;
-    resize: none; /* 禁止调整大小 */
+    resize: none;
     overflow-y: auto;
-    background: transparent; /* 透明背景 */
-    position: relative; /* 确保在 placeholder 之上 */
+    background-color: #fff; /* White background for input */
+    position: relative;
     z-index: 2;
+    /* Adjust border radius if preview is visible */
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
 }
+/* Style adjustment when image preview is shown */
+#chat-input-container:has(#input-image-preview:not(:empty)) #chat-input {
+     border-bottom-left-radius: 0;
+     border-bottom-right-radius: 0;
+}
+#chat-input-container:not(:has(#input-image-preview:not(:empty))) #chat-input {
+     border-bottom-left-radius: 18px; /* Round bottom corners if preview is hidden/empty */
+     border-bottom-right-radius: 18px;
+}
+
+
 /* --- 输入框 Placeholder 样式 --- */
 #chat-input::before {
     content: attr(data-placeholder); /* 从 data 属性获取文本 */
@@ -392,33 +408,48 @@ h2 { /* Removed h1 styling */
     border: 1px solid #eee;
     border-radius: 3px;
 }
-#input-image-preview { /* 输入下方用于预览的区域 */
-    padding: 8px 15px; /* 调整内边距 */
-    min-height: 40px;
+#input-image-preview {
+    padding: 8px 15px;
+    min-height: 40px; /* Keep min-height */
     background-color: #f8f8f8;
-    border-top: 1px dashed #ddd;
+    /* border-top: 1px dashed #ddd; */ /* Remove top border */
+    border-left: 1px solid #ccc; /* Match input border */
+    border-right: 1px solid #ccc; /* Match input border */
+    border-bottom: 1px solid #ccc; /* Match input border */
     display: flex;
     flex-wrap: wrap;
     gap: 5px;
     align-items: center;
-    border-bottom-left-radius: 25px; /* 匹配容器圆角 */
-    border-bottom-right-radius: 25px;
+    border-bottom-left-radius: 18px; /* Match input radius */
+    border-bottom-right-radius: 18px;
+    cursor: pointer; /* Indicate clickable for upload */
 }
-#input-image-preview img { /* 预览区域图片的样式 */
-    max-width: 40px; /* 缩小预览图 */
+/* Hide preview area if it's empty (only contains the placeholder) */
+#input-image-preview:has(.placeholder-text):empty {
+     /* This selector might not work perfectly if placeholder is removed/readded by JS */
+     /* A class added by JS when empty might be more reliable */
+     /* display: none; */ /* Hiding might cause layout jumps, better to rely on JS or min-height */
+     /* For now, rely on min-height and visual appearance */
+}
+
+#input-image-preview img { /* Style images within the preview */
+    max-width: 40px;
     max-height: 40px;
     border: 1px solid #ccc;
     border-radius: 3px;
 }
-#input-controls { /* 包裹按钮和加载指示 */
+/* Remove old #input-controls styles */
+/*
+#input-controls {
      display: flex;
-     justify-content: flex-end; /* 按钮靠右 */
-     align-items: center; /* 垂直居中对齐加载指示和按钮 */
-     padding: 5px 15px 8px 15px; /* 调整内边距 (上 右 下 左)，减少底部padding */
+     justify-content: flex-end;
+     align-items: center;
+     padding: 5px 15px 8px 15px;
      flex-shrink: 0;
-     min-height: 40px; /* 给控件区域一个最小高度，确保按钮不会跳动 */
+     min-height: 40px;
      box-sizing: border-box;
 }
+*/
 
 /* --- Image Preview Item Styles --- */
 .image-preview-item {
@@ -606,4 +637,45 @@ h2 { /* Removed h1 styling */
     font-style: italic;
     color: #888;
     font-size: 0.9em;
+}
+/* --- New Unified Input Area Styles --- */
+#unified-input-area {
+    display: flex;
+    align-items: flex-end; /* Align input container and button to bottom */
+    gap: 8px; /* Space between input container and button */
+    padding: 10px 15px; /* Padding around the whole area */
+    margin: 0 10px 10px 10px; /* Consistent margin with chat container */
+    /* background-color: #f9f9f9; */ /* Optional background */
+    /* border-top: 1px solid #e0e0e0; */ /* Optional separator */
+    flex-shrink: 0; /* Prevent shrinking */
+}
+
+#unified-input-area #send-button {
+    height: 50px; /* Match input min-height */
+    padding: 0 20px; /* Adjust padding */
+    flex-shrink: 0; /* Prevent button shrinking */
+    border-radius: 18px; /* Match input radius */
+    /* Ensure button inherits control-button styles if needed, or add base styles */
+    background-color: #007bff; /* Example primary color */
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 16px; /* Match input font size */
+    transition: background-color 0.2s;
+}
+#unified-input-area #send-button:hover {
+    background-color: #0056b3;
+}
+#unified-input-area #send-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+
+#unified-input-area #loading {
+    margin-left: 8px; /* Space between button and loading */
+    height: 50px; /* Match button height */
+    display: flex; /* Use flex to center content vertically */
+    align-items: center;
+    color: #555; /* Style loading text */
 }

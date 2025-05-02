@@ -31,17 +31,18 @@
             </div>
 
             <!-- 统一输入区域 -->
-            <div id="chat-input-container">
-                <div id="chat-input" contenteditable="true" data-placeholder="在此处输入消息，shift + enter 提交..."></div>
-                <div id="input-image-preview">
-                     <span class="placeholder-text">粘贴的图片将在此预览...</span>
+            <div id="unified-input-area"> <!-- New wrapper -->
+                <div id="chat-input-container"> <!-- Container for text and preview -->
+                    <div id="chat-input" contenteditable="true" data-placeholder="在此处输入消息，shift + enter 提交..."></div>
+                    <div id="input-image-preview">
+                         <span class="placeholder-text">点击此处或粘贴图片进行上传...</span>
+                    </div>
                 </div>
+                <!-- Send button and loading indicator moved next to the input container -->
+                <button type="button" id="send-button" class="control-button">发送</button>
+                <span id="loading" class="loading-indicator" style="display: none;">AI 正在回复中...</span>
+                <!-- Upload button removed -->
             </div>
-             <div id="input-controls">
-                 <span id="loading" class="loading-indicator" style="display: none;">AI 正在回复中...</span>
-                 <button type="button" id="upload-image-button" title="上传图片" class="control-button">📎</button>
-                 <button type="button" id="send-button" class="control-button">发送</button>
-             </div>
         </div>
     </main>
 </div>
