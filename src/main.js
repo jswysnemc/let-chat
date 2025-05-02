@@ -65,8 +65,7 @@ async function handleSend(contentParts) {
     }
 
     console.log(`Main: Handling send request for session ${activeId}...`);
-    ui.disableSendButton();
-    ui.showLoading();
+    ui.disableSendButton(); // This will now also call showLoading()
 
     // 1. Update state and display user message for the active session
     try {
@@ -79,8 +78,8 @@ async function handleSend(contentParts) {
     } catch (error) {
         console.error("Error processing user input:", error);
         ui.displayError("处理您的输入时出错: " + error.message);
-        ui.hideLoading();
-        ui.enableSendButton();
+        // ui.hideLoading(); // No longer needed here
+        ui.enableSendButton(); // This will now also call hideLoading()
         return; // Stop processing if user input handling fails
     }
 
@@ -127,9 +126,12 @@ async function handleSend(contentParts) {
         // For now, just display the separate error message.
     } finally {
         // 5. Always re-enable button and hide loading indicator using UI functions
-        ui.hideLoading();
-        ui.enableSendButton();
-        console.log("Main: Send request processing finished.");
+        console.log("[Main] Entering finally block in handleSend."); // Log finally entry
+        // console.log("[Main] Calling ui.hideLoading()..."); // No longer needed here
+        // ui.hideLoading(); // No longer needed here
+        console.log("[Main] Calling ui.enableSendButton() which will also hide loading...");
+        ui.enableSendButton(); // This will now also call hideLoading()
+        console.log("[Main] Send request processing finished (finally block complete).");
     }
 }
 
@@ -370,6 +372,8 @@ function main() {
 // --- Old Event Listener for Header Edit Button Removed ---
     console.log("Main: Application initialized and initial render complete.");
 }
+
+ui.enableSendButton(); // Ensure button is enabled and loader is hidden on startup
 
 // Wait for the DOM to be fully loaded before running the main script
 document.addEventListener('DOMContentLoaded', main);

@@ -693,7 +693,6 @@ h2 { /* Removed h1 styling */
 #unified-input-area #loading {
     margin-left: 8px; /* Space between button and loading */
     height: 50px; /* Match button height */
-    display: flex; /* Use flex to center content vertically */
     align-items: center;
     color: #555; /* Style loading text */
 }
@@ -826,5 +825,9 @@ h2 { /* Removed h1 styling */
 
 .display-none {
     display: none; /* Hide elements */
+}
+
+.hidden {
+    display: none;
 }
 /* --- End Modal Styles --- */

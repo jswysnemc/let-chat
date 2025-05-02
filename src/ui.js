@@ -223,16 +223,28 @@ export function showLoading() {
 }
 
 export function hideLoading() {
-     if (loadingIndicator) loadingIndicator.style.display = 'none';
+     console.log("[UI] hideLoading called."); // Log function call
+     if (loadingIndicator) {
+         console.log("[UI] Hiding loading indicator element:", loadingIndicator);
+         loadingIndicator.style.display = 'none';
+     } else {
+         console.warn("[UI] hideLoading: loadingIndicator element reference is null.");
+     }
 }
 
 // --- Button States ---
 export function enableSendButton() {
-    if (sendButton) sendButton.disabled = false;
+    if (sendButton) {
+        sendButton.disabled = false;
+        hideLoading(); // Hide loading when button is enabled
+    }
 }
 
 export function disableSendButton() {
-     if (sendButton) sendButton.disabled = true;
+     if (sendButton) {
+        sendButton.disabled = true;
+        showLoading(); // Show loading when button is disabled
+     }
 }
 
 // --- Input Area ---

@@ -23,9 +23,12 @@ function extractContentFromInput(element) {
 
     for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i];
+        // console.log(`[extractContent] Node ${i}: type=${node.nodeType}, name=${node.nodeName}`); // Add logging
+
         if (node.nodeType === Node.TEXT_NODE) {
             const text = node.textContent;
             if (text) {
+                // console.log(`[extractContent] Handling TEXT_NODE: "${text}"`);
                 if (parts.length > 0 && parts[parts.length - 1].type === 'text') {
                     parts[parts.length - 1].text += text;
                 } else {
@@ -36,6 +39,7 @@ function extractContentFromInput(element) {
             const base64Data = node.getAttribute('data-base64');
             const mimeType = node.getAttribute('data-mime-type');
             if (base64Data && mimeType) {
+                // console.log(`[extractContent] Handling IMG node.`);
                 const dataUrl = `data:${mimeType};base64,${base64Data}`;
                 parts.push({
                     type: 'image_url',
@@ -46,6 +50,7 @@ function extractContentFromInput(element) {
             // Simple handling for DIVs (e.g., from pasting formatted text)
             const text = node.textContent;
             if (text) {
+                 // console.log(`[extractContent] Handling DIV node, text: "${text}"`);
                 if (parts.length > 0 && parts[parts.length - 1].type === 'text') {
                     parts[parts.length - 1].text += text;
                 } else {
@@ -54,17 +59,39 @@ function extractContentFromInput(element) {
             }
         } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'BR') {
             // Handle line breaks
+            // console.log(`[extractContent] Handling BR node.`);
             if (parts.length > 0 && parts[parts.length - 1].type === 'text') {
                  if (!parts[parts.length - 1].text.endsWith('\n')) { // Avoid double line breaks if BR is last
                     parts[parts.length - 1].text += '\n';
                  }
             } else {
-                parts.push({ type: 'text', text: '\n' });
+                // Add newline only if it's meaningful (e.g., not at the very beginning)
+                if (parts.length > 0) {
+                     parts.push({ type: 'text', text: '\n' });
+                }
             }
+        } else if (node.nodeType === Node.ELEMENT_NODE) { // <<< NEW CATCH-ALL for other elements
+             // Try to get text content from any other element node
+             const text = node.textContent;
+             if (text) {
+                 // console.log(`[extractContent] Handling generic ELEMENT_NODE (${node.tagName}), text: "${text}"`);
+                 if (parts.length > 0 && parts[parts.length - 1].type === 'text') {
+                     // Add a space if the previous text doesn't end with whitespace, to prevent words merging
+                     if (!/\s$/.test(parts[parts.length - 1].text)) {
+                          parts[parts.length - 1].text += ' ';
+                     }
+                     parts[parts.length - 1].text += text; // Append to previous text part
+                 } else {
+                     parts.push({ type: 'text', text: text }); // Create new text part
+                 }
+             } else {
+                  // console.log(`[extractContent] Ignoring empty generic ELEMENT_NODE (${node.tagName})`);
+             }
+        } else {
+             // console.log(`[extractContent] Ignoring node type ${node.nodeType}`);
         }
-        // Ignore other node types for simplicity
     }
-    // Trim whitespace and filter empty text parts
+     // Trim whitespace and filter empty text parts AFTER processing all nodes
     return parts.map(part => {
         if (part.type === 'text') {
             part.text = part.text.replace(/\n{3,}/g, '\n\n').trim(); // Keep max double newlines
