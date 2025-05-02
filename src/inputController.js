@@ -342,30 +342,45 @@ export function initInputHandling({ onSend }) {
     chatInputElement.addEventListener('keydown', handleKeyDown);
     sendButtonElement.addEventListener('click', handleSendTrigger);
 
-// Add listener for clicking the preview area itself to trigger upload
+    // Combined click listener for image preview area (handles both upload trigger and delete)
     if (imagePreviewAreaElement) {
         imagePreviewAreaElement.addEventListener('click', (event) => {
-            // IMPORTANT: Only trigger upload if the click is on the area itself,
-            // not on an existing image preview or its delete button.
-            if (event.target.closest('.image-preview-item') || event.target.closest('.delete-image-btn')) {
-                 // Click was on an existing preview item or delete button, do nothing for upload trigger.
-                 // The handleDeleteImage listener below will handle delete clicks.
+            console.log("Click detected on image preview area. Target:", event.target);
+
+            // Check if the click was on a delete button
+            const deleteButton = event.target.closest('.delete-image-btn');
+            if (deleteButton) {
+                console.log("Delete button clicked.");
+                // Call the delete handler logic directly or ensure handleDeleteImage handles event delegation correctly
+                // Assuming handleDeleteImage checks the target internally:
+                handleDeleteImage(event);
+                return; // Stop further processing for this click
+            }
+
+            // Check if the click was on an existing image preview item's content (image, wrapper)
+            const previewItem = event.target.closest('.image-preview-item');
+            if (previewItem) {
+                console.log("Clicked on an existing preview item, not triggering upload.");
+                // Do nothing more for upload trigger.
+                // Allow default behavior or other listeners (like potential lightbox).
                 return;
             }
 
-            // Ensure the hidden input element is available before trying to click it
+            // If the click was not on delete or an existing item, assume it's on the background or placeholder.
+            // Attempt to trigger the file upload.
+            console.log("Click appears to be on background or placeholder, attempting to trigger upload.");
             if (imageUploadInputElement) {
-                console.log("Image preview area background clicked, triggering file input.");
                 imageUploadInputElement.click(); // Trigger the hidden file input
             } else {
                 console.error("Cannot trigger upload: Hidden file input element (#image-upload-input) not found or not initialized.");
-                alert("图片上传功能当前不可用。"); // Provide feedback to the user
+                alert("图片上传功能当前不可用。");
             }
         });
-    }
-    // Add delegated listener for delete buttons in the preview area
-    if (imagePreviewAreaElement) {
-        imagePreviewAreaElement.addEventListener('click', handleDeleteImage);
+        // We no longer need the separate listener for handleDeleteImage as it's handled above.
+        // // Add delegated listener for delete buttons in the preview area
+        // if (imagePreviewAreaElement) {
+        //     imagePreviewAreaElement.addEventListener('click', handleDeleteImage); // REMOVED
+        // }
     }
 
     // Add listener for the upload button

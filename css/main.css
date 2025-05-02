@@ -129,10 +129,10 @@ body {
 }
 
 
-.session-delete-btn {
+/* Base style for sidebar control buttons */
+.session-control-button {
     background: none;
     border: none;
-    color: #dc3545; /* Red color for delete */
     cursor: pointer;
     padding: 2px 4px;
     font-size: 1.1em; /* Adjust emoji size */
@@ -141,10 +141,28 @@ body {
     transition: background-color 0.2s, color 0.2s;
 }
 
+/* Specific style for delete button */
+.session-delete-btn {
+    /* Inherits from .session-control-button */
+    color: #dc3545; /* Red color for delete */
+}
+
 .session-delete-btn:hover {
     background-color: rgba(220, 53, 69, 0.1); /* Light red background on hover */
     color: #a02734; /* Darker red on hover */
 }
+
+/* Specific style for edit button */
+.session-edit-btn {
+     /* Inherits from .session-control-button */
+     color: #6c757d; /* Grey color for edit */
+}
+
+.session-edit-btn:hover {
+    background-color: rgba(108, 117, 125, 0.1); /* Light grey background on hover */
+    color: #495057; /* Darker grey on hover */
+}
+
 
 
 #main-content {

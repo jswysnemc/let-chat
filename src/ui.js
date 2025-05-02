@@ -558,6 +558,16 @@ export function renderSessionList(sessions, activeSessionId) {
         const controls = document.createElement('span');
         controls.className = 'session-controls'; // Style this container
 
+        // Create Edit button (Always add edit button)
+        const editButton = document.createElement('button');
+        editButton.type = 'button';
+        // Use common class + specific class for styling/event handling
+        editButton.className = 'session-control-button session-edit-btn';
+        editButton.title = '编辑会话';
+        editButton.textContent = '✏️';
+        editButton.dataset.sessionId = session.id; // Set session ID for the handler
+        controls.appendChild(editButton); // Append edit button to controls span
+
         // Add Delete Button (only if more than one session exists)
         if (sessions.length > 1) {
             const deleteBtn = document.createElement('button');
