@@ -139,6 +139,7 @@ async function handleSend(contentParts) {
  * @param {string} sessionId - The ID of the session to edit.
  */
 function handleEditSession(sessionId) {
+    console.log(`[Main] handleEditSession called for sessionId: ${sessionId}`); // Log entry
     if (!sessionId) {
         console.error("[Main] handleEditSession: No session ID provided.");
         return;
@@ -152,8 +153,10 @@ function handleEditSession(sessionId) {
     }
 
     // Get modal elements using the new UI function
+    console.log("[Main] handleEditSession: Getting modal form elements...");
     const modalElements = ui.getEditModalFormElements();
     if (!modalElements) {
+        console.error("[Main] handleEditSession: Failed to get modal elements from UI module.");
         alert("无法初始化编辑对话框。");
         return;
     }
@@ -167,7 +170,7 @@ function handleEditSession(sessionId) {
     // Define handlers within this scope to close over necessary variables (sessionId, elements)
     const submitHandler = (event) => {
         event.preventDefault();
-        console.log("[Main] Edit modal submitted.");
+        console.log("[Main] Edit modal submitHandler triggered.");
         const newValues = ui.getEditModalValues(); // Get values from modal inputs
 
         if (!newValues) {
@@ -222,7 +225,7 @@ function handleEditSession(sessionId) {
     };
 
     const cancelHandler = () => {
-        console.log("[Main] Edit modal cancelled.");
+        console.log("[Main] Edit modal cancelHandler triggered.");
         cleanupAndHide(); // Hide modal and remove listeners
     };
 
@@ -235,13 +238,16 @@ function handleEditSession(sessionId) {
     }
 
     // --- Logic to show and setup modal ---
+    console.log("[Main] handleEditSession: Setting modal values...");
     // Set initial values in the modal
     ui.setEditModalValues(currentName, currentSystemPrompt);
 
+    console.log("[Main] handleEditSession: Attaching modal listeners...");
     // Attach listeners (only once per modal opening)
     form.addEventListener('submit', submitHandler);
     cancelBtn.addEventListener('click', cancelHandler);
 
+    console.log("[Main] handleEditSession: Showing modal...");
     // Show the modal
     ui.showEditModal();
 }
@@ -278,15 +284,20 @@ function main() {
     // Listener for switching sessions
     if (sessionList) {
         sessionList.addEventListener('click', (event) => {
+            console.log("[Main] Click detected on session list. Target:", event.target); // Log target
             // 首先检查是否点击了编辑按钮
             const editButton = event.target.closest('.session-edit-btn');
+            console.log("[Main] Checking for edit button. Found:", editButton); // Log button found
             if (editButton) {
                 event.stopPropagation(); // Prevent triggering session switch
+                console.log("[Main] Edit button detected.");
                 const sessionIdToEdit = editButton.dataset.sessionId;
+                console.log(`[Main] Extracted sessionId for edit: ${sessionIdToEdit}`); // Log extracted ID
                 if (sessionIdToEdit) {
+                    console.log("[Main] Calling handleEditSession...");
                     handleEditSession(sessionIdToEdit); // Call the helper function
                 } else {
-                    console.error("Edit button clicked but session ID not found.");
+                    console.error("[Main] Edit button clicked but session ID not found in dataset.");
                 }
                 return; // Stop processing after handling edit
             }

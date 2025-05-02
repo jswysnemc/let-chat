@@ -448,12 +448,7 @@ h2 { /* Removed h1 styling */
     cursor: pointer; /* Indicate clickable for upload */
 }
 /* Hide preview area if it's empty (only contains the placeholder) */
-#input-image-preview:has(.placeholder-text):empty {
-     /* This selector might not work perfectly if placeholder is removed/readded by JS */
-     /* A class added by JS when empty might be more reliable */
-     /* display: none; */ /* Hiding might cause layout jumps, better to rely on JS or min-height */
-     /* For now, rely on min-height and visual appearance */
-}
+
 
 #input-image-preview img { /* Style images within the preview */
     max-width: 40px;
