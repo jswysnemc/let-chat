@@ -831,3 +831,165 @@ h2 { /* Removed h1 styling */
     display: none;
 }
 /* --- End Modal Styles --- */
+/* --- Sidebar Toggle Button (Mobile Only) --- */
+.sidebar-toggle-button {
+    display: none; /* Hidden by default, shown in media query */
+    position: fixed; /* Fixed position on screen */
+    top: 10px;       /* Adjust position as needed */
+    left: 10px;
+    z-index: 1001;   /* Above sidebar overlay */
+    background-color: rgba(0, 123, 255, 0.8); /* Semi-transparent */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 12px;
+    font-size: 1.5em; /* Larger icon */
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: background-color 0.2s;
+}
+
+.sidebar-toggle-button:hover {
+    background-color: rgba(0, 86, 179, 0.9); /* Darker on hover */
+}
+
+/* --- Sidebar Overlay (Mobile Only) --- */
+.sidebar-overlay {
+    display: none; /* Hidden by default */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+    z-index: 998; /* Below sidebar, above main content */
+    cursor: pointer; /* Indicate clickable to close */
+}
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 768px) {
+    .app-container {
+        /* Ensure container still works, maybe add position relative if needed for fixed sidebar */
+        position: relative;
+        overflow-x: hidden; /* Prevent horizontal scroll if sidebar slides */
+    }
+
+    #sidebar {
+        position: fixed; /* Take out of flow, fixed position */
+        left: -260px; /* Hide off-screen (adjust based on actual width + padding/border) */
+        top: 0;
+        height: 100vh; /* Full viewport height */
+        z-index: 999; /* Above overlay, below toggle button/modals */
+        transition: left 0.3s ease-in-out; /* Smooth slide animation */
+        box-shadow: 2px 0 8px rgba(0,0,0,0.25); /* Add shadow when open */
+        width: 250px; /* Keep width or adjust slightly */
+        border-right: none; /* Remove border when it's an overlay */
+    }
+
+    /* State when sidebar is open */
+    .sidebar-open #sidebar {
+        left: 0; /* Slide sidebar in */
+    }
+
+    .sidebar-open .sidebar-overlay {
+        display: block; /* Show overlay when sidebar is open */
+    }
+
+    #main-content {
+        width: 100%; /* Main content takes full width */
+        flex-grow: 1; /* Ensure it still grows if needed */
+        transition: margin-left 0.3s ease-in-out; /* Optional: Animate content shift if sidebar pushes */
+        /* If sidebar overlays, no margin-left needed. If it pushes, add: */
+        /* margin-left: 0; */
+    }
+    /* Example if sidebar pushes content instead of overlaying: */
+    /* .sidebar-open #main-content {
+        margin-left: 250px;
+        width: calc(100% - 250px);
+    } */
+
+
+    .sidebar-toggle-button {
+        display: block; /* Show the toggle button on mobile */
+    }
+
+    /* Adjust chat container margin/padding */
+    #chat-container {
+        margin: 5px;
+        padding: 10px; /* Reduce padding slightly */
+        height: calc(100% - 10px); /* Adjust height based on new margin */
+    }
+
+     #ai-response {
+        padding: 10px;
+     }
+
+    /* Adjust input area */
+    #unified-input-area {
+        padding: 8px 10px;
+        margin: 0 5px 5px 5px;
+        gap: 5px; /* Reduce gap */
+    }
+
+    #chat-input {
+        font-size: 15px;
+        min-height: 45px;
+        padding: 10px 12px;
+        border-radius: 15px; /* Adjust radius */
+    }
+    /* Adjust input radius when preview shown/hidden */
+     #chat-input-container:has(#input-image-preview:not(:empty)) #chat-input {
+         border-bottom-left-radius: 0;
+         border-bottom-right-radius: 0;
+     }
+     #chat-input-container:not(:has(#input-image-preview:not(:empty))) #chat-input {
+         border-bottom-left-radius: 15px;
+         border-bottom-right-radius: 15px;
+     }
+     #input-image-preview {
+         padding: 6px 10px;
+         min-height: 35px;
+         border-bottom-left-radius: 15px;
+         border-bottom-right-radius: 15px;
+     }
+
+
+     #unified-input-area #send-button {
+        height: 45px; /* Match input min-height */
+        padding: 0 15px;
+        font-size: 15px;
+        border-radius: 15px; /* Match input radius */
+     }
+     #unified-input-area #loading {
+         height: 45px;
+         font-size: 0.85em;
+     }
+
+    /* Adjust chat bubbles */
+    .message-bubble {
+        max-width: 85%; /* Allow slightly wider bubbles */
+        padding: 8px 12px;
+    }
+
+    /* Modal adjustments */
+    .modal-content {
+        width: 95%;
+        max-width: none; /* Allow full width on small screens */
+        padding: 20px 15px;
+    }
+    .modal-actions {
+        gap: 8px;
+    }
+    .modal-actions button {
+        padding: 8px 15px;
+    }
+
+    /* Session list item adjustments */
+    #session-list li {
+        padding: 8px 10px;
+    }
+    .session-controls {
+        opacity: 1; /* Always show controls on mobile? Or keep hover? */
+    }
+}

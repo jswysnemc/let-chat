@@ -17,6 +17,10 @@ let editModalForm = null;
 let editModalNameInput = null;
 let editModalPromptTextarea = null;
 let editModalCancelBtn = null;
+// Sidebar Toggle Elements
+let sidebarToggleBtn = null;
+let appContainer = null;
+let sidebarOverlay = null;
 
 /**
  * Initializes the UI module by getting references to DOM elements.
@@ -39,12 +43,18 @@ export function initUI() {
     editModalPromptTextarea = document.getElementById('edit-system-prompt');
     editModalCancelBtn = document.getElementById('edit-modal-cancel-btn');
 
+    // Get Sidebar Toggle elements
+    sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+    appContainer = document.querySelector('.app-container'); // Main container for class toggle
+    sidebarOverlay = document.querySelector('.sidebar-overlay');
+
 
     // Check if essential elements exist (including the new ones + modal elements)
     const essentialElements = [
         chatInput, imagePreviewArea, sendButton, aiResponseArea, loadingIndicator,
         chatTitleElement, sessionListElement, editModalOverlay, editModalForm,
-        editModalNameInput, editModalPromptTextarea, editModalCancelBtn
+        editModalNameInput, editModalPromptTextarea, editModalCancelBtn,
+        sidebarToggleBtn, appContainer, sidebarOverlay // Add new elements to check
     ];
     const missingElement = essentialElements.some(el => !el);
 
@@ -112,6 +122,23 @@ export function initUI() {
     }
     // ------------------------------------
 
+
+    // --- Sidebar Toggle Logic ---
+    if (sidebarToggleBtn && appContainer && sidebarOverlay) {
+        sidebarToggleBtn.addEventListener('click', () => {
+            appContainer.classList.toggle('sidebar-open');
+        });
+
+        // Close sidebar when clicking overlay
+        sidebarOverlay.addEventListener('click', () => {
+             appContainer.classList.remove('sidebar-open');
+        });
+        console.log("Sidebar toggle functionality initialized.");
+    } else {
+        // This case should now be caught by the essentialElements check
+        console.warn("Sidebar toggle elements missing, functionality disabled.");
+    }
+    // ---------------------------
 
     return true; // Indicate successful initialization
 }

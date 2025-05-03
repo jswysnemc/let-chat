@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  web:
+    # 构建指令，指定包含 Dockerfile 的目录
+    # '.' 表示当前目录，即 docker-compose.yml 所在的目录
+    build: .
+    # 端口映射配置
+    # 将主机的 80 端口映射到容器内部 Nginx 服务的 80 端口
+    ports:
+      - "80:80"
+    # 可选：卷挂载配置
+    # 如果您希望在本地修改代码（HTML, CSS, JS）后，无需重新构建镜像就能在浏览器中看到更改，
+    # 可以取消下面 volumes 部分的注释。
+    # 这会将本地文件系统中的目录挂载到容器内的相应目录。
+    # 'ro' 表示只读挂载，防止容器内的进程意外修改本地文件。
+    # volumes:
+    #   - ./index.html:/usr/share/nginx/html/index.html:ro
+    #   - ./css:/usr/share/nginx/html/css:ro
+    #   - ./js:/usr/share/nginx/html/js:ro
+    #   - ./src:/usr/share/nginx/html/src:ro
