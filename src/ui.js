@@ -121,21 +121,21 @@ export function initUI() {
         imagePreviewArea.addEventListener('click', handleImageClick);
     }
     // ------------------------------------
-
 // --- Sidebar Toggle Logic ---
 if (sidebarToggleBtn && appContainer && sidebarOverlay) {
     sidebarToggleBtn.addEventListener('click', () => {
-        console.log('Sidebar toggle button clicked!'); // <-- 添加日志
+        // console.log('Sidebar toggle button clicked!'); // <-- Removed log
         appContainer.classList.toggle('sidebar-open');
-        console.log('Toggled .sidebar-open class on:', appContainer); // <-- 添加日志
+        // console.log('Toggled .sidebar-open class on:', appContainer); // <-- Removed log
     });
+
 
 
         // Close sidebar when clicking overlay
         sidebarOverlay.addEventListener('click', () => {
-             console.log('Sidebar overlay clicked!'); // <-- 添加日志
+             // console.log('Sidebar overlay clicked!'); // <-- Removed log
              appContainer.classList.remove('sidebar-open');
-             console.log('Removed .sidebar-open class from:', appContainer); // <-- 添加日志
+             // console.log('Removed .sidebar-open class from:', appContainer); // <-- Removed log
         });
         console.log("Sidebar toggle functionality initialized.");
     } else {

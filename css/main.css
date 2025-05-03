@@ -175,6 +175,7 @@ body {
     display: flex; /* Use flex to make chat-container fill height */
     flex-direction: column;
     overflow: hidden; /* Prevent main content itself from scrolling */
+    position: relative; /* Needed for absolute positioning of child elements like toggle button */
     /* padding: 10px; */ /* Remove padding, let chat-container handle it */
     background-color: #e5ddd5; /* Match body background */
 }
@@ -834,10 +835,10 @@ h2 { /* Removed h1 styling */
 /* --- Sidebar Toggle Button (Mobile Only) --- */
 .sidebar-toggle-button {
     display: none; /* Hidden by default, shown in media query */
-    position: fixed; /* Fixed position on screen */
+    position: absolute; /* Position relative to main-content */
     top: 10px;       /* Adjust position as needed */
     left: 10px;
-    z-index: 1001;   /* Above sidebar overlay */
+    z-index: 1001;   /* Ensure it's clickable, above other main-content children if any overlap */
     background-color: rgba(0, 123, 255, 0.8); /* Semi-transparent */
     color: white;
     border: none;
