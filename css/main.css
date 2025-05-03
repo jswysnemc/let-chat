@@ -913,13 +913,13 @@ h2 { /* Removed h1 styling */
     .sidebar-toggle-button {
         display: block; /* Show the toggle button on mobile */
     }
+/* Adjust chat container margin/padding */
+#chat-container {
+    margin: 5px;
+    padding: 10px; /* Reduce padding slightly */
+    /* height: calc(100% - 10px); */ /* REMOVED: Let flexbox handle height distribution */
+}
 
-    /* Adjust chat container margin/padding */
-    #chat-container {
-        margin: 5px;
-        padding: 10px; /* Reduce padding slightly */
-        height: calc(100% - 10px); /* Adjust height based on new margin */
-    }
 
      #ai-response {
         padding: 10px;
