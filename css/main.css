@@ -166,22 +166,13 @@ body {
     color: #333; /* Darker icon color on hover */
 }
 
-/* Specific style for delete button */
-.session-delete-btn {
-    /* Inherits base style */
-    /* color: #dc3545; */ /* Color handled by hover state now */
-}
+
 
 .session-delete-btn:hover {
     /* background-color: #f8d7da; */ /* Use common hover background */
     color: #dc3545; /* Red color on hover */
 }
 
-/* Specific style for edit button */
-.session-edit-btn {
-     /* Inherits base style */
-     /* color: #6c757d; */ /* Color handled by hover state now */
-}
 
 .session-edit-btn:hover {
     /* background-color: #e2e6ea; */ /* Use common hover background */
@@ -809,6 +800,15 @@ h2 { /* Removed h1 styling */
 .modal-overlay.visible { /* Class to show modal */
     opacity: 1;
     visibility: visible;
+}
+
+/* Assign specific z-index values */
+#edit-session-modal-overlay {
+    z-index: 1000; /* Base level for modals */
+}
+
+#edit-message-modal-overlay {
+    z-index: 1010; /* Higher z-index to appear on top */
 }
 
 .modal-content {

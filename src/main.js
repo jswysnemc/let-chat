@@ -314,6 +314,85 @@ function handleEditSession(sessionId) {
     showEditModal();
 }
 
+// --- Edit Message Modal Logic ---
+let currentEditingMessageIndex = -1; // Store the index of the message being edited
+
+/** Shows the edit message modal with the current content */
+function showEditMessageModal(messageIndex, currentContent) {
+    const overlay = getElement('editMessageModalOverlay');
+    const textarea = getElement('editMessageTextarea');
+    const form = getElement('editMessageForm');
+    const cancelBtn = getElement('editMessageModalCancelBtn');
+
+    if (!overlay || !textarea || !form || !cancelBtn) {
+        console.error("[Main] Edit Message Modal elements not found.");
+        alert("无法打开编辑消息对话框。");
+        return;
+    }
+
+    currentEditingMessageIndex = messageIndex; // Store index
+    textarea.value = currentContent; // Set current text
+
+    // Attach listeners (remove previous ones first if any - robust approach)
+    form.removeEventListener('submit', handleEditMessageSubmit);
+    cancelBtn.removeEventListener('click', handleEditMessageCancel);
+    form.addEventListener('submit', handleEditMessageSubmit);
+    cancelBtn.addEventListener('click', handleEditMessageCancel);
+
+    overlay.classList.add('visible');
+    console.log("[Main] Added '.visible' class to edit message overlay. Element classes:", overlay.classList); // Debug log
+    textarea.focus(); // Focus the textarea
+    textarea.select(); // Select the text
+}
+
+/** Hides the edit message modal and cleans up listeners */
+function hideEditMessageModal() {
+    const overlay = getElement('editMessageModalOverlay');
+    const form = getElement('editMessageForm');
+    const cancelBtn = getElement('editMessageModalCancelBtn');
+
+    if (overlay) {
+        overlay.classList.remove('visible');
+    }
+    // Clean up listeners
+    if (form) form.removeEventListener('submit', handleEditMessageSubmit);
+    if (cancelBtn) cancelBtn.removeEventListener('click', handleEditMessageCancel);
+
+    currentEditingMessageIndex = -1; // Reset index
+}
+
+/** Handles the submission of the edit message form */
+function handleEditMessageSubmit(event) {
+    event.preventDefault();
+    const textarea = getElement('editMessageTextarea');
+    if (!textarea || currentEditingMessageIndex < 0) {
+        console.error("[Main] Cannot submit edit message: Textarea or index invalid.");
+        hideEditMessageModal(); // Hide modal anyway
+        return;
+    }
+
+    const newContent = textarea.value;
+    const activeId = state.getActiveSessionId();
+
+    // TODO: Add check if content actually changed?
+    // const originalContent = state.getMessageContent(activeId, currentEditingMessageIndex); // Need a function like this in state.js
+    // if (newContent !== originalContent) { ... }
+
+    if (state.updateMessageInSession(activeId, currentEditingMessageIndex, newContent)) {
+        renderChatForActiveSession(); // Re-render chat on success
+    } else {
+        alert("更新消息失败。");
+        // Optionally keep modal open on failure? For now, we hide it.
+    }
+
+    hideEditMessageModal();
+}
+
+/** Handles the cancellation of the edit message modal */
+function handleEditMessageCancel() {
+    hideEditMessageModal();
+}
+// --- End Edit Message Modal Logic ---
 /**
  * Application entry point.
  */
@@ -457,19 +536,15 @@ function main() {
                     alert("无法编辑此消息：缺少原始内容数据。");
                     return;
                 }
-               // TODO: Implement a proper editing modal/inline editor
+               // Use the new custom modal instead of prompt()
+               showEditMessageModal(messageIndex, rawContent);
+               // The logic for updating state and UI is now handled by handleEditMessageSubmit
+               /*
                const newContent = prompt("编辑消息:", rawContent); // Simple prompt for now
                if (newContent !== null && newContent !== rawContent) { // Check if changed and not cancelled
-                    // For user messages, content might be complex (text/image parts)
-                    // For AI messages, it's usually just text.
-                    // Need a robust way to handle editing, especially for user messages.
-                    // Simple approach for now: assume text editing.
-                    if (state.updateMessageInSession(activeId, messageIndex, newContent)) {
-                        renderChatForActiveSession();
-                    } else {
-                        alert("更新消息失败。");
-                    }
+                    // ... (old update logic) ...
                }
+               */
            } else if (action === 'retry') {
                 // 1. Find the preceding user message index (already done above, messageIndex is the AI's index)
                 const userMessageIndex = messageIndex - 1;

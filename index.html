@@ -23,7 +23,7 @@
 
     <main id="main-content">
         <!-- 聊天交互区域 -->
-<!-- Sidebar Toggle Button (Mobile Only) -->
+        <!-- Sidebar Toggle Button (Mobile Only) -->
         <button type="button" id="sidebar-toggle-btn" class="sidebar-toggle-button" aria-label="Toggle Sidebar">☰</button>
         <div class="section" id="chat-container">
             <div class="chat-header"> <!-- Added header wrapper -->
@@ -47,13 +47,13 @@
                 <!-- <span id="loading" class="hidden loading-indicator display-none">AI 正在回复中...</span> -->
                 <!-- Upload button removed -->
             </div>
-<!-- Sidebar Overlay (Mobile Only) -->
+    <!-- Sidebar Overlay (Mobile Only) -->
     <div class="sidebar-overlay"></div>
         </div>
     </main>
 </div>
 
-<!-- Hidden File Input for Upload -->
+    <!-- Hidden File Input for Upload -->
     <label for="image-upload-input" class="visually-hidden">上传图片</label>
     <input type="file" id="image-upload-input" accept="image/*" class="display-none hidden" title="选择图片文件进行上传">
 
@@ -63,7 +63,7 @@
 
     <!-- Application Entry Point -->
     <script type="module" src="./src/main.js"></script>
-<!-- Edit Session Modal -->
+    <!-- Edit Session Modal -->
     <div id="edit-modal-overlay" class="modal-overlay" >
         <div id="edit-modal-content" class="modal-content">
             <h3>编辑会话</h3>
@@ -83,6 +83,21 @@
             </form>
         </div>
     </div>
-
+    <!-- Edit Message Modal -->
+    <div id="edit-message-modal-overlay" class="modal-overlay">
+        <div id="edit-message-modal-content" class="modal-content">
+            <h3>编辑消息</h3>
+            <form id="edit-message-form">
+                <div class="form-group">
+                    <label for="edit-message-text" class="visually-hidden">消息内容:</label> <!-- Label for accessibility, visually hidden -->
+                    <textarea id="edit-message-text" name="messageText" rows="6" required></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="button-primary">确定</button>
+                    <button type="button" id="edit-message-modal-cancel-btn" class="button-secondary">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

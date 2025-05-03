@@ -19,6 +19,13 @@ export let editModalNameInput = null;
 export let editModalPromptTextarea = null;
 export let editModalCancelBtn = null;
 
+// --- Edit Message Modal Elements ---
+export let editMessageModalOverlay = null;
+export let editMessageModalContent = null; // Might not be needed if only overlay is controlled
+export let editMessageForm = null;
+export let editMessageTextarea = null;
+export let editMessageModalCancelBtn = null;
+
 // 侧边栏切换元素
 export let sidebarToggleBtn = null;
 export let appContainer = null; // 应用主容器，用于切换 CSS 类
@@ -45,6 +52,12 @@ export function getElement(elementName) {
         case 'editModalNameInput': return editModalNameInput;
         case 'editModalPromptTextarea': return editModalPromptTextarea;
         case 'editModalCancelBtn': return editModalCancelBtn;
+        // --- Add cases for Edit Message Modal ---
+        case 'editMessageModalOverlay': return editMessageModalOverlay;
+        case 'editMessageForm': return editMessageForm;
+        case 'editMessageTextarea': return editMessageTextarea;
+        case 'editMessageModalCancelBtn': return editMessageModalCancelBtn;
+        // --- End Add cases ---
         case 'sidebarToggleBtn': return sidebarToggleBtn;
         case 'appContainer': return appContainer;
         case 'sidebarOverlay': return sidebarOverlay;
@@ -73,6 +86,13 @@ export function initializeElements() {
     editModalNameInput = document.getElementById('edit-session-name');
     editModalPromptTextarea = document.getElementById('edit-system-prompt');
     editModalCancelBtn = document.getElementById('edit-modal-cancel-btn');
+
+    // 获取编辑消息模态框元素
+    editMessageModalOverlay = document.getElementById('edit-message-modal-overlay');
+    // editMessageModalContent = document.getElementById('edit-message-modal-content'); // Usually control via overlay
+    editMessageForm = document.getElementById('edit-message-form');
+    editMessageTextarea = document.getElementById('edit-message-text');
+    editMessageModalCancelBtn = document.getElementById('edit-message-modal-cancel-btn');
 
     // 获取侧边栏切换元素
     sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
