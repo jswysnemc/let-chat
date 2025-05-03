@@ -7,12 +7,14 @@
     <!-- Highlight.js CSS (例如：GitHub 主题) -->
     <link rel="stylesheet" href="./css/main.css">
     <link rel="stylesheet" href="./css/github.min.css">
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
 <div class="app-container">
     <aside id="sidebar">
         <h3>会话列表</h3>
-        <button type="button" id="add-session-btn" class="sidebar-button">+ 新会话</button> <!-- Moved button here -->
+        <button type="button" id="add-session-btn" class="sidebar-button"><i class="fas fa-plus"></i> 新会话</button> <!-- Added icon -->
         <ul id="session-list">
             <!-- Session list items will be populated by JS -->
             <li class="placeholder-text">加载中...</li>
@@ -42,7 +44,7 @@
                 </div>
                 <!-- Send button and loading indicator moved next to the input container -->
                 <button type="button" id="send-button" class="control-button">发送</button>
-                <span id="loading" class="hidden loading-indicator display-none">AI 正在回复中...</span>
+                <!-- <span id="loading" class="hidden loading-indicator display-none">AI 正在回复中...</span> -->
                 <!-- Upload button removed -->
             </div>
 <!-- Sidebar Overlay (Mobile Only) -->

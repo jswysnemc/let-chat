@@ -51,7 +51,8 @@ export function renderSessionList(sessions, activeSessionId) {
         editButton.type = 'button';
         editButton.className = 'session-control-button session-edit-btn'; // 通用和特定类
         editButton.title = '编辑会话';
-        editButton.textContent = '✏️'; // 编辑图标
+        // editButton.textContent = '✏️'; // 使用 innerHTML 插入 Font Awesome 图标
+        editButton.innerHTML = '<i class="fas fa-pencil-alt"></i>'; // Font Awesome Edit Icon
         editButton.dataset.sessionId = session.id; // 将会话 ID 存储在按钮上，方便事件处理
         controls.appendChild(editButton);
 
@@ -60,7 +61,8 @@ export function renderSessionList(sessions, activeSessionId) {
             const deleteBtn = document.createElement('button');
             deleteBtn.type = 'button'; // 明确类型
             deleteBtn.className = 'session-control-button session-delete-btn'; // 通用和特定类
-            deleteBtn.textContent = '🗑️'; // 删除图标
+            // deleteBtn.textContent = '🗑️'; // 使用 innerHTML 插入 Font Awesome 图标
+            deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>'; // Font Awesome Delete Icon
             deleteBtn.title = '删除会话';
             deleteBtn.dataset.sessionId = session.id; // 同样存储 ID
             controls.appendChild(deleteBtn);

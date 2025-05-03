@@ -86,14 +86,6 @@ export function initializeElements() {
         editModalNameInput, editModalPromptTextarea, editModalCancelBtn,
         sidebarToggleBtn, appContainer, sidebarOverlay
     ];
-    const missingElement = essentialElements.some(el => !el);
-
-    if (missingElement) {
-        console.error("致命错误：在 DOM 中未找到必需的 UI 元素（包括模态框和侧边栏元素）。请检查元素 ID。");
-        // 可以在这里添加更用户友好的错误提示，例如 alert
-        // alert("应用程序初始化失败：缺少必要的界面元素。请检查控制台获取详细信息。");
-        return false; // 表示初始化失败
-    }
 
     // 获取容器内的占位符
     // 注意：这些占位符可能在初始 HTML 中不存在，需要在使用它们的代码中进行检查

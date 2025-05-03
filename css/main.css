@@ -25,13 +25,13 @@ body {
 #sidebar {
     width: 240px; /* Sidebar width */
     flex-shrink: 0; /* Prevent sidebar from shrinking */
-    background-color: #f0f0f0; /* Sidebar background */
-    border-right: 1px solid #d1d1d1;
+    background-color: #f7f7f7; /* Lighter background */
+    border-right: 1px solid #e0e0e0; /* Lighter border */
     padding: 15px;
     display: flex;
     flex-direction: column;
     overflow-y: auto; /* Allow sidebar scrolling if needed */
-    transition: width 0.3s ease; /* Optional: transition for potential toggle */
+    transition: width 0.3s ease, left 0.3s ease-in-out; /* Added left transition for mobile */
 }
 
 #sidebar h3 {
@@ -39,7 +39,7 @@ body {
     margin-bottom: 15px;
     color: #333;
     font-size: 1.1em;
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid #e0e0e0; /* Lighter border */
     padding-bottom: 10px;
     text-align: center;
 }
@@ -55,52 +55,64 @@ body {
 #session-list li {
     padding: 10px 12px;
     margin-bottom: 5px;
-    border-radius: 5px;
+    border-radius: 6px; /* Slightly larger radius */
     cursor: pointer;
-    transition: background-color 0.2s, color 0.2s;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s; /* Added border-color transition */
     font-size: 0.95em;
     white-space: nowrap; /* Prevent wrapping */
     overflow: hidden; /* Hide overflow */
     text-overflow: ellipsis; /* Show ellipsis (...) */
     border: 1px solid transparent; /* Placeholder for active border */
+    position: relative; /* Needed for controls positioning */
 }
 
 #session-list li:hover {
-    background-color: #e0e0e0;
+    background-color: #ececec; /* Lighter hover background */
 }
 
 #session-list li.active-session { /* Style for the active session */
-    background-color: #007bff; /* Use theme color */
+    background-color: #0d6efd; /* Slightly different blue */
     color: white;
-    font-weight: bold;
-    border-color: #0056b3;
+    font-weight: 500; /* Slightly less bold */
+    border-color: #0d6efd; /* Match background */
+}
+/* Keep controls visible and styled for active session */
+#session-list li.active-session .session-controls {
+     opacity: 1;
+}
+#session-list li.active-session .session-control-button {
+     color: white; /* Make icons white on active background */
+}
+#session-list li.active-session .session-control-button:hover {
+     background-color: rgba(255, 255, 255, 0.2); /* Light white background on hover */
 }
 
-.sidebar-button { /* Common style for sidebar buttons */
-     /* margin-top: auto; */ /* REMOVED: No longer pushing button to bottom */
-     padding: 10px;
-     background-color: #6c757d; /* Secondary color */
-     color: white;
-     border: none;
-     border-radius: 5px;
-     cursor: pointer;
-     text-align: center;
-     font-size: 0.95em;
-     transition: background-color 0.2s;
-     display: block; /* Make it block level */
-     width: 100%; /* Full width */
-}
-.sidebar-button:hover {
-     background-color: #5a6268;
-}
+/* Remove generic .sidebar-button style as #add-session-btn has specific styles now */
+/* .sidebar-button { ... } */
+/* .sidebar-button:hover { ... } */
 
 #add-session-btn {
-     /* Inherits .sidebar-button styles */
-     background-color: #007bff; /* Primary color for add */
-     margin-bottom: 15px; /* Add space below button, before the list */
- }
+    display: flex; /* Use flex to align icon and text */
+    align-items: center;
+    justify-content: center; /* Center content */
+    gap: 8px; /* Space between icon and text */
+    padding: 10px;
+    background-color: #0d6efd; /* Match active session blue */
+    color: white;
+    border: none;
+    border-radius: 6px; /* Match list item radius */
+    cursor: pointer;
+    text-align: center;
+    font-size: 0.95em;
+    transition: background-color 0.2s;
+    width: 100%; /* Full width */
+    margin-bottom: 15px; /* Add space below button, before the list */
+}
+#add-session-btn i { /* Style icon specifically if needed */
+    font-size: 1em; /* Adjust icon size relative to text */
+}
 #add-session-btn:hover {
-     background-color: #0056b3;
+    background-color: #0b5ed7; /* Darker blue on hover */
 }
 
 /* Styles for session list item controls */
@@ -114,20 +126,22 @@ body {
 .session-controls {
     display: flex;
     align-items: center;
-    gap: 5px; /* Space between buttons if edit is added */
-    margin-left: 10px; /* Space between name and controls */
-    /* Make controls appear on hover over the list item */
-    opacity: 0;
+    gap: 6px; /* Adjust gap */
+    /* margin-left: 10px; */ /* Remove margin, use absolute positioning */
+    position: absolute; /* Position controls relative to li */
+    right: 10px; /* Position on the right */
+    top: 50%; /* Center vertically */
+    transform: translateY(-50%);
+    opacity: 0; /* Hide by default */
     transition: opacity 0.15s ease-in-out;
+    background-color: inherit; /* Inherit background from li for seamless look */
+    padding: 2px 0; /* Add slight vertical padding if needed */
 }
 
 #session-list li:hover .session-controls {
-    opacity: 1;
+    opacity: 1; /* Show on hover */
 }
-/* Keep controls visible for the active session always */
-#session-list li.active-session .session-controls {
-     opacity: 1;
-}
+/* Active session controls styling moved to .active-session rule */
 
 
 /* Base style for sidebar control buttons */
@@ -135,38 +149,43 @@ body {
     background: none;
     border: none;
     cursor: pointer;
-    padding: 2px 4px;
-    font-size: 1.1em; /* Adjust emoji size */
+    padding: 4px; /* Adjust padding for icons */
+    font-size: 0.9em; /* Adjust icon size */
     line-height: 1;
-    border-radius: 3px;
+    border-radius: 4px; /* Slightly larger radius */
     transition: background-color 0.2s, color 0.2s;
+    color: #6c757d; /* Default icon color (grey) */
+    display: inline-flex; /* Center icon */
+    align-items: center;
+    justify-content: center;
 }
 
 /* Common hover background for control buttons */
 .session-control-button:hover {
-    background-color: rgba(0, 123, 255, 0.1); /* Light transparent blue background */
+    background-color: rgba(0, 0, 0, 0.08); /* Subtle dark background on hover */
+    color: #333; /* Darker icon color on hover */
 }
 
 /* Specific style for delete button */
 .session-delete-btn {
-    /* Inherits from .session-control-button */
-    color: #dc3545; /* Red color for delete */
+    /* Inherits base style */
+    /* color: #dc3545; */ /* Color handled by hover state now */
 }
 
 .session-delete-btn:hover {
     /* background-color: #f8d7da; */ /* Use common hover background */
-    color: #a02734; /* Keep darker red text on hover */
+    color: #dc3545; /* Red color on hover */
 }
 
 /* Specific style for edit button */
 .session-edit-btn {
-     /* Inherits from .session-control-button */
-     color: #6c757d; /* Grey color for edit */
+     /* Inherits base style */
+     /* color: #6c757d; */ /* Color handled by hover state now */
 }
 
 .session-edit-btn:hover {
     /* background-color: #e2e6ea; */ /* Use common hover background */
-    color: #495057; /* Keep darker grey text on hover */
+    color: #0d6efd; /* Blue color on hover */
 }
 
 
@@ -178,7 +197,7 @@ body {
     overflow: hidden; /* Prevent main content itself from scrolling */
     position: relative; /* Needed for absolute positioning of child elements like toggle button */
     /* padding: 10px; */ /* Remove padding, let chat-container handle it */
-    background-color: #e5ddd5; /* Match body background */
+    background-color: #f9f9f9; /* Lighter background for the main area */
 }
 
 
@@ -199,62 +218,123 @@ h2 { /* Removed h1 styling */
 #chat-container {
      flex-grow: 1; /* Let chat container fill main-content height */
      overflow: hidden; /* Prevent this container from scrolling */
-     background-color: #f4f4f4;
+     background-color: #ffffff; /* White background for chat area */
      padding: 15px;
-     border-radius: 8px;
-     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+     border-radius: 0; /* Remove border-radius */
+     box-shadow: none; /* Remove shadow */
      display: flex;
      flex-direction: column;
-     margin: 10px; /* Keep margin within main-content */
-     /* height: calc(100% - 20px); */ /* Remove fixed height calc, rely on flex-grow */
-     height: calc(100% - 20px); /* Re-add height calc based on margin */
+     margin: 0; /* Remove margin, let main-content handle spacing if needed */
+     height: 100%; /* Fill main-content */
 }
 #chat-container h2#chat-title { /* Target the title specifically */
     margin-bottom: 10px;
 }
 #ai-response {
-    border: 1px solid #e0e0e0; /* Add a subtle border */
-    background-color: #ffffff; /* White background for contrast */
-    padding: 15px; /* Add padding */
+    /* border: 1px solid #e0e0e0; */ /* Remove border */
+    background-color: #ffffff; /* Keep white background */
+    padding: 15px; /* Keep padding */
     flex-grow: 1; /* 占据聊天容器剩余空间 */
     overflow-y: auto; /* THE single scrollbar */
-    margin-bottom: 10px; /* Reduced margin */
-    border-radius: 6px; /* Add slight radius */
+    margin-bottom: 0; /* Remove margin */
+    border-radius: 0; /* Remove radius */
     display: flex; /* 使用 Flexbox 排列气泡 */
     flex-direction: column; /* 垂直排列 */
-    gap: 10px; /* 气泡之间的间隙 */
+    gap: 15px; /* Increase gap between bubbles slightly */
 }
 
 /* --- 聊天气泡样式 --- */
 .message-bubble {
-    padding: 10px 15px;
-    border-radius: 18px; /* 更圆的边角 */
-    max-width: 75%; /* 气泡最大宽度 */
+    padding: 12px 18px; /* Slightly increase padding */
+    border-radius: 22px; /* Even rounder corners */
+    max-width: 80%; /* Allow slightly wider bubbles */
     word-wrap: break-word; /* 允许长单词换行 */
     position: relative; /* 用于复制按钮定位 */
-    box-shadow: 0 1px 1px rgba(0,0,0,0.1); /* 轻微阴影 */
+    box-shadow: none; /* Remove shadow */
     line-height: 1.5; /* 调整行高 */
 }
 .user-bubble {
-    background-color: #dcf8c6; /* 用户的浅绿色气泡 */
+    background-color: #e1fec6; /* Slightly adjusted green */
     align-self: flex-end; /* 用户靠右 */
-    border-bottom-right-radius: 5px; /* 右下角略方 */
+    /* border-bottom-right-radius: 5px; */ /* Remove specific corner radius */
     margin-left: auto; /* 确保靠右 */
+    color: #333; /* Darker text for better contrast */
 }
 .assistant-bubble {
-    background-color: #f1f0f0; /* 助手的浅灰色气泡 */
+    background-color: #ffffff; /* White assistant bubble */
     align-self: flex-start; /* 助手靠左 */
-    border: 1px solid #e9e9e9; /* 边框颜色也微调 */
-    border-bottom-left-radius: 5px; /* 左下角略方 */
+    border: 1px solid #e9e9e9; /* Keep subtle border */
+    /* border-bottom-left-radius: 5px; */ /* Remove specific corner radius */
     margin-right: auto; /* 确保靠左 */
-    padding-right: 40px; /* 为消息复制按钮留出空间 */
+    padding-right: 45px; /* Adjust space for potentially different copy button */
+    color: #333; /* Darker text */
 }
-.message-bubble strong { /* 发送者前缀 */
-    display: block;
-    margin-bottom: 4px;
-    font-size: 0.85em;
-    font-weight: bold;
-    color: #555;
+/* Hide the entire message header containing the prefix and old controls position */
+.message-header {
+    display: none;
+}
+
+/* Keep strong hidden just in case */
+.message-bubble strong {
+    display: none;
+}
+
+/* --- New Message Controls Styling --- */
+.message-controls {
+    display: flex; /* Arrange buttons horizontally */
+    justify-content: flex-start; /* Align to the start (left for assistant, right for user?) */
+    gap: 8px; /* Space between buttons */
+    margin-top: 10px; /* Increased space above the controls */
+    padding-top: 10px; /* Add padding above controls for the border */
+    padding-left: 10px; /* Indent slightly from the bubble edge */
+    padding-bottom: 5px; /* Space below controls */
+    opacity: 1; /* Always visible */
+    /* transition: opacity 0.2s ease-in-out; */ /* No longer needed */
+    height: 28px; /* Define height for alignment */
+    align-items: center;
+    border-top: 1px solid #eee; /* Add separator line */
+}
+
+/* Remove the hover rule for opacity */
+/* .message-bubble:hover .message-controls {
+    opacity: 1;
+} */
+
+/* Base style for new control buttons */
+.message-control-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0; /* Remove padding, rely on font-size/line-height */
+    font-size: 1.2em; /* Adjust icon size */
+    line-height: 1;
+    color: #666; /* Default icon color */
+    border-radius: 4px;
+    transition: background-color 0.2s, color 0.2s;
+    width: 24px; /* Fixed width */
+    height: 24px; /* Fixed height */
+    display: inline-flex; /* Use flex to center icon */
+    align-items: center;
+    justify-content: center;
+}
+
+.message-control-button:hover:not(:disabled) {
+    background-color: rgba(0, 0, 0, 0.08); /* Subtle background on hover */
+    color: #333; /* Darker icon on hover */
+}
+
+.message-control-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Specific button styles (can add more if needed) */
+.message-delete-btn:hover:not(:disabled) {
+    color: #dc3545; /* Red on hover for delete */
+}
+
+.message-retry-btn:hover:not(:disabled) {
+    color: #007bff; /* Blue on hover for retry */
 }
 .user-bubble strong {
     color: #075e54; /* 用户前缀颜色 */
@@ -295,30 +375,36 @@ h2 { /* Removed h1 styling */
 .assistant-message-content pre code { display: block; padding: 0; background: none; color: inherit; }
 
 /* 消息复制按钮样式 */
-.copy-button {
+.copy-button { /* Message copy button */
     position: absolute;
-    top: 8px;
-    right: 8px;
-    background-color: #f0f0f0;
-    border: 1px solid #ccc;
-    color: #555;
-    padding: 2px 6px;
-    font-size: 0.75em;
-    border-radius: 4px;
+    bottom: 8px; /* Position at bottom right */
+    right: 10px;
+    background-color: rgba(0, 0, 0, 0.05); /* Very subtle background */
+    border: none; /* Remove border */
+    color: #666; /* Grey icon color */
+    padding: 4px 6px; /* Adjust padding */
+    font-size: 1em; /* Use emoji/icon font size */
+    border-radius: 50%; /* Make it circular */
     cursor: pointer;
     opacity: 0; /* 默认隐藏 */
     transition: opacity 0.2s, background-color 0.2s;
     z-index: 10; /* 确保在内容之上 */
+    line-height: 1; /* Ensure icon centers */
+    width: 24px; /* Fixed size */
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 .assistant-bubble:hover .copy-button {
     opacity: 0.7; /* 悬停时显示 */
 }
 .copy-button:hover {
-    background-color: #e0e0e0;
+    background-color: rgba(0, 0, 0, 0.1); /* Slightly darker on hover */
     opacity: 1;
 }
 .copy-button:active {
-    background-color: #d0d0d0;
+    background-color: rgba(0, 0, 0, 0.15); /* Even darker when active */
 }
 
 /* 代码块语言标签样式 */
@@ -336,15 +422,15 @@ h2 { /* Removed h1 styling */
 }
 
 /* 代码块复制按钮样式 */
-.code-copy-button {
+.code-copy-button { /* Code block copy button */
     position: absolute;
-    top: 5px;
-    right: 5px;
-    background-color: #e0e0e0; /* 稍有区别 */
-    border: 1px solid #bbb;
-    color: #333;
-    padding: 2px 6px;
-    font-size: 0.75em;
+    top: 8px; /* Adjust position */
+    right: 8px;
+    background-color: rgba(0, 0, 0, 0.08); /* Subtle background */
+    border: none;
+    color: #555;
+    padding: 4px 8px; /* Adjust padding */
+    font-size: 0.8em; /* Smaller text */
     border-radius: 4px;
     cursor: pointer;
     opacity: 0; /* 默认隐藏 */
@@ -355,25 +441,25 @@ h2 { /* Removed h1 styling */
     opacity: 0.8; /* 在 pre 悬停时显示 */
 }
 .code-copy-button:hover {
-    background-color: #d0d0d0;
+    background-color: rgba(0, 0, 0, 0.15);
     opacity: 1;
 }
 .code-copy-button:active {
-    background-color: #c0c0c0;
+    background-color: rgba(0, 0, 0, 0.2);
 }
 /* --- 结束聊天气泡样式 --- */
 
 
 #chat-input-container {
-    /* border: 1px solid #ccc; */ /* Border removed, handled by unified wrapper or input */
-    /* border-radius: 25px; */ /* Radius removed */
     padding: 0;
     background-color: transparent; /* Let wrapper handle background */
     display: flex; /* Use Flexbox */
     flex-direction: column; /* Arrange input and preview vertically */
     flex-grow: 1; /* Take available horizontal space */
-    /* flex-shrink: 0; */ /* Allow shrinking if needed, though grow=1 dominates */
     position: relative; /* Keep for internal positioning if needed */
+    border: 1px solid #e0e0e0; /* Add border around the input+preview */
+    border-radius: 8px; /* Add slight radius to the container */
+    overflow: hidden; /* Clip children to the rounded corners */
 }
 #chat-input { /* contenteditable div */
     min-height: 50px;
@@ -383,27 +469,29 @@ h2 { /* Removed h1 styling */
     width: 100%;
     font-size: 16px;
     line-height: 1.5;
-    border: 1px solid #ccc; /* Add border directly to input */
-    border-radius: 18px; /* Add radius to input */
+    border: none; /* Remove border from input itself */
+    /* border-radius: 18px; */ /* Remove radius from input itself */
+    border-radius: 0; /* Ensure no radius */
     outline: none;
     resize: none;
     overflow-y: auto;
     background-color: #fff; /* White background for input */
     position: relative;
     z-index: 2;
-    /* Adjust border radius if preview is visible */
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
+    /* Remove specific border-radius adjustments */
+    /* border-bottom-left-radius: 0; */
+    /* border-bottom-right-radius: 0; */
 }
 /* Style adjustment when image preview is shown */
-#chat-input-container:has(#input-image-preview:not(:empty)) #chat-input {
+/* Remove specific border-radius adjustments based on preview */
+/* #chat-input-container:has(#input-image-preview:not(:empty)) #chat-input {
      border-bottom-left-radius: 0;
      border-bottom-right-radius: 0;
-}
-#chat-input-container:not(:has(#input-image-preview:not(:empty))) #chat-input {
-     border-bottom-left-radius: 18px; /* Round bottom corners if preview is hidden/empty */
+} */
+/* #chat-input-container:not(:has(#input-image-preview:not(:empty))) #chat-input {
+     border-bottom-left-radius: 18px;
      border-bottom-right-radius: 18px;
-}
+} */
 
 
 /* --- 输入框 Placeholder 样式 --- */
@@ -437,16 +525,18 @@ h2 { /* Removed h1 styling */
     padding: 8px 15px;
     min-height: 40px; /* Keep min-height */
     background-color: #f8f8f8;
-    /* border-top: 1px dashed #ddd; */ /* Remove top border */
-    border-left: 1px solid #ccc; /* Match input border */
-    border-right: 1px solid #ccc; /* Match input border */
-    border-bottom: 1px solid #ccc; /* Match input border */
+    border-top: 1px solid #e0e0e0; /* Add top border to separate from input */
+    /* Remove side/bottom borders, handled by container */
+    /* border-left: 1px solid #ccc; */
+    /* border-right: 1px solid #ccc; */
+    /* border-bottom: 1px solid #ccc; */
     display: flex;
     flex-wrap: wrap;
     gap: 5px;
     align-items: center;
-    border-bottom-left-radius: 18px; /* Match input radius */
-    border-bottom-right-radius: 18px;
+    /* border-bottom-left-radius: 18px; */ /* Remove radius */
+    /* border-bottom-right-radius: 18px; */
+    border-radius: 0;
     cursor: pointer; /* Indicate clickable for upload */
 }
 /* Hide preview area if it's empty (only contains the placeholder) */
@@ -664,24 +754,24 @@ h2 { /* Removed h1 styling */
     align-items: flex-end; /* Align input container and button to bottom */
     gap: 8px; /* Space between input container and button */
     padding: 10px 15px; /* Padding around the whole area */
-    margin: 0 10px 10px 10px; /* Consistent margin with chat container */
-    /* background-color: #f9f9f9; */ /* Optional background */
-    /* border-top: 1px solid #e0e0e0; */ /* Optional separator */
+    margin: 0; /* Remove margin, part of chat-container now */
+    background-color: #ffffff; /* White background */
+    border-top: 1px solid #e0e0e0; /* Separator line from chat messages */
     flex-shrink: 0; /* Prevent shrinking */
 }
 
 #unified-input-area #send-button {
-    height: 50px; /* Match input min-height */
-    padding: 0 20px; /* Adjust padding */
+    height: 40px; /* Adjust height */
+    padding: 0 18px; /* Adjust padding */
     flex-shrink: 0; /* Prevent button shrinking */
-    border-radius: 18px; /* Match input radius */
-    /* Ensure button inherits control-button styles if needed, or add base styles */
+    border-radius: 6px; /* Standard button radius */
     background-color: #007bff; /* Example primary color */
     color: white;
     border: none;
     cursor: pointer;
-    font-size: 16px; /* Match input font size */
+    font-size: 15px; /* Adjust font size */
     transition: background-color 0.2s;
+    margin-bottom: 0; /* Align with bottom of input container */
 }
 #unified-input-area #send-button:hover {
     background-color: #0056b3;
@@ -694,7 +784,8 @@ h2 { /* Removed h1 styling */
 
 #unified-input-area #loading {
     margin-left: 8px; /* Space between button and loading */
-    height: 50px; /* Match button height */
+    height: 40px; /* Match button height */
+    display: flex; /* Use flex to center vertically */
     align-items: center;
     color: #555; /* Style loading text */
 }
@@ -938,33 +1029,36 @@ h2 { /* Removed h1 styling */
         font-size: 15px;
         min-height: 45px;
         padding: 10px 12px;
-        border-radius: 15px; /* Adjust radius */
+        /* border-radius: 15px; */ /* Remove radius */
+        border-radius: 0;
     }
     /* Adjust input radius when preview shown/hidden */
-     #chat-input-container:has(#input-image-preview:not(:empty)) #chat-input {
+     /* Remove mobile specific radius adjustments */
+     /* #chat-input-container:has(#input-image-preview:not(:empty)) #chat-input {
          border-bottom-left-radius: 0;
          border-bottom-right-radius: 0;
-     }
-     #chat-input-container:not(:has(#input-image-preview:not(:empty))) #chat-input {
+     } */
+     /* #chat-input-container:not(:has(#input-image-preview:not(:empty))) #chat-input {
          border-bottom-left-radius: 15px;
          border-bottom-right-radius: 15px;
-     }
+     } */
      #input-image-preview {
          padding: 6px 10px;
          min-height: 35px;
-         border-bottom-left-radius: 15px;
-         border-bottom-right-radius: 15px;
+         /* border-bottom-left-radius: 15px; */ /* Remove radius */
+         /* border-bottom-right-radius: 15px; */
+         border-radius: 0;
      }
 
 
      #unified-input-area #send-button {
-        height: 45px; /* Match input min-height */
+        height: 40px; /* Match adjusted height */
         padding: 0 15px;
         font-size: 15px;
-        border-radius: 15px; /* Match input radius */
+        border-radius: 6px; /* Match standard radius */
      }
      #unified-input-area #loading {
-         height: 45px;
+         height: 40px; /* Match adjusted height */
          font-size: 0.85em;
      }
 
@@ -994,4 +1088,20 @@ h2 { /* Removed h1 styling */
     .session-controls {
         opacity: 1; /* Always show controls on mobile? Or keep hover? */
     }
+}
+/* --- Bubble Loading Spinner --- */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.bubble-loading-spinner {
+    display: inline-block;
+    border: 3px solid rgba(0, 0, 0, 0.1); /* Light grey border */
+    border-left-color: #666; /* Darker grey for spinning part */
+    border-radius: 50%;
+    width: 18px; /* Size of the spinner */
+    height: 18px;
+    animation: spin 1s linear infinite; /* Apply the animation */
+    margin: 5px; /* Add some margin */
 }

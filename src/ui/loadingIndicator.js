@@ -5,11 +5,13 @@ import { loadingIndicator } from './domElements.js'; // 导入加载指示器元
  * 显示加载指示器。
  */
 export function showLoading() {
-    if (loadingIndicator) {
-        loadingIndicator.style.display = 'inline-block'; // 设置为内联块以显示
-    } else {
-        console.warn("[UI] showLoading: loadingIndicator 元素引用为 null。");
-    }
+    // 不再显示加载指示器
+    // if (loadingIndicator) {
+    //     loadingIndicator.style.display = 'inline-block'; // 设置为内联块以显示
+    // } else {
+    //     console.warn("[UI] showLoading: loadingIndicator 元素引用为 null。");
+    // }
+    return; // 直接返回，不执行任何操作
 }
 
 /**

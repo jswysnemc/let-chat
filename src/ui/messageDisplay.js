@@ -23,7 +23,8 @@ function _createMessageControls(messageIndex, role, isStreaming = false) {
     const copyBtn = document.createElement('button');
     copyBtn.className = 'message-control-button message-copy-btn';
     copyBtn.title = '复制';
-    copyBtn.textContent = '📋'; // 或者 '复制'
+    // copyBtn.textContent = '📋'; // 使用 innerHTML 插入 Font Awesome 图标
+    copyBtn.innerHTML = '<i class="fas fa-copy"></i>'; // Font Awesome Copy Icon
     copyBtn.dataset.action = 'copy';
     // 禁用按钮直到内容完全加载 (对 AI 消息)
     copyBtn.disabled = isStreaming && role === 'assistant';
@@ -32,7 +33,8 @@ function _createMessageControls(messageIndex, role, isStreaming = false) {
     const editBtn = document.createElement('button');
     editBtn.className = 'message-control-button message-edit-btn';
     editBtn.title = '编辑';
-    editBtn.textContent = '✏️'; // 或者 '编辑'
+    // editBtn.textContent = '✏️'; // 使用 innerHTML 插入 Font Awesome 图标
+    editBtn.innerHTML = '<i class="fas fa-pencil-alt"></i>'; // Font Awesome Edit Icon
     editBtn.dataset.action = 'edit';
     // 禁用按钮直到内容完全加载 (对 AI 消息)
     editBtn.disabled = isStreaming && role === 'assistant';
@@ -41,7 +43,8 @@ function _createMessageControls(messageIndex, role, isStreaming = false) {
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'message-control-button message-delete-btn';
     deleteBtn.title = '删除';
-    deleteBtn.textContent = '🗑️'; // 或者 '删除'
+    // deleteBtn.textContent = '🗑️'; // 使用 innerHTML 插入 Font Awesome 图标
+    deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>'; // Font Awesome Delete Icon
     deleteBtn.dataset.action = 'delete';
     // 删除按钮通常可以立即启用
     controlsDiv.appendChild(deleteBtn);
@@ -51,7 +54,8 @@ function _createMessageControls(messageIndex, role, isStreaming = false) {
         const retryBtn = document.createElement('button');
         retryBtn.className = 'message-control-button message-retry-btn hidden'; // 默认隐藏
         retryBtn.title = '重试';
-        retryBtn.textContent = '🔄'; // 或者 '重试'
+        // retryBtn.textContent = '🔄'; // 使用 innerHTML 插入 Font Awesome 图标
+        retryBtn.innerHTML = '<i class="fas fa-sync-alt"></i>'; // Font Awesome Retry/Sync Icon
         retryBtn.dataset.action = 'retry';
         // 重试按钮也应在流式传输完成前禁用（如果可见）
         retryBtn.disabled = isStreaming;
@@ -82,20 +86,14 @@ export function displayUserMessage(contentParts, messageIndex) {
     const textContent = contentParts.filter(p => p.type === 'text').map(p => p.text).join('');
     bubbleDiv.dataset.rawContent = textContent; // 存储原始文本内容
 
-    const headerDiv = document.createElement('div'); // 用于放置前缀和控件
-    headerDiv.className = 'message-header';
+    // const headerDiv = document.createElement('div'); // REMOVED: Header no longer used
+    // headerDiv.className = 'message-header';
+    // const prefix = document.createElement('strong'); // REMOVED: Prefix no longer used
+    // prefix.textContent = 'You: ';
+    // headerDiv.appendChild(prefix);
+    // bubbleDiv.appendChild(headerDiv); // REMOVED: Header no longer added
 
-    const prefix = document.createElement('strong');
-    prefix.textContent = 'You: '; // 添加 "You: " 前缀
-    headerDiv.appendChild(prefix);
-
-    // 添加控件按钮
-    const controls = _createMessageControls(messageIndex, 'user');
-    headerDiv.appendChild(controls);
-
-    bubbleDiv.appendChild(headerDiv); // 将头部（前缀+控件）添加到气泡
-
-    // 创建内容包装器
+    // 创建内容包装器 (Content wrapper remains)
     const contentWrapper = document.createElement('div');
     contentWrapper.className = 'message-content-wrapper'; // 添加样式类
     bubbleDiv.appendChild(contentWrapper);
@@ -119,6 +117,11 @@ export function displayUserMessage(contentParts, messageIndex) {
     });
 
     aiResponseArea.appendChild(bubbleDiv); // 将消息气泡添加到响应区域
+
+    // 添加控件按钮 *after* the content wrapper
+    const controls = _createMessageControls(messageIndex, 'user');
+    bubbleDiv.appendChild(controls); // Append controls directly to bubble, after content
+
     scrollChatToBottom(); // 滚动到底部
 }
 
@@ -141,31 +144,37 @@ export function createAssistantMessageBubble(messageIndex, isStreaming = true) {
      bubbleElement.dataset.messageIndex = messageIndex; // 存储消息索引
      // data-raw-content 将在 finalize 时添加
 
-     const headerDiv = document.createElement('div'); // 用于放置前缀和控件
-     headerDiv.className = 'message-header';
+     // const headerDiv = document.createElement('div'); // REMOVED: Header no longer used
+     // headerDiv.className = 'message-header';
+     // const prefix = document.createElement('strong'); // REMOVED: Prefix no longer used
+     // prefix.textContent = 'Assistant: ';
+     // headerDiv.appendChild(prefix);
+     // bubbleElement.appendChild(headerDiv); // REMOVED: Header no longer added
 
-     const prefix = document.createElement('strong');
-     prefix.textContent = 'Assistant: '; // 添加 "Assistant: " 前缀
-     headerDiv.appendChild(prefix);
-
-     // 添加控件按钮 (初始状态根据 isStreaming 决定)
-     const controls = _createMessageControls(messageIndex, 'assistant', isStreaming);
-     headerDiv.appendChild(controls);
-
-     bubbleElement.appendChild(headerDiv); // 将头部（前缀+控件）添加到气泡
-
-     // 创建用于容纳消息内容的 span
+     // 创建用于容纳消息内容的 span (Content container remains)
      const contentContainer = document.createElement('span');
      contentContainer.className = 'assistant-message-content';
      bubbleElement.appendChild(contentContainer);
+
+     // 如果是流式传输的初始状态，添加加载动画
+     if (isStreaming) {
+         const spinner = document.createElement('span');
+         spinner.className = 'bubble-loading-spinner';
+         contentContainer.appendChild(spinner); // 添加到内容容器
+     }
 
      // 移除旧的独立复制按钮创建逻辑
      // const copyButton = ... (现在由 _createMessageControls 处理)
 
      aiResponseArea.appendChild(bubbleElement); // 添加到 DOM
+
+     // 添加控件按钮 *after* the content container
+     const controls = _createMessageControls(messageIndex, 'assistant', isStreaming);
+     bubbleElement.appendChild(controls); // Append controls directly to bubble, after content
+
      scrollChatToBottom(); // 滚动到底部
 
-     // 返回调用者需要的引用 (不再单独返回 copyButton)
+     // 返回调用者需要的引用
      return { bubbleElement, contentContainer };
 }
 
@@ -177,6 +186,12 @@ export function createAssistantMessageBubble(messageIndex, isStreaming = true) {
  */
 export function updateAssistantMessageContent(contentContainer, htmlContent) {
     if (contentContainer) {
+        // 在第一次更新内容前，移除可能存在的加载动画
+        const existingSpinner = contentContainer.querySelector('.bubble-loading-spinner');
+        if (existingSpinner) {
+            contentContainer.removeChild(existingSpinner);
+        }
+
         contentContainer.innerHTML = htmlContent; // 更新内容
         scrollChatToBottom(); // 添加内容时滚动
     } else {
