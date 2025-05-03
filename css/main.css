@@ -77,7 +77,7 @@ body {
 }
 
 .sidebar-button { /* Common style for sidebar buttons */
-     margin-top: auto; /* Push button to the bottom */
+     /* margin-top: auto; */ /* REMOVED: No longer pushing button to bottom */
      padding: 10px;
      background-color: #6c757d; /* Secondary color */
      color: white;
@@ -97,7 +97,8 @@ body {
 #add-session-btn {
      /* Inherits .sidebar-button styles */
      background-color: #007bff; /* Primary color for add */
-}
+     margin-bottom: 15px; /* Add space below button, before the list */
+ }
 #add-session-btn:hover {
      background-color: #0056b3;
 }
