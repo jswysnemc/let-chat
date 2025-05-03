@@ -25,7 +25,7 @@ export function renderSessionList(sessions, activeSessionId) {
         // 如果没有会话，显示占位符
         const noSessionsLi = document.createElement('li');
         noSessionsLi.className = 'placeholder-text';
-        noSessionsLi.textContent = '没有会话。点击下方按钮创建。';
+        noSessionsLi.textContent = '没有会话。点击按钮创建。';
         sessionListElement.appendChild(noSessionsLi);
         return;
     }
@@ -56,17 +56,16 @@ export function renderSessionList(sessions, activeSessionId) {
         editButton.dataset.sessionId = session.id; // 将会话 ID 存储在按钮上，方便事件处理
         controls.appendChild(editButton);
 
-        // 仅当存在多个会话时才添加删除按钮
-        if (sessions.length > 1) {
-            const deleteBtn = document.createElement('button');
-            deleteBtn.type = 'button'; // 明确类型
-            deleteBtn.className = 'session-control-button session-delete-btn'; // 通用和特定类
-            // deleteBtn.textContent = '🗑️'; // 使用 innerHTML 插入 Font Awesome 图标
-            deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>'; // Font Awesome Delete Icon
-            deleteBtn.title = '删除会话';
-            deleteBtn.dataset.sessionId = session.id; // 同样存储 ID
-            controls.appendChild(deleteBtn);
-        }
+        // 总是添加删除按钮 (移除 if sessions.length > 1 条件)
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button'; // 明确类型
+        deleteBtn.className = 'session-control-button session-delete-btn'; // 通用和特定类
+        // deleteBtn.textContent = '🗑️'; // 使用 innerHTML 插入 Font Awesome 图标
+        deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>'; // Font Awesome Delete Icon
+        deleteBtn.title = '删除会话';
+        deleteBtn.dataset.sessionId = session.id; // 同样存储 ID
+        controls.appendChild(deleteBtn);
+        // } // 移除 if 的结束括号
 
         // 将控件容器添加到列表项
         li.appendChild(controls);
@@ -98,11 +97,18 @@ export function initializeSidebar() {
         // 切换按钮点击事件
         sidebarToggleBtn.addEventListener('click', () => {
             appContainer.classList.toggle('sidebar-open'); // 切换主容器的类
+            // 如果侧边栏打开了，隐藏按钮
+            if (appContainer.classList.contains('sidebar-open')) {
+                sidebarToggleBtn.style.display = 'none';
+            }
+            // 注意：如果用户再次点击按钮关闭侧边栏（理论上不可能，因为按钮隐藏了），按钮不会重新显示。
+            // 重新显示按钮的逻辑放在遮罩层点击事件中。
         });
 
         // 遮罩层点击事件（用于关闭侧边栏）
         sidebarOverlay.addEventListener('click', () => {
              appContainer.classList.remove('sidebar-open'); // 移除类以关闭侧边栏
+             sidebarToggleBtn.style.display = 'block'; // 关闭侧边栏时重新显示按钮
         });
         console.log("侧边栏切换功能已初始化。");
     } else {

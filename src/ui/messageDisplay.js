@@ -230,13 +230,13 @@ export function finalizeAssistantMessage(bubbleElement, fullContent) {
 
                     // 处理复制成功的逻辑
             const handleCopySuccess = () => {
-                    const originalText = btn.textContent;
+                    const originalHTML = btn.innerHTML; // Store original HTML (icon)
                     const originalTitle = btn.title;
-                    btn.textContent = '✅'; // 或 '已复制!'
+                    btn.innerHTML = '<i class="fas fa-check"></i>'; // Use check icon
                     btn.title = '已复制!';
                     btn.disabled = true;
                     setTimeout(() => {
-                        btn.textContent = originalText;
+                        btn.innerHTML = originalHTML; // Restore original HTML (icon)
                         btn.title = originalTitle;
                         btn.disabled = false;
                     }, 2000);

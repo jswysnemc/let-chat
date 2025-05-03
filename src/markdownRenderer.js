@@ -55,8 +55,20 @@ export function highlightCodeBlocks(container) {
         // 防止重复处理同一个 pre 元素
         if (preElement.dataset.codeProcessed) return;
 
+        // --- Create Wrapper ---
+        const wrapper = document.createElement('div');
+        wrapper.className = 'code-block-wrapper';
+        preElement.parentNode.insertBefore(wrapper, preElement);
+        wrapper.appendChild(preElement); // Move pre inside wrapper
+        // --------------------
+
         const codeBlock = preElement.querySelector('code');
-        if (!codeBlock) return;
+        if (!codeBlock) {
+             // If no code block found, remove the potentially empty wrapper? Or just skip.
+             // For now, just skip processing this element further.
+             return;
+        }
+
 
         // 1. 应用高亮
         try {
@@ -99,9 +111,9 @@ export function highlightCodeBlocks(container) {
             const langLabel = document.createElement('span');
             langLabel.className = 'code-language-label';
             langLabel.textContent = language;
-            // 插入到 pre 元素内部，但在 code 元素之前（或作为 pre 的第一个子元素）
-            preElement.style.position = 'relative'; // 确保 pre 是定位上下文
-            preElement.insertBefore(langLabel, preElement.firstChild);
+            // 插入到 wrapper 元素内部, 在 pre 元素之前
+            // preElement.style.position = 'relative'; // No longer needed on pre
+            wrapper.insertBefore(langLabel, preElement); // Insert into wrapper, before pre
         }
 
 
@@ -110,8 +122,8 @@ export function highlightCodeBlocks(container) {
         copyBtn.className = 'code-copy-button'; // 应用特定样式
         copyBtn.textContent = '复制';
         copyBtn.title = '复制代码';
-        // 附加到 pre 元素，通常放在右上角
-        preElement.appendChild(copyBtn);
+        // 附加到 wrapper 元素, 在 pre 元素之前 (或者之后, CSS 定位决定最终位置)
+        wrapper.insertBefore(copyBtn, preElement); // Insert into wrapper, before pre
 
         copyBtn.addEventListener('click', (e) => {
             e.stopPropagation(); // 防止触发其他事件
@@ -157,8 +169,51 @@ export function highlightCodeBlocks(container) {
             // --- End Main Copy Logic ---
         });
 
-        // 标记该 pre 元素已处理
-        preElement.dataset.codeProcessed = 'true';
+        // 4. 添加代码块折叠/展开功能 (JS Controlled Height)
+        const codeBlockHeightThreshold = 800; // Set desired collapsed height in pixels
+        let isInitiallyCollapsed = false;
+
+        // Check scrollHeight of the pre element itself
+        if (preElement.scrollHeight > codeBlockHeightThreshold) {
+            isInitiallyCollapsed = true;
+            // Set initial collapsed state using JS
+            wrapper.style.height = `${codeBlockHeightThreshold}px`;
+            wrapper.style.overflow = 'hidden'; // Hide overflow when collapsed by JS
+
+            const expandBtn = document.createElement('button');
+            expandBtn.className = 'code-expand-button';
+            expandBtn.textContent = '展开代码'; // Initial text
+            expandBtn.title = '展开/收起代码块';
+
+            // 插入按钮在 wrapper 元素之后
+            wrapper.parentNode.insertBefore(expandBtn, wrapper.nextSibling);
+
+            expandBtn.addEventListener('click', () => {
+                // Check current state by looking at style.height
+                if (wrapper.style.height && wrapper.style.height !== 'auto') {
+                    // --- Expand ---
+                    wrapper.style.height = 'auto'; // Remove fixed height
+                    wrapper.style.overflow = 'visible'; // Allow overflow
+                    expandBtn.textContent = '收起代码';
+                } else {
+                    // --- Collapse ---
+                    wrapper.style.height = `${codeBlockHeightThreshold}px`;
+                    wrapper.style.overflow = 'hidden';
+                    expandBtn.textContent = '展开代码';
+                }
+                // Optional: Scroll adjustment after animation
+                // setTimeout(scrollChatToBottom, 310);
+            });
+        } else {
+             // Ensure wrapper has auto height if not collapsible
+             wrapper.style.height = 'auto';
+             wrapper.style.overflow = 'visible';
+        }
+
+
+        // 标记该 wrapper (及其内容) 已处理
+        wrapper.dataset.codeProcessed = 'true'; // Mark wrapper instead of pre
+        preElement.dataset.codeProcessed = 'true'; // Mark pre too, just in case
     });
 }
 

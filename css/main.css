@@ -36,12 +36,14 @@ body {
 
 #sidebar h3 {
     margin-top: 0;
-    margin-bottom: 15px;
-    color: #333;
-    font-size: 1.1em;
-    border-bottom: 1px solid #e0e0e0; /* Lighter border */
-    padding-bottom: 10px;
-    text-align: center;
+    margin-bottom: 10px; /* Reduced bottom margin */
+    color: #495057; /* Slightly softer color */
+    font-size: 1.15em; /* Slightly larger font size */
+    font-weight: 600; /* Semi-bold */
+    /* border-bottom: 1px solid #e0e0e0; */ /* Removed border */
+    padding-bottom: 5px; /* Reduced bottom padding */
+    padding-left: 5px; /* Add some left padding */
+    text-align: left; /* Align text to the left */
 }
 
 #session-list {
@@ -62,12 +64,15 @@ body {
     white-space: nowrap; /* Prevent wrapping */
     overflow: hidden; /* Hide overflow */
     text-overflow: ellipsis; /* Show ellipsis (...) */
-    border: 1px solid transparent; /* Placeholder for active border */
+    border: 1px solid #e0e0e0; /* Add light grey border for non-active items */
     position: relative; /* Needed for controls positioning */
+    color: #333; /* Set default text color */
+    background-color: #ffffff; /* Explicitly set white background for non-active */
 }
 
 #session-list li:hover {
-    background-color: #ececec; /* Lighter hover background */
+    background-color: #f5f5f5; /* Slightly different hover background */
+    border-color: #d5d5d5; /* Slightly darker border on hover */
 }
 
 #session-list li.active-session { /* Style for the active session */
@@ -353,17 +358,69 @@ h2 { /* Removed h1 styling */
 .assistant-message-content ul, .assistant-message-content ol { padding-left: 1.5em; margin-bottom: 0.8em; }
 .assistant-message-content li { margin-bottom: 0.4em; }
 .assistant-message-content blockquote { margin-left: 0.5em; padding-left: 0.8em; border-left: 3px solid #ccc; color: #666; margin-bottom: 0.8em; }
-.assistant-message-content pre {
-    background-color: #f5f5f5;
-    padding: 0.8em;
-    padding-top: 2.2em; /* 增加顶部内边距为标签留空间 */
+
+/* New Wrapper Style */
+.code-block-wrapper {
+    position: relative; /* Context for absolute positioning of buttons/labels */
+    background-color: #f5f5f5; /* Move background here */
     border-radius: 4px;
-    overflow-x: auto;
-    margin-bottom: 0.8em;
-    position:relative; /* 相对定位，用于内部绝对定位 */
+    margin-bottom: 0; /* Wrapper handles bottom margin via expand button */
+    /* overflow: hidden; */ /* Controlled by JS now */
+    /* max-height: 800px; */ /* Controlled by JS now */
+    transition: height 0.3s ease-out; /* Transition height instead of max-height */
+}
+/* Remove expanded class styling for height/overflow */
+/* .code-block-wrapper.expanded {
+    max-height: none;
+    overflow: visible;
+} */
+
+/* Adjusted Pre Style */
+.assistant-message-content pre {
+    /* background-color: #f5f5f5; */ /* Moved to wrapper */
+    padding: 0.8em;
+    padding-top: 2.8em; /* Increased top padding for fixed elements */
+    /* border-radius: 4px; */ /* Moved to wrapper */
+    overflow: auto; /* Allow both x and y scroll always */
+    /* max-height: calc(800px - 2.8em); */ /* Remove max-height from pre */
+    margin-bottom: 0; /* Reset margin */
+    /* position:relative; */ /* No longer needed */
+    /* transition: max-height 0.3s ease-out; */ /* No transition needed on pre */
+    /* Ensure pre takes full available height within wrapper when wrapper has fixed height */
+    height: 100%; /* Try making pre fill wrapper height */
+    box-sizing: border-box; /* Include padding in height calculation */
  }
+/* Remove expanded style for pre */
+/* .code-block-wrapper.expanded .assistant-message-content pre {
+    max-height: none;
+} */
+
 .assistant-message-content code { font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace; font-size: 0.9em; }
 .assistant-message-content pre code { display: block; padding: 0; background: none; color: inherit; }
+
+/* Style for the expand/collapse button (Positioned after wrapper) */
+.code-expand-button {
+    display: block; /* Place button below the wrapper block */
+    /* width: calc(100% - 1.6em); */ /* Let it take full width relative to parent */
+    width: 100%;
+    margin: 0 auto 0.8em auto; /* Center and add bottom margin */
+    padding: 5px 10px;
+    text-align: center;
+    background-color: #e0e0e0;
+    border: 1px solid #ccc;
+    border-top: none; /* Remove top border */
+    border-radius: 0; /* Remove radius */
+    border-bottom-left-radius: 4px; /* Round bottom corners */
+    border-bottom-right-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+    color: #333;
+    transition: background-color 0.2s;
+    box-sizing: border-box; /* Include padding/border in width */
+}
+.code-expand-button:hover {
+    background-color: #d0d0d0;
+}
 
 /* 消息复制按钮样式 */
 .copy-button { /* Message copy button */
@@ -398,38 +455,42 @@ h2 { /* Removed h1 styling */
     background-color: rgba(0, 0, 0, 0.15); /* Even darker when active */
 }
 
-/* 代码块语言标签样式 */
+/* 代码块语言标签样式 (Positioned relative to wrapper) */
 .code-language-label {
     position: absolute;
     top: 0;
-    left: 0; /* 改为左上角 */
+    left: 0;
     font-size: 0.8em;
     color: #888;
     background-color: #e0e0e0; /* 标签背景 */
-    padding: 2px 6px;
+    padding: 3px 8px; /* Adjusted padding */
     border-bottom-right-radius: 4px; /* 右下角圆角 */
-    z-index: 5; /* 在代码复制按钮之下 */
+    z-index: 10; /* Ensure above pre content */
     text-transform: lowercase;
+    border-top-left-radius: 4px; /* Match wrapper radius */
 }
 
-/* 代码块复制按钮样式 */
+/* 代码块复制按钮样式 (Positioned relative to wrapper) */
 .code-copy-button { /* Code block copy button */
     position: absolute;
-    top: 8px; /* Adjust position */
-    right: 8px;
+    top: 0px; /* Align with top */
+    right: 0px; /* Align with right */
     background-color: rgba(0, 0, 0, 0.08); /* Subtle background */
     border: none;
     color: #555;
     padding: 4px 8px; /* Adjust padding */
     font-size: 0.8em; /* Smaller text */
-    border-radius: 4px;
+    border-radius: 0; /* Remove radius */
+    border-bottom-left-radius: 4px; /* Round bottom left */
     cursor: pointer;
-    opacity: 0; /* 默认隐藏 */
+    opacity: 0.7; /* Make slightly visible by default? Or keep 0? */
     transition: opacity 0.2s, background-color 0.2s;
-    z-index: 10;
+    z-index: 10; /* Ensure above pre content */
+    border-top-right-radius: 4px; /* Match wrapper radius */
 }
-.assistant-message-content pre:hover .code-copy-button {
-    opacity: 0.8; /* 在 pre 悬停时显示 */
+/* Show button on wrapper hover */
+.code-block-wrapper:hover .code-copy-button {
+    opacity: 1;
 }
 .code-copy-button:hover {
     background-color: rgba(0, 0, 0, 0.15);
@@ -493,11 +554,17 @@ h2 { /* Removed h1 styling */
     position: absolute;
     top: 12px; /* 与 #chat-input 内边距匹配 */
     left: 15px; /* 与 #chat-input 内边距匹配 */
+    right: 15px; /* Add right constraint */
     pointer-events: none; /* 允许点击穿透 */
     display: none; /* 默认隐藏 */
     z-index: 1; /* 在输入内容之下 */
     font-size: 16px; /* 匹配输入框字体 */
     line-height: 1.5; /* 匹配输入框行高 */
+    /* Add styles for ellipsis */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /* width: calc(100% - 30px); */ /* Let left/right constraints handle width */
 }
 #chat-input.is-placeholder-showing::before {
     display: block; /* 当类存在时显示 */
@@ -511,6 +578,15 @@ h2 { /* Removed h1 styling */
     margin: 2px;
     border: 1px solid #eee;
     border-radius: 3px;
+}
+/* Style for placeholder text inside image preview */
+#input-image-preview .placeholder-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block; /* Needed for ellipsis to work correctly on span */
+    max-width: 100%; /* Ensure it doesn't overflow container */
+    vertical-align: middle; /* Align nicely if other elements are present */
 }
 #input-image-preview {
     padding: 8px 15px;
@@ -935,9 +1011,13 @@ h2 { /* Removed h1 styling */
     color: white;
     border: none;
     border-radius: 5px;
-    padding: 8px 12px;
-    font-size: 1.5em; /* Larger icon */
-    line-height: 1;
+    padding: 8px 10px; /* Adjusted padding for better icon centering */
+    font-size: 1.2em; /* Slightly smaller icon size */
+    line-height: 1; /* Keep line-height 1 */
+    /* Optional: Use flex for perfect centering if needed */
+    /* display: inline-flex;
+    align-items: center;
+    justify-content: center; */
     cursor: pointer;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     transition: background-color 0.2s;
