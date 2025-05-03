@@ -23,6 +23,42 @@ let appContainer = null;
 let sidebarOverlay = null;
 
 /**
+ * Attempts to copy text to the clipboard using the deprecated execCommand method.
+ * @param {string} text The text to copy.
+ * @returns {boolean} True if the copy command was likely successful, false otherwise.
+ */
+export function copyTextFallback(text) { // Add export keyword
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+
+    // Make textarea offscreen.
+    textArea.style.position = 'fixed';
+    textArea.style.top = '-9999px';
+    textArea.style.left = '-9999px';
+    // Avoid potential scrolling issues
+    textArea.style.opacity = '0';
+
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    let success = false;
+    try {
+        // execCommand might throw an error or return false
+        success = document.execCommand('copy');
+        if (!success) {
+            console.warn('Fallback copy command (execCommand) reported failure.');
+        }
+    } catch (err) {
+        console.error('Error using fallback copy command (execCommand):', err);
+        success = false;
+    }
+
+    document.body.removeChild(textArea);
+    return success;
+}
+
+/**
  * Initializes the UI module by getting references to DOM elements.
  * Should be called once when the application starts.
  * @returns {boolean} True if initialization was successful, false otherwise.
@@ -429,27 +465,62 @@ export function finalizeAssistantMessage(bubbleElement, copyButton, fullContent)
 
     // Enable the message-level copy button and add its listener
     copyButton.disabled = false;
-    // Ensure listener is only added once (though re-adding might be harmless)
+    // Ensure listener is only added once
     if (!copyButton.dataset.listenerAdded) {
         copyButton.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(fullContent).then(() => {
-                    const originalText = copyButton.textContent;
-                    copyButton.textContent = '已复制!';
-                    copyButton.disabled = true;
-                    setTimeout(() => {
-                        copyButton.textContent = originalText;
-                        copyButton.disabled = false;
-                    }, 2000);
+            const textToCopy = fullContent; // Use the fullContent passed to the function
+
+            const handleCopySuccess = () => {
+                const originalText = copyButton.textContent;
+                copyButton.textContent = '已复制!';
+                copyButton.disabled = true;
+                setTimeout(() => {
+                    copyButton.textContent = originalText;
+                    copyButton.disabled = false;
+                }, 2000);
+            };
+
+            const handleCopyFailure = (methodUsed) => {
+                 console.error(`Copy failed using ${methodUsed}.`);
+                 // Provide more specific feedback
+                 if (methodUsed === 'navigator.clipboard' && !window.isSecureContext) {
+                     // This case might not be reached if we check isSecureContext first, but good fallback
+                     alert('复制失败：此功能需要安全连接 (HTTPS) 或在 localhost 上运行。');
+                 } else if (methodUsed === 'document.execCommand') {
+                      alert('复制失败！浏览器不支持或禁止了后备复制方法。');
+                 } else {
+                     alert('复制失败！您的浏览器可能不支持此操作或权限不足。');
+                 }
+            };
+
+            // --- Main Copy Logic ---
+            // Prefer navigator.clipboard in secure contexts
+            if (window.isSecureContext && navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    handleCopySuccess();
                 }).catch(err => {
-                    console.error('无法复制代码到剪贴板: ', err);
-                    alert('复制失败!');
+                    console.error('navigator.clipboard.writeText failed:', err);
+                    // Optional: Attempt fallback even if modern API exists but failed?
+                    // console.log("Modern copy failed, attempting fallback...");
+                    // if (copyTextFallback(textToCopy)) {
+                    //     handleCopySuccess();
+                    // } else {
+                    //     handleCopyFailure('document.execCommand after navigator failure');
+                    // }
+                    // For now, just report failure if modern API fails in secure context.
+                    handleCopyFailure('navigator.clipboard');
                 });
-            } else {
-                console.warn('Clipboard API 不可用。');
-                alert('您的浏览器不支持自动复制功能。');
             }
+            // Else (insecure context or clipboard API not available), try fallback
+            else {
+                if (copyTextFallback(textToCopy)) {
+                    handleCopySuccess();
+                } else {
+                    handleCopyFailure('document.execCommand');
+                }
+            }
+            // --- End Main Copy Logic ---
         });
         copyButton.dataset.listenerAdded = 'true'; // Mark listener as added
     }

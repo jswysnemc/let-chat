@@ -1,4 +1,5 @@
 // src/markdownRenderer.js
+import { copyTextFallback } from './ui.js'; // Import the fallback function
 
 // 在标准的模块化项目中，应该通过 npm/yarn 安装 marked 和 highlight.js
 // 然后像这样导入:
@@ -115,23 +116,45 @@ export function highlightCodeBlocks(container) {
         copyBtn.addEventListener('click', (e) => {
             e.stopPropagation(); // 防止触发其他事件
             const codeToCopy = codeBlock.textContent;
-            if (navigator.clipboard && navigator.clipboard.writeText) {
+
+            const handleCopySuccess = () => {
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = '已复制!';
+                copyBtn.disabled = true;
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                    copyBtn.disabled = false;
+                }, 2000);
+            };
+
+            const handleCopyFailure = (methodUsed) => {
+                 console.error(`Code block copy failed using ${methodUsed}.`);
+                 if (methodUsed === 'navigator.clipboard' && !window.isSecureContext) {
+                     alert('复制失败：此功能需要安全连接 (HTTPS) 或在 localhost 上运行。');
+                 } else if (methodUsed === 'document.execCommand') {
+                      alert('复制失败！浏览器不支持或禁止了后备复制方法。');
+                 } else {
+                     alert('复制失败！您的浏览器可能不支持此操作或权限不足。');
+                 }
+            };
+
+            // --- Main Copy Logic ---
+            if (window.isSecureContext && navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(codeToCopy).then(() => {
-                    const originalText = copyBtn.textContent;
-                    copyBtn.textContent = '已复制!';
-                    copyBtn.disabled = true;
-                    setTimeout(() => {
-                        copyBtn.textContent = originalText;
-                        copyBtn.disabled = false;
-                    }, 2000);
+                    handleCopySuccess();
                 }).catch(err => {
-                    console.error('无法复制代码到剪贴板: ', err);
-                    alert('复制失败! 可能需要 HTTPS 或浏览器权限。');
+                    console.error('navigator.clipboard.writeText failed for code block:', err);
+                    handleCopyFailure('navigator.clipboard');
                 });
             } else {
-                 console.warn('Clipboard API 不可用。');
-                 alert('您的浏览器不支持自动复制功能。');
+                // Insecure context or clipboard API not available, try fallback
+                if (copyTextFallback(codeToCopy)) { // Use imported fallback
+                    handleCopySuccess();
+                } else {
+                    handleCopyFailure('document.execCommand');
+                }
             }
+            // --- End Main Copy Logic ---
         });
 
         // 标记该 pre 元素已处理
