@@ -166,22 +166,22 @@ export function addSession(name = null) {
 /**
  * 根据 ID 删除一个会话。
  * @param {string} sessionId - 要删除的会话 ID。
- * @returns {boolean} 如果删除成功则返回 true，否则返回 false。
+ * @returns {boolean} 如果删除成功则返回 true。
  */
 export function deleteSession(sessionId) {
-    const sessionIds = Object.keys(sessions);
     if (!sessions[sessionId]) {
         console.warn("尝试删除不存在的会话:", sessionId);
         return false;
     }
-    if (sessionIds.length <= 1) {
-        console.warn("无法删除最后一个会话。");
-        alert("无法删除最后一个会话。"); // 用户提示
-        return false;
-    }
+    // 移除不允许删除最后一个会话的限制
+    // if (Object.keys(sessions).length <= 1) {
+    //     console.warn("无法删除最后一个会话。");
+    //     alert("无法删除最后一个会话。"); // 用户提示
+    //     return false;
+    // }
 
     const deletedSessionName = sessions[sessionId].name; // 用于日志
-    delete sessions[sessionId];
+    delete sessions[sessionId]; // 直接删除
     console.log("删除了会话:", sessionId, deletedSessionName);
 
     // 如果删除的是活动会话，则切换到另一个会话（例如第一个）
@@ -258,6 +258,76 @@ export function addMessageToSession(sessionId, role, content) {
     _saveState();
     return true;
 }
+
+/**
+ * 从指定会话中按索引删除一条消息。
+ * @param {string} sessionId - 目标会话 ID。
+ * @param {number} messageIndex - 要删除的消息在 messages 数组中的索引。
+ * @returns {boolean} 如果删除成功则返回 true。
+ */
+export function deleteMessageFromSession(sessionId, messageIndex) {
+    if (!sessions[sessionId]) {
+        console.error(`无法从不存在的会话 ${sessionId} 删除消息。`);
+        return false;
+    }
+    const messages = sessions[sessionId].messages;
+    if (messageIndex < 0 || messageIndex >= messages.length) {
+        console.error(`尝试从会话 ${sessionId} 删除无效索引 ${messageIndex} 的消息。`);
+        return false;
+    }
+    // 再次检查 messageIndex 是否仍然有效，以防在边界检查后状态发生变化
+    const messageToDelete = messages[messageIndex];
+    if (!messageToDelete) {
+        console.error(`尝试删除会话 ${sessionId} 索引 ${messageIndex} 时消息已不存在。可能存在竞态条件。`);
+        alert("无法删除消息，它可能已被其他操作移除。");
+        return false;
+    }
+    // 不允许删除 system 消息 (通常是第一个)
+    if (messageToDelete.role === 'system') {
+        console.warn(`不允许删除会话 ${sessionId} 中的系统消息 (索引 ${messageIndex})。`);
+        alert("无法删除系统提示消息。");
+        return false;
+    }
+
+    const deletedMessage = messages.splice(messageIndex, 1); // 从数组中移除
+    console.log(`从会话 ${sessionId} 删除了索引 ${messageIndex} 的消息:`, deletedMessage[0]);
+    _saveState();
+    return true;
+}
+
+/**
+ * 更新指定会话中特定索引的消息内容。
+ * @param {string} sessionId - 目标会话 ID。
+ * @param {number} messageIndex - 要更新的消息在 messages 数组中的索引。
+ * @param {string | Array<object>} newContent - 新的消息内容。
+ * @returns {boolean} 如果更新成功则返回 true。
+ */
+export function updateMessageInSession(sessionId, messageIndex, newContent) {
+    if (!sessions[sessionId]) {
+        console.error(`无法更新不存在的会话 ${sessionId} 中的消息。`);
+        return false;
+    }
+    const messages = sessions[sessionId].messages;
+    if (messageIndex < 0 || messageIndex >= messages.length) {
+        console.error(`尝试更新会话 ${sessionId} 中无效索引 ${messageIndex} 的消息。`);
+        return false;
+    }
+    // 通常不应允许直接编辑 system 消息，但如果需要可以放开
+    if (messages[messageIndex].role === 'system') {
+         console.warn(`不建议直接编辑会话 ${sessionId} 中的系统消息 (索引 ${messageIndex})。请使用 updateSystemPrompt。`);
+         // return false; // 可以选择阻止编辑
+    }
+    if (typeof newContent === 'undefined') {
+         console.error(`尝试将会话 ${sessionId} 索引 ${messageIndex} 的消息更新为 undefined 内容。`);
+         return false;
+    }
+
+    console.log(`更新会话 ${sessionId} 索引 ${messageIndex} 的消息内容。旧内容:`, messages[messageIndex].content, "新内容:", newContent);
+    messages[messageIndex].content = newContent;
+    _saveState();
+    return true;
+}
+
 
 /**
  * 获取指定 ID 会话的消息数组。

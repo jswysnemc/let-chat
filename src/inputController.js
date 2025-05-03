@@ -1,5 +1,6 @@
 // src/inputController.js
-import { getElement, updateChatInputPlaceholderVisually, updatePreviewPlaceholderVisually } from './ui.js';
+import { getElement } from './ui/domElements.js'; // Import getElement from its new location
+import { updateChatInputPlaceholderVisually, updatePreviewPlaceholderVisually } from './ui/placeholderManager.js'; // Import placeholder functions from their new location
 
 // --- Module-scoped variables ---
 let chatInputElement = null;

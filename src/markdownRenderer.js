@@ -1,5 +1,5 @@
 // src/markdownRenderer.js
-import { copyTextFallback } from './ui.js'; // Import the fallback function
+import { copyTextFallback } from './ui/copyUtils.js'; // Import the fallback function from its new location
 
 // 在标准的模块化项目中，应该通过 npm/yarn 安装 marked 和 highlight.js
 // 然后像这样导入:
