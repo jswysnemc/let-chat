@@ -21,7 +21,16 @@ export function showLoading() {
         const isMobile = window.innerWidth <= 768;
         const indicatorText = isMobile ? 'AI思考中' : 'AI 正在思考中';
         
-        typingIndicator.innerHTML = `${indicatorText}<div class="typing-dots"><span></span><span></span><span></span></div>`;
+        // 增强动效，使用新的动画样式
+        typingIndicator.innerHTML = `
+            <div class="typing-indicator-spinner"></div>
+            <span class="typing-indicator-text">${indicatorText}</span>
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        `;
         
         // 添加到AI回复区域
         aiResponseArea.appendChild(typingIndicator);
@@ -29,6 +38,11 @@ export function showLoading() {
         // 滚动到底部，确保在移动设备上也能看到
         setTimeout(() => {
             aiResponseArea.scrollTop = aiResponseArea.scrollHeight;
+        }, 10);
+        
+        // 添加进入动画
+        setTimeout(() => {
+            typingIndicator.classList.add('animate-in');
         }, 10);
     } else {
         console.warn("[UI] showLoading: aiResponseArea 元素引用为 null。");
@@ -42,7 +56,15 @@ export function hideLoading() {
     // 移除AI回复框中的加载指示器
     const typingIndicator = document.getElementById('ai-typing-indicator');
     if (typingIndicator) {
-        typingIndicator.remove();
+        // 添加退出动画
+        typingIndicator.classList.add('animate-out');
+        
+        // 动画结束后移除元素
+        setTimeout(() => {
+            if (typingIndicator.parentNode) {
+                typingIndicator.remove();
+            }
+        }, 300); // 动画持续时间
     }
     
     // 保留原始的 loadingIndicator 处理，以防万一

@@ -125,6 +125,40 @@ function ensureMarkedLoaded() {
     });
 }
 
+// 在文件开头添加一个更强健的粗体文本处理函数
+/**
+ * 专门用于处理粗体文本的增强函数
+ * 改进对流式输出中粗体文本的处理能力
+ * @param {string} text - 需要处理的文本
+ * @returns {string} - 替换了粗体标记的HTML
+ */
+function enhanceBoldTextRendering(text) {
+    if (!text) return '';
+    
+    // 处理**粗体**格式
+    let processed = text;
+    
+    // 1. 处理整行粗体 (如果整个内容都被**包围)
+    if (/^\*\*(.*)\*\*$/.test(processed)) {
+        return `<p><strong>${processed.slice(2, -2)}</strong></p>`;
+    }
+    
+    // 2. 处理行内粗体文本 - 使用非贪婪匹配
+    processed = processed.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    
+    // 3. 处理单词级粗体
+    processed = processed.replace(/\*\*(\S+?)\*\*/g, '<strong>$1</strong>');
+    
+    // 4. 处理有空格的粗体 - 检查没有被处理的部分
+    const remainingBoldPattern = /\*\*([^*]*)\*\*/g;
+    if (remainingBoldPattern.test(processed)) {
+        processed = processed.replace(remainingBoldPattern, '<strong>$1</strong>');
+    }
+    
+    // 确保返回的HTML被正确处理
+    return processed;
+}
+
 /**
  * 使用 marked 将 Markdown 字符串解析为 HTML。
  * @param {string} markdownString - 要解析的 Markdown 文本。
@@ -154,14 +188,18 @@ export function renderMarkdown(markdownString) {
     if (typeof marked === 'undefined') {
         console.error("Marked.js is not loaded. Cannot render Markdown.");
         
-        // 尝试一种简化的即时处理方式
-        let simpleHTML = markdownString;
+        // 使用增强的粗体文本处理
+        let simpleHTML = enhanceBoldTextRendering(markdownString);
         
-        // 处理简单的粗体文本
-        simpleHTML = simpleHTML.replace(/\*\*([^\*]+)\*\*/g, '<strong>$1</strong>');
+        // 如果增强处理没有生成任何<strong>标签，说明可能失败了，尝试备用方案
+        if (!simpleHTML.includes('<strong>')) {
+            // 处理简单的粗体文本
+            simpleHTML = markdownString.replace(/\*\*([^\*]+)\*\*/g, '<strong>$1</strong>');
+        }
         
-        // 转义HTML标签
+        // 转义HTML标签，但保留strong标签
         simpleHTML = simpleHTML.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        simpleHTML = simpleHTML.replace(/&lt;strong&gt;/g, "<strong>").replace(/&lt;\/strong&gt;/g, "</strong>");
         
         console.log("简易处理Markdown:", simpleHTML.substring(0, 50));
         
@@ -201,6 +239,9 @@ function renderMarkdownFallback(markdownString) {
         // 输出一些原始内容用于调试
         console.log("原始Markdown内容(前40字符):", markdownString.substring(0, 40));
         
+        // 首先尝试使用增强的粗体文本处理
+        let htmlContent = enhanceBoldTextRendering(markdownString);
+        
         // 特殊情况：直接处理整个文本，如果它完全匹配 **text** 格式
         if (/^\*\*(.*)\*\*$/.test(markdownString)) {
             const innerText = markdownString.replace(/^\*\*|\*\*$/g, '');
@@ -213,7 +254,7 @@ function renderMarkdownFallback(markdownString) {
         console.log("以粗体开头:", startsWithBold);
         
         // 转义尖括号（在应用格式前）
-        let htmlContent = markdownString;
+        htmlContent = markdownString;
         
         // 调试特殊粗体模式的存在性
         const hasBoldText = /\*\*([^*]+)\*\*/g.test(htmlContent);
@@ -281,8 +322,15 @@ function renderMarkdownFallback(markdownString) {
         console.error("基本Markdown处理回退也失败了:", fallbackError);
         // 如果回退处理也失败，尝试最基本的处理
         try {
-            // 最简单的处理：直接替换**文本**为<strong>文本</strong>
-            let simpleHTML = markdownString.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            // 使用增强的粗体文本处理
+            let simpleHTML = enhanceBoldTextRendering(markdownString);
+            
+            // 如果增强处理没有效果，回退到简单替换
+            if (!simpleHTML.includes('<strong>')) {
+                // 最简单的处理：直接替换**文本**为<strong>文本</strong>
+                simpleHTML = markdownString.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            }
+            
             // 转义HTML
             simpleHTML = simpleHTML.replace(/</g, "&lt;").replace(/>/g, "&gt;");
             // 还原strong标签

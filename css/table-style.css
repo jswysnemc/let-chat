@@ -30,6 +30,22 @@
     text-align: center;
 }
 
+/* 确保所有单元格内容居中 */
+.assistant-message-content table th,
+.assistant-message-content table td {
+    text-align: center !important;
+}
+
+/* 允许指定例外 - 仅当明确指定这些类时 */
+.assistant-message-content table td.text-left {
+    text-align: left !important;
+}
+
+.assistant-message-content table td.text-right,
+.assistant-message-content table td.number {
+    text-align: right !important;
+}
+
 .assistant-message-content table tbody tr {
     transition: background-color 0.2s;
 }

@@ -4,7 +4,8 @@
 @media (max-width: 768px) {
     /* 整体布局 */
     .app-container {
-        grid-template-columns: 1fr; /* 单列布局 */
+        display: block; /* 在移动端使用块级布局 */
+        height: 100%;
     }
     
     /* 侧边栏适配 */
@@ -14,11 +15,13 @@
         top: 0;
         height: 100%;
         width: 280px;
+        min-width: auto; /* 重置PC端设置 */
         z-index: 20000; /* 比遮罩层高 */
         transition: left 0.3s ease;
         background-color: #fff;
         box-shadow: 3px 0 10px rgba(0, 0, 0, 0.1);
         overflow-y: auto; /* 允许侧边栏内容滚动 */
+        flex-shrink: unset; /* 重置PC端设置 */
     }
     
     #sidebar.open {
@@ -49,7 +52,7 @@
         position: absolute;
         top: 10px;
         left: 10px;
-        z-index: 10000; /* 非常高的z-index */
+        z-index: 10000; /* 非常高的z-index，但比侧边栏和遮罩层低 */
         background-color: #0d6efd; /* 蓝色背景，更加明显 */
         color: white;
         border: 1px solid #0056b3;
@@ -67,6 +70,13 @@
         background-color: #0056b3;
         box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
         transform: scale(1.05); /* 轻微放大效果 */
+    }
+    
+    /* 确保侧边栏打开时按钮仍然可见 */
+    #sidebar.open ~ #main-content .sidebar-toggle-button {
+        display: block !important;
+        opacity: 1 !important;
+        visibility: visible !important;
     }
     
     /* 消息气泡适配 */
@@ -123,9 +133,13 @@
     
     /* 主内容区适配 */
     #main-content {
-        padding-left: 0;
+        padding: 0; /* 移除PC端的左侧内边距 */
         margin-left: 0;
         width: 100%;
+        position: relative;
+        height: 100vh;
+        overflow: hidden;
+        box-sizing: border-box;
     }
     
     /* 表格适配 */
@@ -234,5 +248,15 @@
         height: 36px;
         padding: 0 12px;
         font-size: 14px;
+    }
+    
+    .typing-indicator-spinner {
+        width: 16px;
+        height: 16px;
+        margin-right: 8px;
+    }
+    
+    .typing-indicator-text {
+        font-size: 13px;
     }
 } 

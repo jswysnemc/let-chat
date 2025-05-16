@@ -178,7 +178,7 @@
     color: #555;
 }
 
-/* AI回复加载动效 */
+/* AI回复加载动效 - 增强版 */
 .ai-typing-indicator {
     display: flex;
     align-items: center;
@@ -193,11 +193,25 @@
     font-size: 14px;
     max-width: 80%;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease-out;
+    opacity: 0;
+    transform: translateY(10px);
 }
 
-.ai-typing-indicator::before {
-    content: "";
-    display: inline-block;
+/* 进入动画 */
+.ai-typing-indicator.animate-in {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* 退出动画 */
+.ai-typing-indicator.animate-out {
+    opacity: 0;
+    transform: translateY(5px);
+}
+
+/* 旋转的加载spinner */
+.typing-indicator-spinner {
     width: 20px;
     height: 20px;
     margin-right: 12px;
@@ -205,6 +219,10 @@
     border-top-color: #0d6efd;
     border-radius: 50%;
     animation: ai-typing-spinner 0.85s linear infinite;
+}
+
+.typing-indicator-text {
+    margin-right: 8px;
 }
 
 @keyframes ai-typing-spinner {
@@ -220,7 +238,7 @@
 .typing-dots {
     display: inline-flex;
     align-items: center;
-    margin-left: 8px;
+    margin-left: 4px;
 }
 
 .typing-dots span {
@@ -256,6 +274,59 @@
     }
 }
 
+/* 模型切换后的消息样式修复 */
+/* 确保所有Markdown内容保持一致的样式，无论模型切换 */
+.assistant-message-content {
+    line-height: 1.6;
+    color: #333;
+}
+
+/* 确保粗体文本样式在不同模型下保持一致 */
+.assistant-message-content strong,
+.assistant-message-content b {
+    font-weight: 600;
+    color: #000;
+}
+
+/* 确保Markdown列表在所有模型下显示一致 */
+.assistant-message-content ul,
+.assistant-message-content ol {
+    padding-left: 2em;
+    margin: 1em 0;
+}
+
+.assistant-message-content ul li,
+.assistant-message-content ol li {
+    margin-bottom: 0.5em;
+}
+
+/* 确保代码样式统一 */
+.assistant-message-content code {
+    font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 3px;
+    padding: 0.2em 0.4em;
+    font-size: 0.9em;
+}
+
+/* 确保链接样式一致 */
+.assistant-message-content a {
+    color: #0d6efd;
+    text-decoration: none;
+    border-bottom: 1px dotted #0d6efd;
+    transition: all 0.2s ease;
+}
+
+.assistant-message-content a:hover {
+    color: #0a58ca;
+    border-bottom: 1px solid #0a58ca;
+}
+
+/* 确保段落间距一致 */
+.assistant-message-content p {
+    margin: 0.75em 0;
+}
+
 /* 响应式样式 - 底部输入区域适配 */
 @media (max-width: 768px) {
     #unified-input-area {
@@ -287,5 +358,15 @@
     #unified-input-area #loading {
         height: 40px;
         font-size: 0.85em;
+    }
+    
+    .typing-indicator-spinner {
+        width: 16px;
+        height: 16px;
+        margin-right: 8px;
+    }
+    
+    .typing-indicator-text {
+        font-size: 13px;
     }
 } 

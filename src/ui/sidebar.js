@@ -108,7 +108,7 @@ export function initializeSidebar() {
         // 切换按钮点击事件
         sidebarToggleBtn.addEventListener('click', (event) => {
             console.log("侧边栏切换按钮被点击!");
-            console.log("事件对象:", event);
+            event.stopPropagation(); // 阻止事件冒泡，防止主内容区域的点击事件触发
             
             // 使用正确的类操作：给sidebar添加open类
             sidebar.classList.add('open');
@@ -118,8 +118,8 @@ export function initializeSidebar() {
             sidebarOverlay.classList.add('visible');
             console.log("已添加overlay.visible类");
             
-            // 不需要隐藏按钮，这样用户还可以点击其他地方
-            // sidebarToggleBtn.style.display = 'none';
+            // 确保按钮保持可见
+            sidebarToggleBtn.style.display = 'block';
         });
 
         // 关闭侧边栏的函数
@@ -128,11 +128,15 @@ export function initializeSidebar() {
             sidebar.classList.remove('open'); // 移除open类以关闭侧边栏
             sidebarOverlay.classList.remove('visible'); // 隐藏遮罩层
             console.log("已移除sidebar.open和overlay.visible类");
+            
+            // 确保按钮保持可见
+            sidebarToggleBtn.style.display = 'block';
         };
 
         // 遮罩层点击事件（用于关闭侧边栏）
         sidebarOverlay.addEventListener('click', (event) => {
             console.log("遮罩层被点击!");
+            event.stopPropagation(); // 阻止事件冒泡
             closeSidebar();
         });
         

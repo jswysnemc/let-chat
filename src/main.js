@@ -85,6 +85,41 @@ function renderChatForActiveSession() {
     setTimeout(() => scrollChatToBottom(), 100);
 }
 
+/**
+ * 增强流式响应处理中的Markdown渲染，特别是粗体文本
+ * @param {string} content - 要渲染的流式内容
+ * @returns {string} - 渲染后的HTML
+ */
+function enhanceStreamMarkdownRendering(content) {
+    if (!content) return '';
+    
+    try {
+        // 1. 尝试完整的Markdown渲染
+        return renderMarkdown(content);
+    } catch (err) {
+        console.error("流式Markdown渲染失败，使用增强处理:", err);
+        try {
+            // 2. 处理粗体文本
+            let html = content.replace(/\*\*([^*]+?)\*\*/g, '<strong>$1</strong>');
+            
+            // 3. 转义HTML
+            html = html.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            
+            // 4. 还原strong标签
+            html = html.replace(/&lt;strong&gt;/g, "<strong>").replace(/&lt;\/strong&gt;/g, "</strong>");
+            
+            // 5. 包装在<p>标签中
+            if (!html.startsWith("<p>")) {
+                html = `<p>${html}</p>`;
+            }
+            
+            return html;
+        } catch (err2) {
+            console.error("增强处理也失败了，返回原始内容:", err2);
+            return `<p>${content}</p>`;
+        }
+    }
+}
 
 /**
  * 处理用户发送消息的核心逻辑。
@@ -169,46 +204,8 @@ async function handleSend(contentParts) {
         // 3. Stream and render AI response
         for await (const chunk of streamAIResponse(currentHistory)) {
             accumulatedContent += chunk;
-            // Render the accumulated content as HTML
-            let htmlContent = "";
-            
-            // 特殊情况：直接识别以**开头的文本
-            if (accumulatedContent.trim().startsWith("**") && accumulatedContent.includes("**")) {
-                console.log("[Main] 检测到流式内容以**开头，使用特殊处理");
-                try {
-                    // 1. 首先尝试完整的Markdown渲染
-                    htmlContent = renderMarkdown(accumulatedContent);
-                } catch (err) {
-                    console.error("流式Markdown渲染失败，使用直接替换:", err);
-                    // 2. 直接替换**文本**为<strong>文本</strong>
-                    htmlContent = accumulatedContent;
-                    htmlContent = htmlContent.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-                    // 3. 转义其余HTML
-                    htmlContent = htmlContent.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                    // 4. 还原strong标签
-                    htmlContent = htmlContent.replace(/&lt;strong&gt;/g, "<strong>").replace(/&lt;\/strong&gt;/g, "</strong>");
-                    // 5. 包装在<p>标签中
-                    if (!htmlContent.startsWith("<p>")) {
-                        htmlContent = `<p>${htmlContent}</p>`;
-                    }
-                }
-            } else {
-                // 常规内容处理
-                try {
-                    // 尝试完整的Markdown渲染
-                    htmlContent = renderMarkdown(accumulatedContent);
-                } catch (err) {
-                    console.error("流式Markdown渲染失败，使用基本处理:", err);
-                    // 确保至少渲染一些内容和粗体文本
-                    htmlContent = accumulatedContent;
-                    htmlContent = htmlContent.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-                    htmlContent = htmlContent.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                    htmlContent = htmlContent.replace(/&lt;strong&gt;/g, "<strong>").replace(/&lt;\/strong&gt;/g, "</strong>");
-                    if (!htmlContent.startsWith("<p>")) {
-                        htmlContent = `<p>${htmlContent}</p>`;
-                    }
-                }
-            }
+            // 使用增强的流式Markdown渲染
+            let htmlContent = enhanceStreamMarkdownRendering(accumulatedContent);
             
             console.log("[Main] 流式HTML内容(前30字符):", htmlContent.substring(0, 30));
             // Update the content container's innerHTML using the UI function

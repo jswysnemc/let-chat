@@ -1,42 +1,96 @@
-html {
-    height: 100%;
-    overflow: hidden; /* Prevent outer scroll */
+html, body {
     margin: 0;
-    box-sizing: border-box;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
 }
+
 *, *:before, *:after {
   box-sizing: inherit; /* Ensure box-sizing is inherited */
 }
 
 body {
     font-family: sans-serif;
-    margin: 0; /* Ensure no margin */
     background-color: #e5ddd5; /* 类似聊天应用的背景色 */
-    height: 100%; /* Use 100% to fill html */
     overflow: hidden; /* Prevent body scroll */
     /* display: flex; flex-direction: column; gap: 10px; */ /* Removed - handled by app-container */
 }
 
 .app-container {
-    display: flex;
-    height: 100%; /* Use 100% of parent (body) height instead of 100vh */
-    overflow: hidden; /* 防止外部滚动 */
+    display: flex; /* 改用flex布局而不是grid */
+    width: 100%;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    position: relative; /* 确保定位正确 */
 }
 
 #sidebar {
+    background-color: #f8f9fa;
     padding: 20px 15px;
-    background-color: #f5f5f7;
-    border-right: 1px solid #e0e0e0;
+    height: 100vh;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 300px; /* 固定宽度 */
+    min-width: 300px; /* 防止收缩 */
+    box-sizing: border-box;
+    position: relative;
+    z-index: 1000;
+    flex-shrink: 0; /* 防止侧边栏被压缩 */
+}
+
+/* PC端侧边栏底部区域 */
+.sidebar-footer {
+    margin-top: auto;
+    padding: 15px 10px;
+    border-top: 1px solid #eee;
+}
+
+/* 主内容区域 */
+#main-content {
     height: 100vh;
-    min-width: 220px; /* 最小宽度限制 */
-    width: 240px; /* 默认宽度 */
-    max-width: 40%; /* 最大宽度限制 */
-    resize: horizontal; /* 允许水平调整大小 */
-    overflow-x: auto; /* 避免内容溢出 */
-    position: relative; /* 为调整大小条添加定位 */
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    flex-grow: 1; /* 填充剩余空间 */
+    box-sizing: border-box;
+    background-color: #fff; /* 确保主内容区背景为白色 */
+    margin-left: 0; /* 确保没有左边距 */
+    border-left: none; /* 确保没有左边框 */
+}
+
+/* 聊天区域 */
+#chat-container {
+    flex-grow: 1; /* Let chat container fill main-content height */
+    overflow: hidden; /* Prevent this container from scrolling */
+    padding: 15px 20px; /* 增加内边距 */
+    position: relative;
+    background-color: #ffffff; /* 确保背景是白色 */
+    display: flex;
+    flex-direction: column;
+    margin: 0; /* Remove margin, let main-content handle spacing if needed */
+    height: 100%; /* Fill main-content */
+    box-shadow: none; /* Remove shadow */
+    border-radius: 0; /* Remove border-radius */
+}
+
+/* PC端顶部横条按钮 */
+.sidebar-toggle-button {
+    display: none !important; /* 默认在PC端隐藏 */
+}
+
+/* 聊天标题区域 */
+.chat-header {
+    padding: 15px 20px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
 }
 
 /* 添加调整手柄样式 */
@@ -240,25 +294,13 @@ h2 { /* Removed h1 styling */
     display: flex;
     flex-direction: column;
 }
-#chat-container {
-     flex-grow: 1; /* Let chat container fill main-content height */
-     overflow: hidden; /* Prevent this container from scrolling */
-     background-color: #ffffff; /* White background for chat area */
-     padding: 15px;
-     border-radius: 0; /* Remove border-radius */
-     box-shadow: none; /* Remove shadow */
-     display: flex;
-     flex-direction: column;
-     margin: 0; /* Remove margin, let main-content handle spacing if needed */
-     height: 100%; /* Fill main-content */
-}
 #chat-container h2#chat-title { /* Target the title specifically */
     margin-bottom: 10px;
 }
 #ai-response {
-    /* border: 1px solid #e0e0e0; */ /* Remove border */
-    background-color: #ffffff; /* Keep white background */
-    padding: 15px; /* Keep padding */
+    /* border: 1px solid #e0e0e0; */
+    background-color: #ffffff; /* 确保白色背景 */
+    padding: 15px 0; /* 只保留垂直方向的内边距 */
     flex-grow: 1; /* 占据聊天容器剩余空间 */
     overflow-y: auto; /* THE single scrollbar */
     margin-bottom: 0; /* Remove margin */
