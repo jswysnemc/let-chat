@@ -1186,3 +1186,289 @@ h2 { /* Removed h1 styling */
     animation: spin 1s linear infinite; /* Apply the animation */
     margin: 5px; /* Add some margin */
 }
+
+/* --- 表格样式 --- */
+.assistant-message-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5em 0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    font-size: 0.95em;
+}
+
+.assistant-message-content table thead {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.assistant-message-content table th {
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85em;
+    letter-spacing: 0.5px;
+}
+
+.assistant-message-content table td {
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+}
+
+.assistant-message-content table tbody tr {
+    transition: background-color 0.2s;
+}
+
+.assistant-message-content table tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.assistant-message-content table tbody tr:hover {
+    background-color: #f0f7ff;
+}
+
+.assistant-message-content table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* 表格响应式设计 */
+@media (max-width: 768px) {
+    .assistant-message-content table {
+        font-size: 0.85em;
+    }
+    
+    .assistant-message-content table th,
+    .assistant-message-content table td {
+        padding: 8px 10px;
+    }
+    
+    /* 使超宽的表格可以水平滚动 */
+    .assistant-message-content .table-container {
+        width: 100%;
+        overflow-x: auto;
+        margin: 1.5em 0;
+    }
+}
+
+/* 确保Markdown中的表格正确显示 */
+.assistant-message-content table code {
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+
+/* 表格标题样式 */
+.assistant-message-content table caption {
+    caption-side: top;
+    padding: 10px 0;
+    font-weight: bold;
+    color: #555;
+    text-align: center;
+    font-size: 1.1em;
+}
+
+/* --- 表格样式变体 --- */
+
+/* 紧凑型表格 */
+.assistant-message-content table.compact {
+    font-size: 0.9em;
+}
+
+.assistant-message-content table.compact th,
+.assistant-message-content table.compact td {
+    padding: 6px 10px;
+}
+
+/* 条纹型表格 - 更明显的条纹 */
+.assistant-message-content table.striped tbody tr:nth-child(odd) {
+    background-color: #f2f8ff;
+}
+
+.assistant-message-content table.striped tbody tr:nth-child(even) {
+    background-color: #ffffff;
+}
+
+/* 无边框表格 */
+.assistant-message-content table.borderless {
+    box-shadow: none;
+}
+
+.assistant-message-content table.borderless th {
+    border-bottom: 2px solid #0d6efd;
+}
+
+.assistant-message-content table.borderless td {
+    border-bottom: 1px solid #eee;
+}
+
+/* 卡片式表格 */
+.assistant-message-content table.card {
+    border: none;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.assistant-message-content table.card thead {
+    background-color: #4a89dc;
+}
+
+.assistant-message-content table.card th {
+    padding: 14px 18px;
+}
+
+/* 彩色表格 */
+.assistant-message-content table.colorful thead {
+    background: linear-gradient(135deg, #1e90ff, #0056b3);
+}
+
+.assistant-message-content table.colorful tbody tr:nth-child(odd) {
+    background-color: #f0f7ff;
+}
+
+.assistant-message-content table.colorful tbody tr:nth-child(even) {
+    background-color: #f9fcff;
+}
+
+/* 自动添加行号的表格 */
+.assistant-message-content table.numbered {
+    counter-reset: rowNumber;
+}
+
+.assistant-message-content table.numbered tbody tr {
+    counter-increment: rowNumber;
+}
+
+.assistant-message-content table.numbered tbody tr td:first-child::before {
+    content: counter(rowNumber);
+    min-width: 1em;
+    margin-right: 0.5em;
+    font-weight: 500;
+    color: #0d6efd;
+    display: inline-block;
+}
+
+/* 表格单元格内文本对齐方式 */
+.assistant-message-content table td.text-left {
+    text-align: left;
+}
+
+.assistant-message-content table td.text-center {
+    text-align: center;
+}
+
+.assistant-message-content table td.text-right {
+    text-align: right;
+}
+
+/* 表格格式化增强 */
+.assistant-message-content table td.number {
+    text-align: right;
+    font-family: monospace;
+    font-size: 0.9em;
+}
+
+.assistant-message-content table td.highlight {
+    background-color: #fff8e6;
+    font-weight: 500;
+}
+
+.assistant-message-content table td.success {
+    background-color: #e6fff2;
+    color: #00875a;
+}
+
+.assistant-message-content table td.warning {
+    background-color: #fff8e6;
+    color: #c27803;
+}
+
+.assistant-message-content table td.error {
+    background-color: #ffece6;
+    color: #d73a49;
+}
+
+/* --- 表格动画效果 --- */
+
+/* 表格淡入效果 */
+@keyframes tableAppear {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.assistant-message-content .table-container {
+    animation: tableAppear 0.4s ease-out;
+}
+
+/* 表格行悬停动画 */
+.assistant-message-content table tbody tr {
+    transition: transform 0.15s ease-out, background-color 0.2s;
+}
+
+.assistant-message-content table:not(.no-hover) tbody tr:hover {
+    transform: translateX(3px);
+    background-color: #f0f7ff !important;
+    box-shadow: -3px 0 0 #0d6efd;
+}
+
+/* 表格单元格内容更改动画 */
+@keyframes cellUpdate {
+    0% {
+        background-color: rgba(13, 110, 253, 0.15);
+    }
+    100% {
+        background-color: transparent;
+    }
+}
+
+.assistant-message-content table td.updated {
+    animation: cellUpdate 1.5s ease-out;
+}
+
+/* 卡片样式表格的特殊悬停效果 */
+.assistant-message-content table.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.assistant-message-content table.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* 突出显示行 */
+.assistant-message-content table tr.highlight {
+    background-color: #fff8e6 !important;
+    font-weight: 500;
+}
+
+/* 表格搜索高亮 */
+.assistant-message-content table td.search-highlight {
+    background-color: #ffff9f;
+    position: relative;
+}
+
+.assistant-message-content table td.search-highlight::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #0d6efd;
+    transform: scaleX(0);
+    transition: transform 0.3s ease-out;
+}
+
+.assistant-message-content table td.search-highlight:hover::after {
+    transform: scaleX(1);
+}

@@ -297,6 +297,399 @@ function renderMarkdownFallback(markdownString) {
 }
 
 /**
+ * 将表格数据转换为CSV格式
+ * @param {HTMLElement} tableElement - 表格元素
+ * @returns {string} CSV格式的表格数据
+ */
+function tableToCSV(tableElement) {
+    const rows = [];
+    // 处理表头
+    const headerCells = tableElement.querySelectorAll('th');
+    if (headerCells.length > 0) {
+        const headerRow = [];
+        headerCells.forEach(cell => {
+            // 去除排序指示器文本
+            const cellText = cell.textContent.replace(/\s[⇕↑↓]$/, '').trim();
+            headerRow.push(`"${cellText.replace(/"/g, '""')}"`);
+        });
+        rows.push(headerRow.join(','));
+    }
+    
+    // 处理表格主体
+    const bodyRows = tableElement.querySelectorAll('tbody tr');
+    bodyRows.forEach(row => {
+        if (row.style.display !== 'none') { // 只导出可见行
+            const rowData = [];
+            row.querySelectorAll('td').forEach(cell => {
+                rowData.push(`"${cell.textContent.trim().replace(/"/g, '""')}"`);
+            });
+            rows.push(rowData.join(','));
+        }
+    });
+    
+    return rows.join('\n');
+}
+
+/**
+ * 增强表格的交互性和视觉效果
+ * @param {HTMLElement} tableElement - 表格元素
+ */
+function enhanceTable(tableElement) {
+    // 只处理没有特殊类名的普通表格，给它随机分配一个美观的表格样式
+    if (!tableElement.classList.contains('compact') && 
+        !tableElement.classList.contains('striped') && 
+        !tableElement.classList.contains('borderless') && 
+        !tableElement.classList.contains('card') && 
+        !tableElement.classList.contains('colorful') && 
+        !tableElement.classList.contains('numbered')) {
+        
+        // 随机选择一种表格样式
+        const tableStyles = ['striped', 'card', 'colorful'];
+        const randomStyle = tableStyles[Math.floor(Math.random() * tableStyles.length)];
+        tableElement.classList.add(randomStyle);
+    }
+    
+    // 为表格添加排序功能
+    const headerCells = tableElement.querySelectorAll('th');
+    headerCells.forEach((th, colIndex) => {
+        // 只有存在tbody和多行数据时才添加排序功能
+        const tbody = tableElement.querySelector('tbody');
+        if (!tbody || tbody.querySelectorAll('tr').length <= 1) {
+            return;
+        }
+        
+        // 为表头添加排序样式和点击事件
+        th.style.cursor = 'pointer';
+        th.style.userSelect = 'none';
+        th.style.position = 'relative';
+        
+        // 添加表头排序指示器
+        const sortIndicator = document.createElement('span');
+        sortIndicator.textContent = ' ⇕';
+        sortIndicator.style.opacity = '0.5';
+        sortIndicator.style.fontSize = '0.8em';
+        sortIndicator.style.marginLeft = '4px';
+        th.appendChild(sortIndicator);
+        
+        // 记录排序状态: null(未排序), 'asc'(升序), 'desc'(降序)
+        th.dataset.sortOrder = 'null';
+        
+        // 点击表头排序
+        th.addEventListener('click', () => {
+            const sortOrder = th.dataset.sortOrder;
+            
+            // 重置所有表头排序状态和指示器
+            headerCells.forEach(cell => {
+                cell.dataset.sortOrder = 'null';
+                const indicator = cell.querySelector('span');
+                if (indicator) {
+                    indicator.textContent = ' ⇕';
+                    indicator.style.opacity = '0.5';
+                }
+            });
+            
+            // 设置此表头的排序方向
+            const newSortOrder = sortOrder === 'null' || sortOrder === 'desc' ? 'asc' : 'desc';
+            th.dataset.sortOrder = newSortOrder;
+            
+            // 更新排序指示器
+            if (newSortOrder === 'asc') {
+                sortIndicator.textContent = ' ↑';
+                sortIndicator.style.opacity = '1';
+            } else {
+                sortIndicator.textContent = ' ↓';
+                sortIndicator.style.opacity = '1';
+            }
+            
+            // 获取所有行并排序
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            // 排序函数
+            const sortRows = (a, b) => {
+                const cellA = a.cells[colIndex]?.textContent || '';
+                const cellB = b.cells[colIndex]?.textContent || '';
+                
+                // 检查是否为数字
+                const numA = parseFloat(cellA);
+                const numB = parseFloat(cellB);
+                
+                if (!isNaN(numA) && !isNaN(numB)) {
+                    // 数字比较
+                    return newSortOrder === 'asc' ? numA - numB : numB - numA;
+                } else {
+                    // 文本比较
+                    return newSortOrder === 'asc' 
+                        ? cellA.localeCompare(cellB) 
+                        : cellB.localeCompare(cellA);
+                }
+            };
+            
+            // 排序行
+            rows.sort(sortRows);
+            
+            // 更新表格
+            rows.forEach(row => {
+                tbody.appendChild(row);
+            });
+        });
+    });
+    
+    // 标记包含数字的单元格
+    const dataCells = tableElement.querySelectorAll('td');
+    dataCells.forEach(cell => {
+        const text = cell.textContent.trim();
+        // 检查是否全是数字、货币符号和小数点
+        if (/^[$¥€£]?\s*-?\d+(\.\d+)?%?$/.test(text)) {
+            cell.classList.add('number');
+        }
+        
+        // 自动标记特殊单元格
+        const lowerText = text.toLowerCase();
+        if (lowerText.includes('success') || lowerText.includes('通过') || lowerText.includes('完成')) {
+            cell.classList.add('success');
+        } else if (lowerText.includes('warn') || lowerText.includes('警告')) {
+            cell.classList.add('warning');
+        } else if (lowerText.includes('error') || lowerText.includes('失败') || lowerText.includes('错误')) {
+            cell.classList.add('error');
+        }
+    });
+    
+    // 为大型表格添加搜索功能（超过5行数据）
+    const tbody = tableElement.querySelector('tbody');
+    if (tbody && tbody.querySelectorAll('tr').length > 5) {
+        // 创建搜索容器
+        const searchContainer = document.createElement('div');
+        searchContainer.className = 'table-search-container';
+        searchContainer.style.marginBottom = '10px';
+        searchContainer.style.display = 'flex';
+        searchContainer.style.alignItems = 'center';
+        
+        // 创建搜索输入框
+        const searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.placeholder = '搜索表格...';
+        searchInput.style.padding = '6px 10px';
+        searchInput.style.border = '1px solid #ccc';
+        searchInput.style.borderRadius = '4px';
+        searchInput.style.width = '100%';
+        searchInput.style.fontSize = '0.9em';
+        searchInput.style.maxWidth = '250px';
+        
+        // 创建搜索结果计数
+        const resultCount = document.createElement('span');
+        resultCount.style.marginLeft = '10px';
+        resultCount.style.fontSize = '0.85em';
+        resultCount.style.color = '#666';
+        resultCount.textContent = '';
+        
+        // 创建表格工具栏
+        const toolbarContainer = document.createElement('div');
+        toolbarContainer.className = 'table-toolbar';
+        toolbarContainer.style.display = 'flex';
+        toolbarContainer.style.marginLeft = 'auto';
+        toolbarContainer.style.gap = '8px';
+        
+        // 创建复制按钮
+        const copyBtn = document.createElement('button');
+        copyBtn.textContent = '复制表格';
+        copyBtn.style.padding = '6px 10px';
+        copyBtn.style.backgroundColor = '#f0f0f0';
+        copyBtn.style.border = '1px solid #ccc';
+        copyBtn.style.borderRadius = '4px';
+        copyBtn.style.cursor = 'pointer';
+        copyBtn.style.fontSize = '0.85em';
+        copyBtn.style.display = 'flex';
+        copyBtn.style.alignItems = 'center';
+        copyBtn.style.transition = 'background-color 0.2s';
+        
+        // 创建导出按钮
+        const exportBtn = document.createElement('button');
+        exportBtn.textContent = '导出CSV';
+        exportBtn.style.padding = '6px 10px';
+        exportBtn.style.backgroundColor = '#f0f0f0';
+        exportBtn.style.border = '1px solid #ccc';
+        exportBtn.style.borderRadius = '4px';
+        exportBtn.style.cursor = 'pointer';
+        exportBtn.style.fontSize = '0.85em';
+        exportBtn.style.display = 'flex';
+        exportBtn.style.alignItems = 'center';
+        exportBtn.style.transition = 'background-color 0.2s';
+        
+        // 添加按钮悬停效果
+        [copyBtn, exportBtn].forEach(btn => {
+            btn.addEventListener('mouseover', () => {
+                btn.style.backgroundColor = '#e0e0e0';
+            });
+            btn.addEventListener('mouseout', () => {
+                btn.style.backgroundColor = '#f0f0f0';
+            });
+        });
+        
+        // 添加复制功能
+        copyBtn.addEventListener('click', () => {
+            // 获取表格数据为纯文本格式
+            const csv = tableToCSV(tableElement);
+            
+            // 复制到剪贴板
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(csv)
+                    .then(() => {
+                        const originalText = copyBtn.textContent;
+                        copyBtn.textContent = '已复制!';
+                        copyBtn.style.backgroundColor = '#d4edda';
+                        copyBtn.style.borderColor = '#c3e6cb';
+                        setTimeout(() => {
+                            copyBtn.textContent = originalText;
+                            copyBtn.style.backgroundColor = '#f0f0f0';
+                            copyBtn.style.borderColor = '#ccc';
+                        }, 2000);
+                    })
+                    .catch(err => {
+                        console.error('复制失败:', err);
+                        alert('复制表格数据失败');
+                    });
+            } else {
+                // 后备方法
+                const textarea = document.createElement('textarea');
+                textarea.value = csv;
+                document.body.appendChild(textarea);
+                textarea.select();
+                
+                try {
+                    const successful = document.execCommand('copy');
+                    if (successful) {
+                        const originalText = copyBtn.textContent;
+                        copyBtn.textContent = '已复制!';
+                        copyBtn.style.backgroundColor = '#d4edda';
+                        copyBtn.style.borderColor = '#c3e6cb';
+                        setTimeout(() => {
+                            copyBtn.textContent = originalText;
+                            copyBtn.style.backgroundColor = '#f0f0f0';
+                            copyBtn.style.borderColor = '#ccc';
+                        }, 2000);
+                    } else {
+                        alert('复制表格数据失败');
+                    }
+                } catch (err) {
+                    console.error('复制失败:', err);
+                    alert('复制表格数据失败');
+                }
+                
+                document.body.removeChild(textarea);
+            }
+        });
+        
+        // 添加导出CSV功能
+        exportBtn.addEventListener('click', () => {
+            // 获取表格数据为CSV格式
+            const csv = tableToCSV(tableElement);
+            
+            // 创建Blob对象
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            
+            // 创建下载链接
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            
+            // 设置文件名
+            let filename = 'table-data.csv';
+            // 尝试从表格标题或第一行第一列获取文件名
+            const caption = tableElement.querySelector('caption');
+            if (caption) {
+                filename = `${caption.textContent.trim()}.csv`;
+            } else {
+                const firstHeader = tableElement.querySelector('th');
+                if (firstHeader) {
+                    filename = `${firstHeader.textContent.trim()}-data.csv`;
+                }
+            }
+            
+            link.setAttribute('download', filename);
+            
+            // 触发下载
+            document.body.appendChild(link);
+            link.click();
+            
+            // 清理
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            // 显示导出成功提示
+            const originalText = exportBtn.textContent;
+            exportBtn.textContent = '已导出!';
+            exportBtn.style.backgroundColor = '#d4edda';
+            exportBtn.style.borderColor = '#c3e6cb';
+            setTimeout(() => {
+                exportBtn.textContent = originalText;
+                exportBtn.style.backgroundColor = '#f0f0f0';
+                exportBtn.style.borderColor = '#ccc';
+            }, 2000);
+        });
+        
+        // 添加按钮到工具栏
+        toolbarContainer.appendChild(copyBtn);
+        toolbarContainer.appendChild(exportBtn);
+        
+        // 将元素添加到搜索容器
+        searchContainer.appendChild(searchInput);
+        searchContainer.appendChild(resultCount);
+        searchContainer.appendChild(toolbarContainer);
+        
+        // 将搜索容器添加到表格前
+        tableElement.parentNode.insertBefore(searchContainer, tableElement);
+        
+        // 添加搜索功能
+        searchInput.addEventListener('input', () => {
+            const searchText = searchInput.value.toLowerCase().trim();
+            let matchCount = 0;
+            let hasHighlight = false;
+            
+            // 清除之前的高亮
+            tableElement.querySelectorAll('td.search-highlight').forEach(cell => {
+                cell.classList.remove('search-highlight');
+            });
+            
+            // 清除行隐藏状态
+            tbody.querySelectorAll('tr').forEach(row => {
+                row.style.display = '';
+            });
+            
+            if (searchText) {
+                // 搜索表格内容
+                tbody.querySelectorAll('tr').forEach(row => {
+                    let rowMatch = false;
+                    
+                    row.querySelectorAll('td').forEach(cell => {
+                        const cellText = cell.textContent.toLowerCase();
+                        
+                        if (cellText.includes(searchText)) {
+                            // 高亮匹配的单元格
+                            cell.classList.add('search-highlight');
+                            rowMatch = true;
+                            hasHighlight = true;
+                        }
+                    });
+                    
+                    // 如果行中没有匹配项，隐藏该行
+                    if (!rowMatch) {
+                        row.style.display = 'none';
+                    } else {
+                        matchCount++;
+                    }
+                });
+                
+                // 更新结果计数
+                resultCount.textContent = `找到 ${matchCount} 条匹配结果`;
+            } else {
+                // 清空搜索时，清除结果计数
+                resultCount.textContent = '';
+            }
+        });
+    }
+}
+
+/**
  * 处理指定容器内的代码块：应用语法高亮、添加语言标签和复制代码按钮。
  * @param {HTMLElement} container - 要处理其内部代码块的容器元素。
  */
@@ -469,6 +862,43 @@ export function highlightCodeBlocks(container) {
         // 标记该 wrapper (及其内容) 已处理
         wrapper.dataset.codeProcessed = 'true'; // Mark wrapper instead of pre
         preElement.dataset.codeProcessed = 'true'; // Mark pre too, just in case
+    });
+    
+    // 处理表格，添加响应式容器
+    container.querySelectorAll('table').forEach(tableElement => {
+        // 防止重复处理同一个表格
+        if (tableElement.dataset.tableProcessed) return;
+        
+        // 创建表格容器，使宽表格可以水平滚动
+        const tableContainer = document.createElement('div');
+        tableContainer.className = 'table-container';
+        
+        // 将表格放入容器中
+        tableElement.parentNode.insertBefore(tableContainer, tableElement);
+        tableContainer.appendChild(tableElement);
+        
+        // 确保表格有thead和tbody
+        if (!tableElement.querySelector('thead')) {
+            const firstRow = tableElement.querySelector('tr');
+            if (firstRow) {
+                const thead = document.createElement('thead');
+                tableElement.insertBefore(thead, firstRow);
+                thead.appendChild(firstRow);
+                
+                // 将第一行的td转换为th
+                firstRow.querySelectorAll('td').forEach(cell => {
+                    const th = document.createElement('th');
+                    th.innerHTML = cell.innerHTML;
+                    cell.parentNode.replaceChild(th, cell);
+                });
+            }
+        }
+        
+        // 增强表格功能
+        enhanceTable(tableElement);
+        
+        // 标记表格已处理
+        tableElement.dataset.tableProcessed = 'true';
     });
 }
 
