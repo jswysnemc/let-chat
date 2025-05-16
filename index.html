@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="./css/markdown-style.css">
     <link rel="stylesheet" href="./css/table-style.css">
     <link rel="stylesheet" href="./css/fix.css">
+    <link rel="stylesheet" href="./css/mobile-fixes.css">
     <link rel="stylesheet" href="./css/github.min.css">
     <!-- Font Awesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -29,7 +30,7 @@
     <main id="main-content">
         <!-- 聊天交互区域 -->
         <!-- Sidebar Toggle Button (Mobile Only) -->
-        <button type="button" id="sidebar-toggle-btn" class="sidebar-toggle-button" aria-label="Toggle Sidebar"><i class="fas fa-bars"></i></button> <!-- Replaced text with Font Awesome icon -->
+        <button type="button" id="sidebar-toggle-btn" class="sidebar-toggle-button" onclick="document.getElementById('sidebar').classList.add('open'); document.querySelector('.sidebar-overlay').classList.add('visible'); console.log('侧边栏按钮被点击(内联)');" aria-label="Toggle Sidebar"><i class="fas fa-bars"></i></button> <!-- Replaced text with Font Awesome icon -->
         <div class="section" id="chat-container">
             <div class="chat-header"> <!-- Added header wrapper -->
                  <!-- <h2 id="chat-title">与 AI 对话</h2> -->
@@ -65,6 +66,7 @@
     <!-- External Libraries (Keep these as modules rely on globals for now) -->
     <script src="./js/marked.min.js" defer></script>
     <script src="./js/highlight.min.js" defer></script>
+    <script src="./js/debug.js" defer></script>
 
     <!-- Application Entry Point -->
     <script type="module" src="./src/main.js"></script>

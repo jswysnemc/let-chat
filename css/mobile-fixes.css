@@ -1,0 +1,238 @@
+/* 移动端适配修复 */
+
+/* 基本移动端样式 */
+@media (max-width: 768px) {
+    /* 整体布局 */
+    .app-container {
+        grid-template-columns: 1fr; /* 单列布局 */
+    }
+    
+    /* 侧边栏适配 */
+    #sidebar {
+        position: fixed;
+        left: -280px;
+        top: 0;
+        height: 100%;
+        width: 280px;
+        z-index: 20000; /* 比遮罩层高 */
+        transition: left 0.3s ease;
+        background-color: #fff;
+        box-shadow: 3px 0 10px rgba(0, 0, 0, 0.1);
+        overflow-y: auto; /* 允许侧边栏内容滚动 */
+    }
+    
+    #sidebar.open {
+        left: 0;
+    }
+    
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 15000; /* 比按钮高，但比侧边栏低 */
+        transition: opacity 0.3s ease;
+        opacity: 0;
+    }
+    
+    .sidebar-overlay.visible {
+        display: block;
+        opacity: 1;
+    }
+    
+    /* 侧边栏切换按钮 */
+    .sidebar-toggle-button {
+        display: block !important; /* 强制显示 */
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 10000; /* 非常高的z-index */
+        background-color: #0d6efd; /* 蓝色背景，更加明显 */
+        color: white;
+        border: 1px solid #0056b3;
+        padding: 10px 13px; /* 更大的点击区域 */
+        font-size: 1.2em;
+        border-radius: 4px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        opacity: 1 !important; /* 确保完全不透明 */
+        pointer-events: auto !important; /* 确保可以点击 */
+    }
+    
+    .sidebar-toggle-button:hover {
+        background-color: #0056b3;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
+        transform: scale(1.05); /* 轻微放大效果 */
+    }
+    
+    /* 消息气泡适配 */
+    .message-bubble {
+        padding: 10px 15px;
+        max-width: 85%;
+        font-size: 0.95em;
+    }
+    
+    .assistant-bubble {
+        padding-right: 35px;
+    }
+    
+    /* 消息控制按钮 */
+    .message-controls {
+        margin-top: 8px;
+        padding-top: 8px;
+        padding-left: 8px;
+        height: 24px;
+        gap: 6px;
+    }
+    
+    .message-control-button {
+        width: 20px;
+        height: 20px;
+        font-size: 1em;
+    }
+    
+    /* AI回复框中的加载动效移动端适配 */
+    .ai-typing-indicator {
+        padding: 10px 15px;
+        font-size: 13px;
+        max-width: 85%;
+    }
+    
+    .ai-typing-indicator::before {
+        width: 16px;
+        height: 16px;
+        margin-right: 8px;
+    }
+    
+    .typing-dots span {
+        width: 5px;
+        height: 5px;
+        margin: 0 1px;
+    }
+    
+    /* 确保在低分辨率设备上正确显示对话 */
+    #ai-response {
+        padding: 10px;
+        -webkit-overflow-scrolling: touch; /* 确保滚动平滑 */
+        gap: 12px; /* 优化移动设备上的间距 */
+    }
+    
+    /* 主内容区适配 */
+    #main-content {
+        padding-left: 0;
+        margin-left: 0;
+        width: 100%;
+    }
+    
+    /* 表格适配 */
+    .assistant-message-content table {
+        font-size: 0.85em;
+    }
+    
+    .assistant-message-content table th,
+    .assistant-message-content table td {
+        padding: 8px 10px;
+    }
+    
+    /* 代码块适配 */
+    .code-block-wrapper {
+        margin: 1em 0;
+    }
+    
+    .assistant-message-content pre {
+        padding: 1em;
+        padding-top: 2em;
+        font-size: 0.9em;
+    }
+    
+    .code-language-label {
+        font-size: 0.7em;
+        padding: 0.2em 0.5em;
+    }
+    
+    .code-copy-button {
+        top: 6px;
+        right: 6px;
+        font-size: 0.7em;
+        padding: 0.3em 0.6em;
+    }
+}
+
+/* 小屏幕手机适配 */
+@media (max-width: 480px) {
+    /* 侧边栏适配 */
+    #sidebar {
+        width: 250px;
+    }
+    
+    /* 消息气泡 */
+    .message-bubble {
+        max-width: 90%; /* 在小屏幕上使用更大的最大宽度 */
+        font-size: 14px;
+        padding: 9px 12px;
+    }
+    
+    /* 消息控制按钮 */
+    .message-controls {
+        height: 22px;
+        gap: 5px;
+    }
+    
+    .message-control-button {
+        width: 18px;
+        height: 18px;
+        font-size: 0.9em;
+    }
+    
+    /* AI回复加载动效 */
+    .ai-typing-indicator {
+        max-width: 90%;
+        padding: 9px 12px;
+        font-size: 12px;
+    }
+    
+    .typing-dots span {
+        width: 4px;
+        height: 4px;
+    }
+    
+    .ai-typing-indicator::before {
+        width: 14px;
+        height: 14px;
+        margin-right: 6px;
+    }
+    
+    /* 在超小屏幕上调整间距 */
+    #ai-response {
+        padding: 8px;
+        gap: 10px;
+    }
+    
+    /* 统一输入区域适配 */
+    #unified-input-area {
+        padding: 6px 8px;
+        gap: 4px;
+    }
+    
+    #chat-input {
+        min-height: 40px;
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+    
+    #input-image-preview {
+        padding: 5px 8px;
+        min-height: 30px;
+        font-size: 12px;
+    }
+    
+    #unified-input-area #send-button {
+        height: 36px;
+        padding: 0 12px;
+        font-size: 14px;
+    }
+} 

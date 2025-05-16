@@ -16,13 +16,20 @@ export function showLoading() {
         const typingIndicator = document.createElement('div');
         typingIndicator.className = 'ai-typing-indicator message-bubble assistant-bubble';
         typingIndicator.id = 'ai-typing-indicator';
-        typingIndicator.innerHTML = 'AI 正在思考中<div class="typing-dots"><span></span><span></span><span></span></div>';
+        
+        // 检测是否为移动设备，调整文本内容
+        const isMobile = window.innerWidth <= 768;
+        const indicatorText = isMobile ? 'AI思考中' : 'AI 正在思考中';
+        
+        typingIndicator.innerHTML = `${indicatorText}<div class="typing-dots"><span></span><span></span><span></span></div>`;
         
         // 添加到AI回复区域
         aiResponseArea.appendChild(typingIndicator);
         
-        // 滚动到底部
-        aiResponseArea.scrollTop = aiResponseArea.scrollHeight;
+        // 滚动到底部，确保在移动设备上也能看到
+        setTimeout(() => {
+            aiResponseArea.scrollTop = aiResponseArea.scrollHeight;
+        }, 10);
     } else {
         console.warn("[UI] showLoading: aiResponseArea 元素引用为 null。");
     }

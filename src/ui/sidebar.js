@@ -93,26 +93,82 @@ export function updateChatTitle(title) {
  * 添加事件监听器以处理按钮点击和遮罩层点击。
  */
 export function initializeSidebar() {
-    if (sidebarToggleBtn && appContainer && sidebarOverlay) {
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+    
+    console.log("侧边栏初始化开始...");
+    console.log("sidebar元素:", sidebar);
+    console.log("sidebarToggleBtn元素:", sidebarToggleBtn);
+    console.log("sidebarOverlay元素:", sidebarOverlay);
+    console.log("mainContent元素:", mainContent);
+    
+    if (sidebarToggleBtn && sidebar && sidebarOverlay && mainContent) {
+        console.log("所有必要元素都存在，添加事件监听器");
+        
         // 切换按钮点击事件
-        sidebarToggleBtn.addEventListener('click', () => {
-            appContainer.classList.toggle('sidebar-open'); // 切换主容器的类
-            // 如果侧边栏打开了，隐藏按钮
-            if (appContainer.classList.contains('sidebar-open')) {
-                sidebarToggleBtn.style.display = 'none';
-            }
-            // 注意：如果用户再次点击按钮关闭侧边栏（理论上不可能，因为按钮隐藏了），按钮不会重新显示。
-            // 重新显示按钮的逻辑放在遮罩层点击事件中。
+        sidebarToggleBtn.addEventListener('click', (event) => {
+            console.log("侧边栏切换按钮被点击!");
+            console.log("事件对象:", event);
+            
+            // 使用正确的类操作：给sidebar添加open类
+            sidebar.classList.add('open');
+            console.log("已添加sidebar.open类");
+            
+            // 显示遮罩层
+            sidebarOverlay.classList.add('visible');
+            console.log("已添加overlay.visible类");
+            
+            // 不需要隐藏按钮，这样用户还可以点击其他地方
+            // sidebarToggleBtn.style.display = 'none';
         });
 
+        // 关闭侧边栏的函数
+        const closeSidebar = () => {
+            console.log("关闭侧边栏函数被调用");
+            sidebar.classList.remove('open'); // 移除open类以关闭侧边栏
+            sidebarOverlay.classList.remove('visible'); // 隐藏遮罩层
+            console.log("已移除sidebar.open和overlay.visible类");
+        };
+
         // 遮罩层点击事件（用于关闭侧边栏）
-        sidebarOverlay.addEventListener('click', () => {
-             appContainer.classList.remove('sidebar-open'); // 移除类以关闭侧边栏
-             sidebarToggleBtn.style.display = 'block'; // 关闭侧边栏时重新显示按钮
+        sidebarOverlay.addEventListener('click', (event) => {
+            console.log("遮罩层被点击!");
+            closeSidebar();
         });
+        
+        // 主内容区域点击事件（用于关闭侧边栏）
+        // 只有在侧边栏打开时才关闭
+        mainContent.addEventListener('click', (event) => {
+            console.log("主内容区域被点击!");
+            if (sidebar.classList.contains('open')) {
+                console.log("侧边栏处于打开状态，现在关闭它");
+                closeSidebar();
+                // 防止事件冒泡到遮罩层等其他元素
+                event.stopPropagation();
+            } else {
+                console.log("侧边栏未打开，无需关闭");
+            }
+        });
+        
+        // 添加调试按钮点击事件，输出元素状态
+        console.log("为侧边栏切换按钮添加额外的调试事件");
+        
+        // 验证按钮是否真的可以点击（CSS z-index, pointer-events等可能会阻止点击）
+        sidebarToggleBtn.addEventListener('mouseenter', () => {
+            console.log("鼠标进入侧边栏切换按钮");
+        });
+        
+        sidebarToggleBtn.addEventListener('mouseleave', () => {
+            console.log("鼠标离开侧边栏切换按钮");
+        });
+        
         console.log("侧边栏切换功能已初始化。");
     } else {
         // 这个警告理论上不应再触发，因为 initializeElements 已经检查过这些元素
-        console.warn("侧边栏切换元素缺失，功能禁用。");
+        console.warn("侧边栏切换元素缺失，功能禁用。缺失的元素:");
+        if (!sidebarToggleBtn) console.warn("- 侧边栏切换按钮");
+        if (!sidebar) console.warn("- 侧边栏");
+        if (!sidebarOverlay) console.warn("- 侧边栏遮罩层");
+        if (!mainContent) console.warn("- 主内容区域");
     }
 }
