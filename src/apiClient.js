@@ -1,4 +1,4 @@
-import { apiConfig } from './config.js';
+import { getApiConfig } from './config.js';
 
 /**
  * 调用 AI API 并以异步生成器方式流式返回响应内容块。
@@ -7,6 +7,10 @@ import { apiConfig } from './config.js';
  * @throws {Error} 如果 API 请求失败或读取流时发生错误。
  */
 export async function* streamAIResponse(messages) {
+    // 获取当前API配置（确保每次请求都获取最新配置）
+    const apiConfig = getApiConfig();
+    console.log('使用API配置发送请求:', apiConfig);
+    
     let response;
     try {
         response = await fetch(apiConfig.baseurl, {

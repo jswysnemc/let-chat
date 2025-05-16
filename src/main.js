@@ -2,7 +2,7 @@
 // Import State functions
 import * as state from './state.js';
 // Import Config module
-import { initializeConfig } from './config.js';
+import { initializeConfig, refreshApiConfig, getApiConfig } from './config.js';
 // Import UI functions from specific modules
 import { initUI } from './ui.js'; // Main UI initializer
 import { updateChatTitle, renderSessionList } from './ui/sidebar.js'; // Removed clearChatArea from here
@@ -137,6 +137,10 @@ async function handleSend(contentParts) {
 
     console.log(`Main: Handling send request for session ${activeId}...`);
     disableSendButton(); // This will now also call showLoading()
+
+    // 强制刷新API配置，确保使用最新设置
+    refreshApiConfig();
+    console.log("[Main] 已刷新API配置，确保使用最新设置");
 
     // 1. Update state and display user message for the active session
     let userMessageIndex = -1; // Initialize index
@@ -482,9 +486,30 @@ function main() {
     // 监听API配置更改事件
     document.addEventListener('apiConfigChanged', (event) => {
         console.log("API配置已更改:", event.detail);
+        // 记录完整的配置变更信息
+        if (event.detail.config) {
+            console.log("新的API配置详情:", {
+                模型: event.detail.config.model,
+                基础URL: event.detail.config.baseurl,
+                系统提示: event.detail.config.system_prompt?.substring(0, 50) + "..."
+            });
+        }
+        
         // 重新渲染聊天界面，确保样式一致性
         renderChatForActiveSession();
     });
+    
+    // 初始化时强制触发一次配置变更事件，确保一致性
+    const config = getApiConfig();
+    try {
+        const event = new CustomEvent('apiConfigChanged', { 
+            detail: { config }
+        });
+        document.dispatchEvent(event);
+        console.log("应用启动时触发API配置变更事件");
+    } catch (err) {
+        console.error("触发初始配置事件失败:", err);
+    }
     
     // Initialize input handling, passing the handleSend function as the callback
     initInputHandling({ onSend: handleSend });

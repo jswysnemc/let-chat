@@ -33,6 +33,17 @@ export function getApiConfig() {
 export function updateApiConfig(newConfig) {
     currentConfig = { ...newConfig };
     console.log('API配置已更新:', currentConfig);
+    
+    // 触发配置更改事件
+    try {
+        const event = new CustomEvent('apiConfigChanged', { 
+            detail: { config: { ...currentConfig } }
+        });
+        document.dispatchEvent(event);
+        console.log('API配置更新事件已触发');
+    } catch (err) {
+        console.error('触发配置更改事件失败:', err);
+    }
 }
 
 /**
@@ -125,7 +136,7 @@ export function setActiveProvider(providerId) {
     try {
         // 触发一个配置更改事件，通知应用其他部分
         const event = new CustomEvent('apiConfigChanged', { 
-            detail: { provider, model: activeModel }
+            detail: { provider, model: activeModel, config: { ...currentConfig } }
         });
         document.dispatchEvent(event);
         console.log('API配置已更新并触发事件:', provider.name, activeModel.name);
@@ -134,6 +145,16 @@ export function setActiveProvider(providerId) {
     }
     
     return true;
+}
+
+// 强制刷新API配置
+export function refreshApiConfig() {
+    const { activeProviderId } = loadProviders();
+    if (activeProviderId) {
+        console.log('强制刷新API配置...');
+        return setActiveProvider(activeProviderId);
+    }
+    return false;
 }
 
 // 初始化：从本地存储加载配置
@@ -145,5 +166,9 @@ export function initializeConfig() {
     console.log('API配置已初始化:', currentConfig);
 }
 
-// 原始导出，保持向后兼容性
-export const apiConfig = currentConfig;
+// 使用getter方式导出apiConfig，确保每次访问都获取最新值
+export const apiConfig = new Proxy({}, {
+    get: (target, prop) => {
+        return currentConfig[prop];
+    }
+});

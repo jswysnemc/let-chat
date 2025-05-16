@@ -1,4 +1,4 @@
-import { loadProviders, saveProviders, setActiveProvider, getApiConfig } from '../config.js';
+import { loadProviders, saveProviders, setActiveProvider, getApiConfig, refreshApiConfig } from '../config.js';
 
 // DOM 元素引用
 let settingsModalOverlay = null;
@@ -103,6 +103,10 @@ export function showSettingsModal() {
 export function hideSettingsModal() {
     settingsModalOverlay.classList.remove('visible');
     clearProviderForm(); // 清空表单
+    
+    // 强制刷新API配置，确保使用最新激活的服务商设置
+    refreshApiConfig();
+    console.log('关闭设置模态框，已刷新API配置');
 }
 
 /**
