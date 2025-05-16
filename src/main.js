@@ -14,7 +14,9 @@ import { getElement } from './ui/domElements.js'; // Import getElement
 import { aiResponseArea } from './ui/domElements.js'; // Import the chat area element
 import { initInputHandling } from './inputController.js';
 import { streamAIResponse } from './apiClient.js';
-import { renderMarkdown, highlightCodeBlocks } from './markdownRenderer.js';
+import { renderMarkdown, renderMarkdownAsync, highlightCodeBlocks } from './markdownRenderer.js';
+import { showConfirmationModal } from './ui/confirmModal.js'; // Import the new modal function
+import { copyTextFallback } from './ui/copyUtils.js'; // Import copy fallback
 
 
 /** Renders the chat messages for the currently active session */
@@ -112,6 +114,29 @@ async function handleSend(contentParts) {
         }
         displayUserMessage(contentParts, userMessageIndex); // Pass the correct index
         clearInput(); // Clear input after grabbing content
+
+        // --- Auto-rename session logic ---
+        const session = state.getSession(activeId);
+        const messages = state.getMessages(activeId);
+        // Check if it's the first user message (total messages = 2: system + user)
+        // and if the session name still has the default prefix
+        if (session && messages.length === 2 && session.name.startsWith("新会话")) {
+            // Extract text from the first user message part
+            const firstTextPart = contentParts.find(p => p.type === 'text');
+            if (firstTextPart && firstTextPart.text.trim()) {
+                const newTitle = firstTextPart.text.trim().substring(0, 20); // Take first 20 chars as title
+                if (state.updateSessionName(activeId, newTitle)) {
+                    console.log(`[Main] Session ${activeId} auto-renamed to "${newTitle}"`);
+                    // Update UI immediately
+                    renderSessionList(state.getAllSessions(), activeId);
+                    updateChatTitle(newTitle);
+                } else {
+                    console.warn(`[Main] Failed to auto-rename session ${activeId}`);
+                }
+            }
+        }
+        // --- End auto-rename session logic ---
+
     } catch (error) {
         console.error("Error processing user input:", error);
         displayError("处理您的输入时出错: " + error.message);
@@ -141,7 +166,47 @@ async function handleSend(contentParts) {
         for await (const chunk of streamAIResponse(currentHistory)) {
             accumulatedContent += chunk;
             // Render the accumulated content as HTML
-            const htmlContent = renderMarkdown(accumulatedContent);
+            let htmlContent = "";
+            
+            // 特殊情况：直接识别以**开头的文本
+            if (accumulatedContent.trim().startsWith("**") && accumulatedContent.includes("**")) {
+                console.log("[Main] 检测到流式内容以**开头，使用特殊处理");
+                try {
+                    // 1. 首先尝试完整的Markdown渲染
+                    htmlContent = renderMarkdown(accumulatedContent);
+                } catch (err) {
+                    console.error("流式Markdown渲染失败，使用直接替换:", err);
+                    // 2. 直接替换**文本**为<strong>文本</strong>
+                    htmlContent = accumulatedContent;
+                    htmlContent = htmlContent.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+                    // 3. 转义其余HTML
+                    htmlContent = htmlContent.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    // 4. 还原strong标签
+                    htmlContent = htmlContent.replace(/&lt;strong&gt;/g, "<strong>").replace(/&lt;\/strong&gt;/g, "</strong>");
+                    // 5. 包装在<p>标签中
+                    if (!htmlContent.startsWith("<p>")) {
+                        htmlContent = `<p>${htmlContent}</p>`;
+                    }
+                }
+            } else {
+                // 常规内容处理
+                try {
+                    // 尝试完整的Markdown渲染
+                    htmlContent = renderMarkdown(accumulatedContent);
+                } catch (err) {
+                    console.error("流式Markdown渲染失败，使用基本处理:", err);
+                    // 确保至少渲染一些内容和粗体文本
+                    htmlContent = accumulatedContent;
+                    htmlContent = htmlContent.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+                    htmlContent = htmlContent.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    htmlContent = htmlContent.replace(/&lt;strong&gt;/g, "<strong>").replace(/&lt;\/strong&gt;/g, "</strong>");
+                    if (!htmlContent.startsWith("<p>")) {
+                        htmlContent = `<p>${htmlContent}</p>`;
+                    }
+                }
+            }
+            
+            console.log("[Main] 流式HTML内容(前30字符):", htmlContent.substring(0, 30));
             // Update the content container's innerHTML using the UI function
             updateAssistantMessageContent(assistantBubbleRefs.contentContainer, htmlContent);
             // Process code blocks within the updated container (highlighting, etc.)
@@ -452,13 +517,29 @@ function main() {
                 if (sessionIdToDelete) {
                     const sessionToDelete = state.getSession(sessionIdToDelete);
                     const sessionName = sessionToDelete?.name || `ID ${sessionIdToDelete.substring(0,4)}`;
+                    // Replace confirm with custom modal
+                    showConfirmationModal(
+                        `您确定要删除会话 "${sessionName}" 吗？此操作无法撤销。`,
+                        () => { // onConfirm callback
+                            if (state.deleteSession(sessionIdToDelete)) {
+                                const newActiveId = state.getActiveSessionId();
+                                renderSessionList(state.getAllSessions(), newActiveId);
+                                renderChatForActiveSession(); // Render potentially new active chat
+                            } else {
+                                alert("删除会话失败。"); // Show error if deletion fails
+                            }
+                        },
+                        "删除会话" // Optional title
+                    );
+                    /* Original confirm logic:
                     if (confirm(`您确定要删除会话 "${sessionName}" 吗？\n此操作无法撤销。`)) {
                         if (state.deleteSession(sessionIdToDelete)) {
                             const newActiveId = state.getActiveSessionId();
                             renderSessionList(state.getAllSessions(), newActiveId);
-                            renderChatForActiveSession(); // Render potentially new active chat
+                            // renderChatForActiveSession(); // Render potentially new active chat - Moved inside callback
                         }
                     }
+                    */
                 } else {
                      console.error("[Main] Session Delete button clicked but session ID not found.");
                 }
@@ -522,6 +603,19 @@ function main() {
            // --- 结束调试日志 ---
 
            if (action === 'delete') {
+               // Replace confirm with custom modal
+               showConfirmationModal(
+                   "您确定要删除这条消息吗？",
+                   () => { // onConfirm callback
+                       if (state.deleteMessageFromSession(activeId, messageIndex)) {
+                           renderChatForActiveSession(); // Re-render the chat
+                       } else {
+                           alert("删除消息失败。");
+                       }
+                   },
+                   "删除消息" // Optional title
+               );
+               /* Original confirm logic:
                if (confirm("您确定要删除这条消息吗？")) {
                    if (state.deleteMessageFromSession(activeId, messageIndex)) {
                        renderChatForActiveSession(); // Re-render the chat
@@ -529,6 +623,7 @@ function main() {
                        alert("删除消息失败。");
                    }
                }
+               */
            } else if (action === 'edit') {
                const rawContent = bubble.dataset.rawContent;
                 if (typeof rawContent === 'undefined') { // 增加检查
@@ -589,7 +684,48 @@ function main() {
                     // Stream and render AI response
                     for await (const chunk of streamAIResponse(currentHistory)) {
                         accumulatedContent += chunk;
-                        const htmlContent = renderMarkdown(accumulatedContent);
+                        
+                        // 渲染内容
+                        let htmlContent = "";
+                        
+                        // 特殊情况：直接识别以**开头的文本
+                        if (accumulatedContent.trim().startsWith("**") && accumulatedContent.includes("**")) {
+                            console.log("[Main] 检测到重试内容以**开头，使用特殊处理");
+                            try {
+                                // 首先尝试完整的Markdown渲染
+                                htmlContent = renderMarkdown(accumulatedContent);
+                            } catch (err) {
+                                console.error("重试时Markdown渲染失败，使用直接替换:", err);
+                                // 直接替换**文本**为<strong>文本</strong>
+                                htmlContent = accumulatedContent;
+                                htmlContent = htmlContent.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+                                // 转义其余HTML
+                                htmlContent = htmlContent.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                                // 还原strong标签
+                                htmlContent = htmlContent.replace(/&lt;strong&gt;/g, "<strong>").replace(/&lt;\/strong&gt;/g, "</strong>");
+                                // 包装在<p>标签中
+                                if (!htmlContent.startsWith("<p>")) {
+                                    htmlContent = `<p>${htmlContent}</p>`;
+                                }
+                            }
+                        } else {
+                            // 常规内容处理
+                            try {
+                                // 尝试完整的Markdown渲染
+                                htmlContent = renderMarkdown(accumulatedContent);
+                            } catch (err) {
+                                console.error("重试时Markdown渲染失败，使用基本处理:", err);
+                                // 确保至少渲染一些内容和粗体文本
+                                htmlContent = accumulatedContent;
+                                htmlContent = htmlContent.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+                                htmlContent = htmlContent.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                                htmlContent = htmlContent.replace(/&lt;strong&gt;/g, "<strong>").replace(/&lt;\/strong&gt;/g, "</strong>");
+                                if (!htmlContent.startsWith("<p>")) {
+                                    htmlContent = `<p>${htmlContent}</p>`;
+                                }
+                            }
+                        }
+                        
                         updateAssistantMessageContent(assistantBubbleRefs.contentContainer, htmlContent);
                         try {
                              highlightCodeBlocks(assistantBubbleRefs.contentContainer);
@@ -623,8 +759,56 @@ function main() {
                 }
 
            } else if (action === 'copy') {
-               // Copy action is handled internally by the button's own listener in messageDisplay.js
-               console.log("[Main] Copy action detected (handled internally).");
+               // Handle copy action here for both user and assistant messages
+               const textToCopy = bubble.dataset.rawContent || '';
+               if (!textToCopy) {
+                   console.error("[Main] Copy action failed: rawContent is empty or missing.");
+                   alert("无法复制：消息内容为空。");
+                   return;
+               }
+
+               const copyBtn = actionButton; // The button that was clicked
+
+               const handleCopySuccess = () => {
+                   const originalHTML = copyBtn.innerHTML;
+                   const originalTitle = copyBtn.title;
+                   copyBtn.innerHTML = '<i class="fas fa-check"></i>';
+                   copyBtn.title = '已复制!';
+                   copyBtn.disabled = true;
+                   setTimeout(() => {
+                       copyBtn.innerHTML = originalHTML;
+                       copyBtn.title = originalTitle;
+                       copyBtn.disabled = false;
+                   }, 2000);
+               };
+
+               const handleCopyFailure = (methodUsed) => {
+                   console.error(`Copy failed using ${methodUsed}.`);
+                   if (methodUsed === 'navigator.clipboard' && !window.isSecureContext) {
+                       alert('复制失败：此功能需要安全连接 (HTTPS) 或在 localhost 上运行。');
+                   } else if (methodUsed === 'document.execCommand') {
+                       alert('复制失败！浏览器不支持或禁止了后备复制方法。');
+                   } else {
+                       alert('复制失败！您的浏览器可能不支持此操作或权限不足。');
+                   }
+               };
+
+               // --- Main Copy Logic ---
+               if (window.isSecureContext && navigator.clipboard && navigator.clipboard.writeText) {
+                   navigator.clipboard.writeText(textToCopy).then(() => {
+                       handleCopySuccess();
+                   }).catch(err => {
+                       console.error('navigator.clipboard.writeText failed:', err);
+                       handleCopyFailure('navigator.clipboard');
+                   });
+               } else {
+                   if (copyTextFallback(textToCopy)) {
+                       handleCopySuccess();
+                   } else {
+                       handleCopyFailure('document.execCommand');
+                   }
+               }
+               // --- End Main Copy Logic ---
            }
        });
    } else {

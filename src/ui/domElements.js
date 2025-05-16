@@ -26,6 +26,13 @@ export let editMessageForm = null;
 export let editMessageTextarea = null;
 export let editMessageModalCancelBtn = null;
 
+// --- Confirmation Modal Elements ---
+export let confirmModalOverlay = null;
+export let confirmModalTitle = null;
+export let confirmModalMessage = null;
+export let confirmModalConfirmBtn = null;
+export let confirmModalCancelBtn = null;
+
 // 侧边栏切换元素
 export let sidebarToggleBtn = null;
 export let appContainer = null; // 应用主容器，用于切换 CSS 类
@@ -93,6 +100,13 @@ export function initializeElements() {
     editMessageForm = document.getElementById('edit-message-form');
     editMessageTextarea = document.getElementById('edit-message-text');
     editMessageModalCancelBtn = document.getElementById('edit-message-modal-cancel-btn');
+
+    // 获取确认模态框元素
+    confirmModalOverlay = document.getElementById('confirm-modal-overlay');
+    confirmModalTitle = document.getElementById('confirm-modal-title');
+    confirmModalMessage = document.getElementById('confirm-modal-message');
+    confirmModalConfirmBtn = document.getElementById('confirm-modal-confirm-btn');
+    confirmModalCancelBtn = document.getElementById('confirm-modal-cancel-btn');
 
     // 获取侧边栏切换元素
     sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');

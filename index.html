@@ -96,9 +96,22 @@
                 </div>
                 <div class="modal-actions">
                     <button type="submit" class="button-primary">确定</button>
+
                     <button type="button" id="edit-message-modal-cancel-btn" class="button-secondary">取消</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal-overlay" class="modal-overlay">
+        <div id="confirm-modal-content" class="modal-content" style="max-width: 400px;"> <!-- Smaller max-width -->
+            <h3 id="confirm-modal-title">确认操作</h3> <!-- Optional Title -->
+            <p id="confirm-modal-message" style="text-align: center; margin-bottom: 20px;"></p> <!-- Message Area -->
+            <div class="modal-actions">
+                <button type="button" id="confirm-modal-confirm-btn" class="button-primary">确定</button>
+                <button type="button" id="confirm-modal-cancel-btn" class="button-secondary">取消</button>
+            </div>
         </div>
     </div>
 </body>

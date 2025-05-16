@@ -270,9 +270,10 @@ h2 { /* Removed h1 styling */
     display: none;
 }
 
-/* Keep strong hidden just in case */
+/* 添加粗体样式 */
 .message-bubble strong {
-    display: none;
+    font-weight: bold;
+    color: inherit; /* 继承父元素颜色 */
 }
 
 /* --- New Message Controls Styling --- */

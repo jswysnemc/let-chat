@@ -1,12 +1,10 @@
-
-
-
 // src/ui/messageDisplay.js
 import { aiResponseArea } from './domElements.js'; // 导入 AI 响应区域元素
 import { updateAiResponsePlaceholderVisually } from './placeholderManager.js'; // 导入占位符更新函数
 import { scrollChatToBottom } from './chatScroll.js'; // 导入滚动函数
 import { copyTextFallback } from './copyUtils.js'; // 导入后备复制函数
-import { renderMarkdown, highlightCodeBlocks } from '../markdownRenderer.js'; // 导入 Markdown 处理函数 (注意路径)
+import { renderMarkdown, renderMarkdownAsync, highlightCodeBlocks } from '../markdownRenderer.js'; // 导入 Markdown 处理函数 (注意路径)
+import { getElement } from './domElements.js'; // Import getElement to find chatInput
 
 /**
  * 创建包含消息操作按钮的控件 div。
@@ -186,13 +184,31 @@ export function createAssistantMessageBubble(messageIndex, isStreaming = true) {
  */
 export function updateAssistantMessageContent(contentContainer, htmlContent) {
     if (contentContainer) {
+        // --- Preserve Focus ---
+        const activeElement = document.activeElement; // Get the currently focused element
+        const chatInput = getElement('chatInput'); // Get reference to the chat input
+        const shouldRestoreFocus = activeElement === chatInput; // Check if input had focus
+        // --------------------
+
         // 在第一次更新内容前，移除可能存在的加载动画
         const existingSpinner = contentContainer.querySelector('.bubble-loading-spinner');
         if (existingSpinner) {
             contentContainer.removeChild(existingSpinner);
         }
 
+        console.log("[UI] 更新内容容器，HTML前60字符:", htmlContent.substring(0, 60));
+        
+        // 设置innerHTML而不是innerText，确保HTML标签被正确解析
         contentContainer.innerHTML = htmlContent; // 更新内容
+
+        // --- Restore Focus ---
+        if (shouldRestoreFocus && chatInput) {
+            // Use requestAnimationFrame to ensure focus is restored after potential rendering updates
+            requestAnimationFrame(() => {
+                chatInput.focus();
+            });
+        }
+
         scrollChatToBottom(); // 添加内容时滚动
     } else {
         console.warn("UI: updateAssistantMessageContent 调用时容器为 null。");
@@ -222,57 +238,11 @@ export function finalizeAssistantMessage(bubbleElement, fullContent) {
             // 启用所有按钮 (重试按钮的可见性由 main.js 控制)
             btn.disabled = false;
 
-            // 特别处理复制按钮：添加监听器
-            if (btn.classList.contains('message-copy-btn') && !btn.dataset.listenerAdded) {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation(); // 阻止事件冒泡
-                    const textToCopy = bubbleElement.dataset.rawContent || ''; // 从 dataset 获取内容
-
-                    // 处理复制成功的逻辑
-            const handleCopySuccess = () => {
-                    const originalHTML = btn.innerHTML; // Store original HTML (icon)
-                    const originalTitle = btn.title;
-                    btn.innerHTML = '<i class="fas fa-check"></i>'; // Use check icon
-                    btn.title = '已复制!';
-                    btn.disabled = true;
-                    setTimeout(() => {
-                        btn.innerHTML = originalHTML; // Restore original HTML (icon)
-                        btn.title = originalTitle;
-                        btn.disabled = false;
-                    }, 2000);
-                };
-
-                // 处理复制失败的逻辑
-                const handleCopyFailure = (methodUsed) => {
-                     console.error(`使用 ${methodUsed} 复制失败。`);
-                     if (methodUsed === 'navigator.clipboard' && !window.isSecureContext) {
-                         alert('复制失败：此功能需要安全连接 (HTTPS) 或在 localhost 上运行。');
-                     } else if (methodUsed === 'document.execCommand') {
-                          alert('复制失败！浏览器不支持或禁止了后备复制方法。');
-                     } else {
-                         alert('复制失败！您的浏览器可能不支持此操作或权限不足。');
-                     }
-                };
-
-                // --- 主要复制逻辑 ---
-                if (window.isSecureContext && navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(textToCopy).then(() => {
-                        handleCopySuccess();
-                    }).catch(err => {
-                        console.error('navigator.clipboard.writeText 失败:', err);
-                        handleCopyFailure('navigator.clipboard');
-                    });
-                } else {
-                    if (copyTextFallback(textToCopy)) {
-                        handleCopySuccess();
-                    } else {
-                        handleCopyFailure('document.execCommand');
-                    }
-                }
-                // --- 主要复制逻辑结束 ---
-                }); // End of copy button event listener
-                btn.dataset.listenerAdded = 'true'; // 标记监听器已添加
-            } // End of if copy button check
+            // 移除复制按钮监听器的添加逻辑，将统一在 main.js 中处理
+            // if (btn.classList.contains('message-copy-btn') && !btn.dataset.listenerAdded) {
+            //     // ... (removed event listener code) ...
+            //     btn.dataset.listenerAdded = 'true';
+            // }
         }); // End of buttons.forEach
     } else {
         console.warn("[UI] finalizeAssistantMessage: 未找到控件容器。");
@@ -331,8 +301,49 @@ export function displayAssistantMessage(content, messageIndex) {
         return; // 创建气泡失败
     }
 
+    console.log("[UI] 显示助手消息，内容:", content);
+
     // 渲染 Markdown 并更新内容
-    const htmlContent = renderMarkdown(content);
+    let htmlContent = "";
+
+    // 特殊情况：直接识别以**开头的文本
+    if (content.trim().startsWith("**") && content.includes("**")) {
+        console.log("[UI] 检测到以**开头的文本，使用特殊处理");
+        try {
+            // 1. 首先尝试完整的Markdown渲染
+            htmlContent = renderMarkdown(content);
+        } catch (err) {
+            console.error("完整Markdown渲染失败，使用直接替换:", err);
+            // 2. 直接替换**文本**为<strong>文本</strong>
+            htmlContent = content;
+            htmlContent = htmlContent.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            // 3. 转义其余HTML
+            htmlContent = htmlContent.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            // 4. 还原strong标签
+            htmlContent = htmlContent.replace(/&lt;strong&gt;/g, "<strong>").replace(/&lt;\/strong&gt;/g, "</strong>");
+            // 5. 包装在<p>标签中
+            if (!htmlContent.startsWith("<p>")) {
+                htmlContent = `<p>${htmlContent}</p>`;
+            }
+        }
+    } else {
+        // 常规内容处理
+        try {
+            htmlContent = renderMarkdown(content);
+        } catch (err) {
+            console.error("Markdown渲染出错，使用基本处理:", err);
+            // 确保至少渲染一些内容和粗体文本
+            htmlContent = content;
+            htmlContent = htmlContent.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            htmlContent = htmlContent.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            htmlContent = htmlContent.replace(/&lt;strong&gt;/g, "<strong>").replace(/&lt;\/strong&gt;/g, "</strong>");
+            if (!htmlContent.startsWith("<p>")) {
+                htmlContent = `<p>${htmlContent}</p>`;
+            }
+        }
+    }
+    
+    console.log("[UI] 最终HTML内容:", htmlContent);
     updateAssistantMessageContent(bubbleRefs.contentContainer, htmlContent);
 
     // 内容添加到 DOM 后高亮代码块
@@ -344,7 +355,6 @@ export function displayAssistantMessage(content, messageIndex) {
     }
 
     // 最终确定（启用按钮，设置 data-content, 添加复制监听器）
-    // 注意：之前这里错误地传递了 copyButton，现在只传 bubbleElement 和 content
     finalizeAssistantMessage(bubbleRefs.bubbleElement, content);
 }
 
