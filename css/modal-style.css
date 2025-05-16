@@ -11,7 +11,7 @@
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 25000; /* 比侧边栏还要高 */
     justify-content: center;
-    align-items: center;
+    align-items: flex-start; /* 改为顶部对齐 */
     overflow-y: auto;
     padding: 20px;
 }
@@ -199,67 +199,36 @@
     }
 }
 
-/* 会话编辑模态框特殊样式 */
-#edit-session-name {
-    margin-bottom: 0; /* 移除底部外边距 */
-}
-
+/* 系统提示文本域通用样式 */
+#system-prompt, 
 #edit-system-prompt {
-    min-height: 120px; /* 设置最小高度 */
-    font-family: inherit; /* 继承字体 */
-    line-height: 1.5; /* 合理的行高 */
+    min-height: 120px;
+    font-family: inherit;
+    line-height: 1.5;
     width: 100%;
     box-sizing: border-box;
-    padding: 10px 12px;
+    padding: 12px;
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 15px;
     margin: 0;
+    resize: vertical;
+    background-color: #fff;
+    color: #333;
 }
 
-/* 移动端适配 */
-@media (max-width: 768px) {
-    .modal-content {
-        padding: 20px;
-        margin: 15px auto; /* 确保在小屏幕上也有足够边距 */
-    }
-
-    .form-group {
-        margin-bottom: 15px;
-    }
-
-    .modal-actions {
-        margin-top: 20px;
-    }
-}
-
-@media (max-width: 480px) {
-    .modal-content {
-        padding: 15px;
-        margin: 10px auto; /* 较小的边距 */
-    }
-
-    .modal-content h3 {
-        font-size: 1.2em;
-        margin-bottom: 15px;
-    }
-
-    .form-group input[type="text"],
-    .form-group textarea {
-        padding: 8px 10px;
-        font-size: 14px;
-    }
-
-    .button-primary,
-    .button-secondary {
-        padding: 8px 12px;
-        font-size: 14px;
-    }
+#system-prompt:focus, 
+#edit-system-prompt:focus {
+    border-color: #0d6efd;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.2);
 }
 
 /* 设置模态框样式 */
 .settings-modal {
     max-width: 900px; /* 更宽的模态框 */
+    max-height: 90vh; /* 限制最大高度 */
+    overflow-y: auto; /* 允许内容滚动 */
 }
 
 .settings-container {
@@ -345,6 +314,34 @@
     box-sizing: border-box; /* 确保内边距包含在宽度内 */
 }
 
+/* 添加服务商和添加模型按钮样式增强 */
+#add-provider-btn,
+#add-model-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    background-color: #f8f9fa;
+    color: #0d6efd;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#add-provider-btn:hover,
+#add-model-btn:hover {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+}
+
+#add-provider-btn i,
+#add-model-btn i {
+    font-size: 12px;
+}
+
 .settings-action-btn {
     padding: 5px 8px;
     font-size: 12px;
@@ -406,6 +403,45 @@
     flex: 1;
 }
 
+/* 模型选项单选按钮优化 */
+.model-radio-label input[type="radio"] {
+    margin: 0;
+    width: 16px;
+    height: 16px;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 2px solid #0d6efd;
+    border-radius: 50%;
+    outline: none;
+    position: relative;
+    background-color: #fff;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.model-radio-label input[type="radio"]:checked::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #0d6efd;
+}
+
+.model-radio-label input[type="radio"]:focus {
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.2);
+}
+
+.model-radio-label span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 编辑和删除按钮增强 */
 .model-actions {
     display: flex;
     gap: 5px;
@@ -417,16 +453,39 @@
     color: #666;
     cursor: pointer;
     font-size: 14px;
-    padding: 2px;
-    box-sizing: border-box; /* 确保内边距包含在宽度内 */
+    padding: 2px 5px;
+    border-radius: 3px;
+    transition: all 0.2s;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .model-action-btn:hover {
     color: #1890ff;
+    background-color: rgba(24, 144, 255, 0.1);
 }
 
 .model-action-btn.delete-btn:hover {
     color: #ff4d4f;
+    background-color: rgba(255, 77, 79, 0.1);
+}
+
+/* 添加模型弹出框样式 */
+.add-model-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    z-index: 30000;
+    max-width: 90%;
+    width: 350px;
+    box-sizing: border-box;
 }
 
 /* 侧边栏底部 */
@@ -458,6 +517,27 @@
     background-color: #0b5ed7; /* 悬停时颜色变深 */
 }
 
+/* 表单元素统一样式 */
+.form-control {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #333;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+.form-control:focus {
+    border-color: #0d6efd;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.2);
+}
+
 /* 确保模态框内的所有表单元素一致 */
 .modal-content input[type="text"],
 .modal-content textarea {
@@ -485,4 +565,259 @@
     padding-bottom: 10px;
     line-height: 1.5;
     vertical-align: top;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .modal-overlay {
+        padding: 15px 10px;
+        align-items: center; /* 中部对齐更适合移动端 */
+    }
+    
+    .modal-content {
+        padding: 20px;
+        margin: 15px auto; /* 确保在小屏幕上也有足够边距 */
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .modal-actions {
+        margin-top: 20px;
+    }
+    
+    /* 服务商设置模态框移动端适配 */
+    .settings-modal {
+        max-width: 100%;
+        padding: 15px;
+        max-height: 85vh;
+        overflow-y: auto;
+    }
+    
+    .settings-container {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .service-providers-container {
+        flex: none;
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #eee;
+        padding-right: 0;
+        padding-bottom: 15px;
+    }
+    
+    .provider-details-container {
+        width: 100%;
+    }
+    
+    .service-provider-list {
+        max-height: 200px;
+    }
+    
+    .models-container {
+        max-height: 120px;
+    }
+    
+    /* 修复移动端文本域和输入框 */
+    .form-group input[type="text"],
+    .form-group textarea {
+        font-size: 15px;
+        padding: 10px;
+    }
+    
+    #system-prompt, 
+    #edit-system-prompt {
+        min-height: 100px;
+        padding: 10px;
+    }
+    
+    /* 修复添加模型弹出框 */
+    .add-model-popup {
+        width: 90%;
+        padding: 15px;
+    }
+    
+    /* 移动端按钮样式优化 */
+    #add-provider-btn,
+    #add-model-btn {
+        width: 100%;
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+    
+    .settings-action-btn {
+        padding: 6px 8px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-overlay {
+        padding: 10px 5px;
+    }
+    
+    .modal-content {
+        padding: 15px;
+        margin: 10px auto; /* 较小的边距 */
+    }
+
+    .modal-content h3 {
+        font-size: 1.2em;
+        margin-bottom: 15px;
+    }
+
+    .form-group input[type="text"],
+    .form-group textarea {
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+
+    .button-primary,
+    .button-secondary {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+    
+    /* 小屏手机上的服务商设置模态框 */
+    .settings-modal {
+        padding: 12px;
+        max-height: 80vh;
+        margin: 5px;
+    }
+    
+    .service-provider-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .service-provider-header h4 {
+        margin-bottom: 5px;
+    }
+    
+    .settings-action-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .models-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    #add-model-btn {
+        width: 100%;
+        justify-content: center;
+        margin-top: 5px;
+    }
+    
+    .model-item {
+        flex-direction: row; /* 保持水平方向 */
+        padding: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    
+    .model-radio-label {
+        margin-bottom: 0;
+        width: auto;
+        flex: 1;
+        min-width: 0; /* 允许内容压缩 */
+    }
+    
+    .model-radio-label span {
+        font-size: 13px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .model-actions {
+        width: auto;
+        justify-content: flex-end;
+    }
+    
+    .model-action-btn {
+        padding: 3px;
+        font-size: 12px;
+        margin-left: 3px;
+    }
+    
+    /* 单选按钮样式修复 */
+    .model-radio-label input[type="radio"] {
+        width: 14px;
+        height: 14px;
+    }
+    
+    .model-radio-label input[type="radio"]:checked::before {
+        width: 6px;
+        height: 6px;
+    }
+    
+    /* 确保表单元素在小屏幕上正确显示 */
+    .form-group label {
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+    
+    #provider-name,
+    #provider-baseurl,
+    #provider-key,
+    #system-prompt {
+        font-size: 14px;
+        padding: 8px 10px;
+    }
+    
+    #system-prompt, 
+    #edit-system-prompt {
+        min-height: 80px;
+        padding: 8px;
+        font-size: 14px;
+    }
+    
+    /* 添加模型弹出框在小屏幕上的调整 */
+    .add-model-popup {
+        width: 95%;
+        padding: 12px;
+    }
+    
+    .add-model-popup input[type="text"] {
+        font-size: 14px;
+        padding: 8px;
+    }
+    
+    /* 确保系统提示输入框在较小屏幕上不会过大 */
+    #system-prompt {
+        min-height: 80px;
+        max-height: 150px;
+    }
+    
+    /* 小屏幕按钮样式 */
+    #add-provider-btn,
+    #add-model-btn {
+        font-size: 13px;
+        padding: 7px 8px;
+    }
+    
+    /* 修复服务商项目在移动端的样式 */
+    .service-provider-item {
+        padding: 10px;
+    }
+    
+    /* 修复设置模态框标题 */
+    #settings-modal-content h3 {
+        font-size: 16px;
+        padding-bottom: 8px;
+        margin-bottom: 12px;
+    }
+    
+    .service-provider-header h4,
+    .provider-details-container h4 {
+        font-size: 15px;
+    }
 } 
