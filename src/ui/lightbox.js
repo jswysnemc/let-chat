@@ -104,6 +104,11 @@ function closeLightbox() {
         // 添加淡出动画
         overlay.classList.remove('visible');
         
+        // 移除视口监听器（如果存在）
+        if (typeof window.visualViewport !== 'undefined' && overlay.viewportHandler) {
+            window.visualViewport.removeEventListener('resize', overlay.viewportHandler);
+        }
+        
         // 等待动画完成后移除元素
         setTimeout(() => {
             if (overlay.parentNode) {
@@ -141,6 +146,10 @@ function openLightbox(imageUrl) {
     isLightboxOpen = true;
     currentImageUrl = imageUrl;
     currentScale = 1; // 重置缩放级别
+    
+    // 获取视口高度，用于计算安全区域
+    const viewportHeight = window.innerHeight;
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
 
     // 创建遮罩层
     const overlay = document.createElement('div');
@@ -151,6 +160,15 @@ function openLightbox(imageUrl) {
             closeLightbox();
         }
     });
+    
+    // 设置移动设备安全区域
+    if (isMobile) {
+        // 处理安全区域
+        const safeAreaBottom = typeof window.visualViewport !== 'undefined' ? 
+            window.innerHeight - window.visualViewport.height + 20 : 20;
+            
+        overlay.style.paddingBottom = `${Math.max(20, safeAreaBottom)}px`;
+    }
 
     // 创建图片元素
     const img = document.createElement('img');
@@ -309,7 +327,7 @@ function openLightbox(imageUrl) {
         </div>
     `;
     helpTip.style.cssText = `
-        position: absolute;
+        position: fixed;
         bottom: 20px;
         left: 50%;
         transform: translateX(-50%);
@@ -320,7 +338,35 @@ function openLightbox(imageUrl) {
         font-size: 12px;
         opacity: 0;
         transition: opacity 0.5s ease;
+        z-index: 10002;
+        max-width: 90%;
+        margin: 0 auto;
+        text-align: center;
+        box-sizing: border-box;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     `;
+    
+    // 添加媒体查询以处理移动设备
+    if (isMobile) {
+        // 在移动设备上使用更紧凑的样式
+        helpTip.innerHTML = `
+            <div>
+                <kbd>+</kbd>/<kbd>-</kbd> 缩放 | 
+                <kbd>0</kbd> 重置 | 
+                <kbd>ESC</kbd> 关闭
+            </div>
+        `;
+        helpTip.style.bottom = '50px'; // 在移动端提高位置，避免被系统UI遮挡
+        helpTip.style.fontSize = '10px';
+        helpTip.style.padding = '6px 12px';
+        
+        // 如果视口高度明显小于设备高度，说明软键盘可能打开
+        if (viewportHeight < window.screen.height * 0.8) {
+            helpTip.style.bottom = '80px'; // 软键盘打开时提高更多
+        }
+    }
     
     // 提示样式
     const kbdStyle = `
@@ -365,6 +411,28 @@ function openLightbox(imageUrl) {
 
     // 添加全局键盘事件监听器
     document.addEventListener('keydown', handleLightboxKeydown);
+    
+    // 处理视口变化（如软键盘弹出）
+    if (typeof window.visualViewport !== 'undefined') {
+        const viewportHandler = () => {
+            if (!isLightboxOpen) return;
+            
+            // 检测视口高度变化，可能是软键盘弹出
+            const currentHeight = window.visualViewport.height;
+            if (currentHeight < viewportHeight * 0.8) {
+                // 软键盘可能打开，调整位置
+                helpTip.style.bottom = '80px';
+            } else {
+                // 恢复正常位置
+                helpTip.style.bottom = isMobile ? '50px' : '20px';
+            }
+        };
+        
+        window.visualViewport.addEventListener('resize', viewportHandler);
+        
+        // 保存监听器引用以便稍后移除
+        overlay.viewportHandler = viewportHandler;
+    }
 }
 
 // --- Lightbox 初始化和事件处理 ---

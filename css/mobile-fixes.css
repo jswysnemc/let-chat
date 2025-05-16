@@ -174,6 +174,67 @@
         font-size: 0.7em;
         padding: 0.3em 0.6em;
     }
+    
+    /* Lightbox 移动端适配 */
+    .lightbox-help-tip {
+        width: auto !important;
+        max-width: 90% !important;
+        bottom: 50px !important; /* 确保在底部有足够空间 */
+        font-size: 10px !important;
+        padding: 6px 10px !important;
+        border-radius: 15px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        z-index: 20000 !important; /* 确保在所有元素之上 */
+    }
+    
+    .lightbox-help-tip kbd {
+        padding: 1px 3px !important;
+        margin: 0 1px !important;
+        font-size: 9px !important;
+    }
+    
+    .zoom-indicator {
+        bottom: 15px !important;
+        right: 15px !important;
+        font-size: 12px !important;
+        padding: 3px 8px !important;
+    }
+    
+    .lightbox-close {
+        top: 10px !important;
+        right: 10px !important;
+        width: 32px !important;
+        height: 32px !important;
+    }
+    
+    /* 安全区域适配，避免底部导航栏遮挡 */
+    .lightbox-overlay {
+        padding-bottom: env(safe-area-inset-bottom, 20px) !important;
+    }
+    
+    /* 安全区域适配 - 确保底部元素不被系统UI覆盖 */
+    #unified-input-area {
+        padding-bottom: calc(10px + env(safe-area-inset-bottom, 15px)) !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* 输入区域容器适配 */
+    #chat-input-container {
+        position: relative !important;
+        margin-bottom: env(safe-area-inset-bottom, 0) !important;
+    }
+    
+    /* 输入按钮容器安全区域适配 */
+    .input-buttons-container {
+        padding-bottom: calc(8px + env(safe-area-inset-bottom, 5px)) !important;
+    }
+    
+    /* 确保主容器有足够的底部间距 */
+    #main-content {
+        padding-bottom: env(safe-area-inset-bottom, 0) !important;
+    }
 }
 
 /* 小屏幕手机适配 */
@@ -258,5 +319,46 @@
     
     .typing-indicator-text {
         font-size: 13px;
+    }
+    
+    /* 为超小屏幕的Lightbox进一步优化 */
+    .lightbox-help-tip {
+        bottom: 60px !important; /* 在更小的屏幕上进一步增加底部边距 */
+        font-size: 9px !important;
+        padding: 5px 8px !important;
+    }
+    
+    /* 超小屏幕底部安全区域加强适配 */
+    #unified-input-area {
+        padding-bottom: calc(8px + env(safe-area-inset-bottom, 20px)) !important;
+    }
+    
+    #chat-input {
+        padding-bottom: calc(45px + env(safe-area-inset-bottom, 5px)) !important;
+    }
+    
+    .input-buttons-container {
+        padding-bottom: calc(6px + env(safe-area-inset-bottom, 8px)) !important;
+    }
+}
+
+/* 安全区域适配 */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    /* 添加额外的安全区域适配 */
+    #unified-input-area {
+        padding-bottom: calc(10px + env(safe-area-inset-bottom)) !important;
+    }
+    
+    .input-buttons-container {
+        padding-bottom: calc(8px + env(safe-area-inset-bottom)) !important;
+    }
+    
+    #chat-container {
+        padding-bottom: env(safe-area-inset-bottom) !important;
+    }
+    
+    /* 底部输入工具栏固定显示 */
+    #chat-input-container {
+        z-index: 100 !important; /* 确保工具栏在其他元素之上 */
     }
 } 

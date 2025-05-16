@@ -215,7 +215,9 @@
     padding: 8px 10px;
     background-color: #f8f8f8;
     border-top: 1px solid #eee;
-    z-index: 3;
+    z-index: 100; /* 增加z-index确保显示在最上层 */
+    box-sizing: border-box;
+    min-height: 56px; /* 确保最小高度固定，避免内容挤压 */
 }
 
 /* 左侧图标按钮组 */
@@ -634,4 +636,27 @@
 /* 确保段落间距一致 */
 .assistant-message-content p {
     margin: 0.75em 0;
+}
+
+/* --- iOS安全区域修复 --- */
+@supports (padding: max(0px)) {
+    /* iOS安全区域适配 */
+    .input-buttons-container {
+        padding-left: max(10px, env(safe-area-inset-left)) !important;
+        padding-right: max(10px, env(safe-area-inset-right)) !important;
+        padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+    }
+
+    #unified-input-area {
+        padding-left: max(15px, env(safe-area-inset-left)) !important;
+        padding-right: max(15px, env(safe-area-inset-right)) !important;
+        padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
+    }
+
+    #chat-container {
+        min-height: -webkit-fill-available;
+        padding-bottom: env(safe-area-inset-bottom) !important;
+    }
 } 
