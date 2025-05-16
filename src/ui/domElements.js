@@ -79,13 +79,109 @@ export function getElement(elementName) {
  * @returns {boolean} 如果所有必需元素都被找到则返回 true，否则返回 false。
  */
 export function initializeElements() {
+    console.log("===== [调试] initializeElements 函数开始执行 =====");
+    
+    // 初始化基本UI元素
     chatInput = document.getElementById('chat-input');
+    console.log("[调试] 初始化 chatInput:", chatInput);
+    
     imagePreviewArea = document.getElementById('input-image-preview');
+    console.log("[调试] 初始化 imagePreviewArea:", imagePreviewArea);
+    
     sendButton = document.getElementById('send-button');
+    console.log("[调试] 初始化 sendButton:", sendButton);
+    
+    // 初始化AI响应区域 - 这是最关键的元素
     aiResponseArea = document.getElementById('ai-response');
+    console.log("[调试] 初始化 aiResponseArea:", aiResponseArea);
+    
+    if (!aiResponseArea) {
+        console.error("[调试] 致命错误：无法找到ai-response元素，无法继续初始化");
+        return false;
+    }
+    
+    // 初始化loadingIndicator - 特别处理
+    console.log("[调试] 开始初始化loading元素");
+    
+    // 尝试获取现有的loading元素
     loadingIndicator = document.getElementById('loading');
+    console.log("[调试] 初始化 loadingIndicator (第一次尝试):", loadingIndicator);
+    
+    // 如果loading元素不存在，创建一个新的
+    if (!loadingIndicator) {
+        console.warn("[调试] loading元素不存在，创建新元素");
+        
+        loadingIndicator = document.createElement('div');
+        loadingIndicator.id = 'loading';
+        loadingIndicator.style.display = 'none';
+        loadingIndicator.style.opacity = '1';
+        loadingIndicator.setAttribute('aria-live', 'polite');
+        loadingIndicator.innerHTML = `
+            <div class="typing-indicator-spinner"></div>
+            <span class="typing-indicator-text">AI思考中...</span>
+        `;
+        
+        // 添加到aiResponseArea的开头
+        if (aiResponseArea.firstChild) {
+            aiResponseArea.insertBefore(loadingIndicator, aiResponseArea.firstChild);
+        } else {
+            aiResponseArea.appendChild(loadingIndicator);
+        }
+        
+        console.log("[调试] 成功创建并添加loading元素");
+    }
+    
+    // 确保loading元素有正确的内容
+    if (loadingIndicator && loadingIndicator.innerHTML.trim() === '') {
+        console.warn("[调试] 加载元素内容为空，添加内容");
+        loadingIndicator.innerHTML = `
+            <div class="typing-indicator-spinner"></div>
+            <span class="typing-indicator-text">AI思考中...</span>
+        `;
+    }
+    
+    // 添加内联样式确保loading元素在需要时可见
+    const styleElement = document.createElement('style');
+    styleElement.id = 'loading-element-styles';
+    styleElement.textContent = `
+        #loading.visible {
+            display: flex !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            z-index: 1000 !important;
+        }
+    `;
+    document.head.appendChild(styleElement);
+    
+    // 记录loading元素的状态
+    if (loadingIndicator) {
+        console.log("[调试] loadingIndicator HTML内容:", loadingIndicator.innerHTML);
+        console.log("[调试] loadingIndicator 样式:", {
+            display: loadingIndicator.style.display,
+            opacity: loadingIndicator.style.opacity,
+            visibility: loadingIndicator.style.visibility,
+            width: loadingIndicator.offsetWidth,
+            height: loadingIndicator.offsetHeight,
+            computedDisplay: window.getComputedStyle(loadingIndicator).display,
+            computedOpacity: window.getComputedStyle(loadingIndicator).opacity,
+            computedVisibility: window.getComputedStyle(loadingIndicator).visibility,
+            position: window.getComputedStyle(loadingIndicator).position,
+            父元素: loadingIndicator.parentElement ? loadingIndicator.parentElement.id : '无'
+        });
+        
+        // 特意验证loading元素是否在DOM中
+        const domCheck = document.getElementById('loading');
+        console.log("[调试] 验证loading元素是否在DOM中:", !!domCheck);
+    } else {
+        console.error("[调试] 严重错误: 所有尝试都失败，无法初始化loading元素");
+    }
+    
+    // 初始化其他UI元素
     chatTitleElement = document.getElementById('chat-title');
+    console.log("[调试] 初始化 chatTitleElement:", chatTitleElement);
+    
     sessionListElement = document.getElementById('session-list');
+    console.log("[调试] 初始化 sessionListElement:", sessionListElement);
 
     // 获取编辑模态框元素
     editModalOverlay = document.getElementById('edit-modal-overlay');
@@ -96,7 +192,6 @@ export function initializeElements() {
 
     // 获取编辑消息模态框元素
     editMessageModalOverlay = document.getElementById('edit-message-modal-overlay');
-    // editMessageModalContent = document.getElementById('edit-message-modal-content'); // Usually control via overlay
     editMessageForm = document.getElementById('edit-message-form');
     editMessageTextarea = document.getElementById('edit-message-text');
     editMessageModalCancelBtn = document.getElementById('edit-message-modal-cancel-btn');
@@ -113,29 +208,93 @@ export function initializeElements() {
     appContainer = document.querySelector('.app-container');
     sidebarOverlay = document.querySelector('.sidebar-overlay');
 
-    // 检查必需元素是否存在
-    const essentialElements = [
-        chatInput, imagePreviewArea, sendButton, aiResponseArea, loadingIndicator,
-        chatTitleElement, sessionListElement, editModalOverlay, editModalForm,
-        editModalNameInput, editModalPromptTextarea, editModalCancelBtn,
-        sidebarToggleBtn, appContainer, sidebarOverlay
+    // 检查关键元素是否存在并记录
+    const criticalElements = [
+        { name: 'chatInput', element: chatInput },
+        { name: 'aiResponseArea', element: aiResponseArea },
+        { name: 'sendButton', element: sendButton },
+        { name: 'loadingIndicator', element: loadingIndicator },
     ];
+    
+    let criticalMissing = false;
+    criticalElements.forEach(item => {
+        if (!item.element) {
+            console.error(`[调试] 严重错误: 必需的元素 ${item.name} 不存在`);
+            criticalMissing = true;
+        }
+    });
 
     // 获取容器内的占位符
-    // 注意：这些占位符可能在初始 HTML 中不存在，需要在使用它们的代码中进行检查
     if (imagePreviewArea) {
         previewPlaceholder = imagePreviewArea.querySelector('.placeholder-text');
+        console.log("[调试] 初始化 previewPlaceholder:", previewPlaceholder);
         if (!previewPlaceholder) {
              console.warn("警告：未找到图片预览占位符元素。");
         }
     }
-     if (aiResponseArea) {
+    
+    if (aiResponseArea) {
         aiResponsePlaceholder = aiResponseArea.querySelector('.placeholder-text');
-         if (!aiResponsePlaceholder) {
-             console.warn("警告：未找到 AI 响应占位符元素。");
-         }
-     }
+        console.log("[调试] 初始化 aiResponsePlaceholder:", aiResponsePlaceholder);
+        if (!aiResponsePlaceholder) {
+            console.warn("警告：未找到 AI 响应占位符元素。");
+        }
+    }
 
-    console.log("DOM 元素初始化成功。");
+    console.log("DOM 元素初始化" + (criticalMissing ? "失败" : "成功") + "。");
+    console.log("===== [调试] initializeElements 函数执行完毕 =====");
+    
+    // 如果关键元素缺失，返回失败
+    if (criticalMissing) {
+        console.error("[调试] 初始化失败，关键元素缺失");
+        return false;
+    }
+    
+    // 创建一个MutationObserver来监视DOM变化
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            // 检查是否有元素被移除
+            if (mutation.removedNodes.length > 0) {
+                // 检查移除的节点中是否包含loading元素
+                mutation.removedNodes.forEach((node) => {
+                    if (node.id === 'loading' || (node.querySelector && node.querySelector('#loading'))) {
+                        console.warn("[调试] 检测到loading元素被移除，尝试恢复");
+                        // 重新获取loading元素
+                        loadingIndicator = document.getElementById('loading');
+                        if (!loadingIndicator) {
+                            // 如果元素已被移除，重新创建
+                            const newLoading = document.createElement('div');
+                            newLoading.id = 'loading';
+                            newLoading.style.display = 'none';
+                            newLoading.setAttribute('aria-live', 'polite');
+                            newLoading.innerHTML = `
+                                <div class="typing-indicator-spinner"></div>
+                                <span class="typing-indicator-text">AI思考中...</span>
+                            `;
+                            
+                            // 重新添加到AI响应区域
+                            const responseArea = document.getElementById('ai-response');
+                            if (responseArea) {
+                                if (responseArea.firstChild) {
+                                    responseArea.insertBefore(newLoading, responseArea.firstChild);
+                                } else {
+                                    responseArea.appendChild(newLoading);
+                                }
+                                loadingIndicator = newLoading;
+                                console.log("[调试] 已恢复loading元素");
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    });
+    
+    // 开始观察aiResponseArea的变化
+    if (aiResponseArea) {
+        observer.observe(aiResponseArea, { childList: true, subtree: true });
+        console.log("[调试] 已开始监视aiResponseArea的DOM变化");
+    }
+    
     return true; // 表示初始化成功
 }

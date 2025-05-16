@@ -43,9 +43,10 @@
                  <!-- Edit Button Removed from header -->
             </div>
             <div id="ai-response">
+                 <!-- 不再使用顶部loading元素，现在使用底部气泡式加载指示器 -->
                  <span class="placeholder-text">对话历史将显示在此处...</span>
             </div>
-
+            
             <!-- 统一输入区域 -->
             <div id="unified-input-area"> <!-- New wrapper -->
                 <div id="chat-input-container"> <!-- Container for text and preview -->
@@ -87,6 +88,55 @@
     <script src="./js/marked.min.js" defer></script>
     <script src="./js/highlight.min.js" defer></script>
     <script src="./js/debug.js" defer></script>
+
+    <!-- 调试脚本 - 监测加载指示器 -->
+    <script>
+        // 等待DOM完全加载
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("[调试脚本] DOM加载完成，开始监测加载指示器");
+            
+            // 定义监测函数
+            function checkLoadingElement() {
+                // 只检测气泡式加载指示器
+                const typingIndicator = document.getElementById('ai-typing-indicator');
+                
+                console.log("[调试脚本] 检测周期执行");
+                
+                if (typingIndicator) {
+                    const styles = window.getComputedStyle(typingIndicator);
+                    console.log("[调试脚本] ai-typing-indicator元素计算样式:", {
+                        display: styles.display,
+                        visibility: styles.visibility,
+                        opacity: styles.opacity,
+                        position: styles.position,
+                        zIndex: styles.zIndex,
+                        width: typingIndicator.offsetWidth + 'px',
+                        height: typingIndicator.offsetHeight + 'px',
+                        classList: typingIndicator.className,
+                        parent: typingIndicator.parentElement ? typingIndicator.parentElement.id : 'none'
+                    });
+                } else {
+                    console.log("[调试脚本] ai-typing-indicator元素不存在");
+                }
+            }
+            
+            // 初始检测
+            setTimeout(checkLoadingElement, 1000);
+            
+            // 定期检测
+            setInterval(checkLoadingElement, 3000);
+            
+            // 监测按钮点击
+            document.addEventListener('click', function(event) {
+                if (event.target.id === 'send-button' || event.target.closest('#send-button')) {
+                    console.log("[调试脚本] 发送按钮被点击");
+                    setTimeout(checkLoadingElement, 100);
+                    setTimeout(checkLoadingElement, 500);
+                    setTimeout(checkLoadingElement, 1000);
+                }
+            });
+        });
+    </script>
 
     <!-- Application Entry Point -->
     <script type="module" src="./src/main.js"></script>
