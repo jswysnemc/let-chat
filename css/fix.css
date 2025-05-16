@@ -74,6 +74,54 @@
     margin: 2px;
     border: 1px solid #eee;
     border-radius: 3px;
+    transition: transform 0.2s ease;
+}
+
+/* 图片包装器样式 */
+.input-image-wrapper {
+    position: relative;
+    display: inline-block;
+    margin: 2px;
+    vertical-align: middle;
+    cursor: pointer;
+}
+
+/* 输入框中的图片悬停效果 */
+.input-image-wrapper:hover img {
+    border-color: #0d6efd;
+    transform: scale(1.05);
+}
+
+/* 输入框中的删除按钮默认隐藏，悬停时显示 */
+.input-image-wrapper .delete-image-btn {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 18px;
+    height: 18px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: bold;
+    line-height: 16px;
+    text-align: center;
+    cursor: pointer;
+    padding: 0;
+    opacity: 0;
+    transition: opacity 0.2s, background-color 0.2s;
+    z-index: 1;
+    box-shadow: 0 0 2px rgba(0,0,0,0.5);
+}
+
+.input-image-wrapper:hover .delete-image-btn {
+    opacity: 0.7;
+}
+
+.input-image-wrapper .delete-image-btn:hover {
+    background-color: rgba(200, 0, 0, 0.8);
+    opacity: 1;
 }
 
 /* 图片预览区域 */
@@ -106,6 +154,7 @@
     display: inline-block;
     margin: 2px;
     vertical-align: top;
+    transition: transform 0.2s ease;
 }
 
 .image-preview-item img {
@@ -114,10 +163,20 @@
     max-height: 45px;
     border: 1px solid #ccc;
     border-radius: 3px;
+    transition: border-color 0.2s ease;
 }
 
-/* 删除图片按钮 */
-.delete-image-btn {
+/* 预览项悬停效果 */
+.image-preview-item:hover {
+    transform: scale(1.05);
+}
+
+.image-preview-item:hover img {
+    border-color: #0d6efd;
+}
+
+/* 预览区域的删除图片按钮 */
+.image-preview-item .delete-image-btn {
     position: absolute;
     top: -5px;
     right: -5px;
@@ -139,7 +198,7 @@
     box-shadow: 0 0 2px rgba(0,0,0,0.5);
 }
 
-.delete-image-btn:hover {
+.image-preview-item .delete-image-btn:hover {
     background-color: rgba(200, 0, 0, 0.8);
     opacity: 1;
 }

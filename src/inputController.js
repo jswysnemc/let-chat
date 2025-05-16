@@ -162,17 +162,45 @@ function _addImageToInputAndPreview(dataUrl, mimeType, base64Data) {
     console.log("[InputController] _addImageToInputAndPreview called. Image ID prefix:", `pasted-img-${Date.now()}`);
     const imageId = `pasted-img-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`; // Unique ID
 
-    // 为 contenteditable 输入创建图像
+    // 为 contenteditable 输入创建图像包装器和图像
     if (chatInputElement) {
+        // 创建包装器以便定位删除按钮
+        const inputImageWrapper = document.createElement('span');
+        inputImageWrapper.className = 'input-image-wrapper';
+        inputImageWrapper.setAttribute('data-image-id', imageId);
+        
+        // 创建图像元素
         const imgInInput = document.createElement('img');
         imgInInput.src = dataUrl;
-        imgInInput.alt = '用户图片'; // 更通用的 alt 文本
+        imgInInput.alt = '用户图片';
         imgInInput.setAttribute('data-base64', base64Data);
         imgInInput.setAttribute('data-mime-type', mimeType);
-        imgInInput.setAttribute('data-image-id', imageId); // 添加唯一 ID
-        insertNodeAtCursor(imgInInput, chatInputElement); // 使用辅助函数插入
+        imgInInput.setAttribute('data-image-id', imageId);
+        
+        // 创建删除按钮
+        const deleteInputBtn = document.createElement('button');
+        deleteInputBtn.className = 'delete-image-btn';
+        deleteInputBtn.textContent = '×';
+        deleteInputBtn.title = '移除图片';
+        deleteInputBtn.setAttribute('data-target-id', imageId);
+        
+        // 组装并插入到文档
+        inputImageWrapper.appendChild(imgInInput);
+        inputImageWrapper.appendChild(deleteInputBtn);
+        insertNodeAtCursor(inputImageWrapper, chatInputElement);
+        
+        // 为图片添加点击事件，触发预览
+        imgInInput.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            // 导入并使用 previewImage 函数（假设已正确导入）
+            import('./ui/lightbox.js').then(module => {
+                module.previewImage(dataUrl);
+            }).catch(err => {
+                console.error('无法加载预览功能:', err);
+            });
+        });
     }
-
 
     // 为预览区域创建图像和删除按钮
     if (imagePreviewAreaElement) {
@@ -194,6 +222,18 @@ function _addImageToInputAndPreview(dataUrl, mimeType, base64Data) {
         previewWrapper.appendChild(deleteBtn);
         imagePreviewAreaElement.appendChild(previewWrapper);
         console.log("[InputController] Preview wrapper appended to imagePreviewAreaElement:", previewWrapper);
+        
+        // 为预览图片添加点击事件，触发预览
+        imgInPreview.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            // 导入并使用 previewImage 函数
+            import('./ui/lightbox.js').then(module => {
+                module.previewImage(dataUrl);
+            }).catch(err => {
+                console.error('无法加载预览功能:', err);
+            });
+        });
     } else {
          console.warn("[InputController] imagePreviewAreaElement not found, cannot add preview image.");
     }
@@ -348,16 +388,27 @@ function handleDeleteImage(event) {
     const imageId = button.getAttribute('data-target-id');
     if (!imageId) return;
 
+    // 防止事件冒泡，避免触发其他点击事件
+    event.preventDefault();
+    event.stopPropagation();
+
     // Remove from preview area
     const previewItem = imagePreviewAreaElement?.querySelector(`.image-preview-item[data-image-id="${imageId}"]`);
     if (previewItem) {
         previewItem.remove();
     }
 
-    // Remove from input area
-    const inputImage = chatInputElement?.querySelector(`img[data-image-id="${imageId}"]`);
-    if (inputImage) {
-        inputImage.remove();
+    // Remove from input area - 同时支持直接图片和带包装器的图片
+    // 先查找新的包装器结构
+    const inputWrapper = chatInputElement?.querySelector(`.input-image-wrapper[data-image-id="${imageId}"]`);
+    if (inputWrapper) {
+        inputWrapper.remove();
+    } else {
+        // 向后兼容：查找直接的图片元素
+        const inputImage = chatInputElement?.querySelector(`img[data-image-id="${imageId}"]`);
+        if (inputImage) {
+            inputImage.remove();
+        }
     }
 
     // Update placeholders
@@ -637,6 +688,18 @@ export function initInputHandling({ onSend }) {
     chatInputElement.addEventListener('blur', handleBlur);
     chatInputElement.addEventListener('input', handleInput);
     chatInputElement.addEventListener('keydown', handleKeyDown);
+    
+    // 添加输入框点击事件，处理图片点击和删除按钮点击
+    chatInputElement.addEventListener('click', (event) => {
+        // 检查是否点击的是删除按钮
+        if (event.target.classList.contains('delete-image-btn')) {
+            handleDeleteImage(event);
+            return;
+        }
+        
+        // 检查是否点击的是图片（图片预览已在_addImageToInputAndPreview中添加事件处理器）
+    });
+    
     sendButtonElement.addEventListener('click', handleSendTrigger);
     
     // 上传图片按钮事件
@@ -697,6 +760,14 @@ export function initInputHandling({ onSend }) {
 
     // 添加文件上传处理
     imageUploadInputElement.addEventListener('change', handleFileUpload);
+
+    // 初始化lightbox图片预览功能
+    import('./ui/lightbox.js').then(module => {
+        module.initializeLightbox();
+        console.log("Lightbox functionality initialized");
+    }).catch(err => {
+        console.error("Error initializing lightbox:", err);
+    });
 
     console.log("Input Controller Initialized.");
 }
