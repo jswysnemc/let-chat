@@ -43,9 +43,9 @@
         opacity: 1;
     }
     
-    /* 侧边栏切换按钮 */
+    /* 侧边栏切换按钮 - 只在移动设备上显示 */
     .sidebar-toggle-button {
-        display: block !important; /* 强制显示 */
+        display: block !important; /* 在移动设备上显示 */
         position: absolute;
         top: 10px;
         left: 10px;

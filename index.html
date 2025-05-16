@@ -26,12 +26,17 @@
             <!-- Session list items will be populated by JS -->
             <li class="placeholder-text">加载中...</li>
         </ul>
+        
+        <!-- 底部设置按钮 -->
+        <div class="sidebar-footer">
+            <button type="button" id="settings-btn" class="sidebar-button"><i class="fas fa-cog"></i> 设置</button>
+        </div>
     </aside>
 
     <main id="main-content">
         <!-- 聊天交互区域 -->
         <!-- Sidebar Toggle Button (Mobile Only) -->
-        <button type="button" id="sidebar-toggle-btn" class="sidebar-toggle-button" onclick="document.getElementById('sidebar').classList.add('open'); document.querySelector('.sidebar-overlay').classList.add('visible'); console.log('侧边栏按钮被点击(内联)');" aria-label="Toggle Sidebar"><i class="fas fa-bars"></i></button> <!-- Replaced text with Font Awesome icon -->
+        <button type="button" id="sidebar-toggle-btn" class="sidebar-toggle-button" style="display: none;" onclick="document.getElementById('sidebar').classList.add('open'); document.querySelector('.sidebar-overlay').classList.add('visible'); console.log('侧边栏按钮被点击(内联)');" aria-label="Toggle Sidebar"><i class="fas fa-bars"></i></button> <!-- Replaced text with Font Awesome icon -->
         <div class="section" id="chat-container">
             <div class="chat-header"> <!-- Added header wrapper -->
                  <!-- <h2 id="chat-title">与 AI 对话</h2> -->
@@ -117,6 +122,69 @@
             <div class="modal-actions">
                 <button type="button" id="confirm-modal-confirm-btn" class="button-primary">确定</button>
                 <button type="button" id="confirm-modal-cancel-btn" class="button-secondary">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设置模态框 -->
+    <div id="settings-modal-overlay" class="modal-overlay">
+        <div id="settings-modal-content" class="modal-content settings-modal">
+            <h3>服务商设置</h3>
+            <div class="settings-container">
+                <!-- 服务商列表 -->
+                <div class="service-providers-container">
+                    <div class="service-provider-header">
+                        <h4>服务商列表</h4>
+                        <button type="button" id="add-provider-btn" class="settings-action-btn">
+                            <i class="fas fa-plus"></i> 添加服务商
+                        </button>
+                    </div>
+                    <ul id="service-provider-list" class="service-provider-list">
+                        <!-- 服务商列表项将通过JS动态加载 -->
+                    </ul>
+                </div>
+                
+                <!-- 当前选择的服务商详情 -->
+                <div class="provider-details-container">
+                    <h4>服务商配置</h4>
+                    <form id="provider-edit-form" class="provider-edit-form">
+                        <div class="form-group">
+                            <label for="provider-name">服务商名称</label>
+                            <input type="text" id="provider-name" name="name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="provider-baseurl">API 基础URL</label>
+                            <input type="text" id="provider-baseurl" name="baseurl" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="provider-key">API 密钥</label>
+                            <input type="text" id="provider-key" name="key" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="models-header">
+                                <label>可用模型</label>
+                                <button type="button" id="add-model-btn" class="settings-action-btn">
+                                    <i class="fas fa-plus"></i> 添加模型
+                                </button>
+                            </div>
+                            <div id="models-container" class="models-container">
+                                <!-- 模型列表将通过JS动态加载 -->
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="system-prompt">系统提示 (System Prompt)</label>
+                            <textarea id="system-prompt" name="system_prompt" rows="4"></textarea>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" id="save-settings-btn" class="button-primary">保存</button>
+                <button type="button" id="settings-modal-cancel-btn" class="button-secondary">取消</button>
             </div>
         </div>
     </div>

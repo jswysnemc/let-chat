@@ -1,6 +1,8 @@
 // src/main.js
 // Import State functions
 import * as state from './state.js';
+// Import Config module
+import { initializeConfig } from './config.js';
 // Import UI functions from specific modules
 import { initUI } from './ui.js'; // Main UI initializer
 import { updateChatTitle, renderSessionList } from './ui/sidebar.js'; // Removed clearChatArea from here
@@ -9,6 +11,8 @@ import { scrollChatToBottom } from './ui/chatScroll.js';
 import { disableSendButton, enableSendButton } from './ui/buttonStates.js';
 import { clearInput } from './ui/inputArea.js';
 import { getEditModalFormElements, getEditModalValues, hideEditModal, setEditModalValues, showEditModal } from './ui/editModal.js';
+// Import settings manager
+import { initializeSettingsManager } from './ui/settingsManager.js';
 // Import other modules
 import { getElement } from './ui/domElements.js'; // Import getElement
 import { aiResponseArea } from './ui/domElements.js'; // Import the chat area element
@@ -464,14 +468,20 @@ function handleEditMessageCancel() {
 function main() {
     console.log("Main: Initializing application state...");
     state.initializeState(); // Initialize state first!
-
+    
+    console.log("Main: Initializing API configuration...");
+    initializeConfig(); // Initialize API configuration
+    
     console.log("Main: Initializing UI...");
     // Initialize UI elements and handlers
     if (!initUI()) {
         // Stop initialization if UI fails
         return; // Or handle more gracefully
     }
-
+    
+    console.log("Main: Initializing settings manager...");
+    initializeSettingsManager(); // Initialize settings manager
+    
     // Initialize input handling, passing the handleSend function as the callback
     initInputHandling({ onSend: handleSend });
 

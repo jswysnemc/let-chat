@@ -23,15 +23,16 @@ body {
 }
 
 #sidebar {
-    width: 240px; /* Sidebar width */
-    flex-shrink: 0; /* Prevent sidebar from shrinking */
-    background-color: #f7f7f7; /* Lighter background */
-    border-right: 1px solid #e0e0e0; /* Lighter border */
-    padding: 15px;
+    padding: 20px 15px;
+    background-color: #f5f5f7;
+    border-right: 1px solid #e0e0e0;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
-    overflow-y: auto; /* Allow sidebar scrolling if needed */
-    transition: width 0.3s ease, left 0.3s ease-in-out; /* Added left transition for mobile */
+    height: 100vh;
+    min-width: 220px; /* 最小宽度限制 */
+    width: 240px; /* 默认宽度 */
+    resize: horizontal; /* 允许水平调整大小 */
 }
 
 #sidebar h3 {
