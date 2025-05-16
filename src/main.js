@@ -482,6 +482,13 @@ function main() {
     console.log("Main: Initializing settings manager...");
     initializeSettingsManager(); // Initialize settings manager
     
+    // 监听API配置更改事件
+    document.addEventListener('apiConfigChanged', (event) => {
+        console.log("API配置已更改:", event.detail);
+        // 重新渲染聊天界面，确保样式一致性
+        renderChatForActiveSession();
+    });
+    
     // Initialize input handling, passing the handleSend function as the callback
     initInputHandling({ onSend: handleSend });
 

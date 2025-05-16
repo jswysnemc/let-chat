@@ -20,6 +20,7 @@ body {
 .app-container {
     display: flex;
     height: 100%; /* Use 100% of parent (body) height instead of 100vh */
+    overflow: hidden; /* 防止外部滚动 */
 }
 
 #sidebar {
@@ -32,7 +33,30 @@ body {
     height: 100vh;
     min-width: 220px; /* 最小宽度限制 */
     width: 240px; /* 默认宽度 */
+    max-width: 40%; /* 最大宽度限制 */
     resize: horizontal; /* 允许水平调整大小 */
+    overflow-x: auto; /* 避免内容溢出 */
+    position: relative; /* 为调整大小条添加定位 */
+}
+
+/* 添加调整手柄样式 */
+#sidebar::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 3px;
+    background-color: transparent;
+    cursor: ew-resize;
+}
+
+/* 在移动端禁用resize功能 */
+@media (max-width: 768px) {
+    #sidebar {
+        resize: none;
+        width: 280px; /* 固定宽度 */
+    }
 }
 
 #sidebar h3 {
@@ -197,6 +221,10 @@ body {
     background-color: #f9f9f9; /* Lighter background for the main area */
 }
 
+/* 隐藏顶部红色横条 */
+.chat-header {
+    display: none !important;
+}
 
 h2 { /* Removed h1 styling */
     color: #333;

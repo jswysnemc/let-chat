@@ -115,11 +115,23 @@ export function setActiveProvider(providerId) {
         key: provider.key,
         baseurl: provider.baseurl,
         model: activeModel.name,
-        system_prompt: provider.system_prompt
+        system_prompt: provider.system_prompt || ''
     });
     
     // 保存激活的服务商ID
     localStorage.setItem(ACTIVE_PROVIDER_KEY, providerId);
+    
+    // 确保其他配置生效
+    try {
+        // 触发一个配置更改事件，通知应用其他部分
+        const event = new CustomEvent('apiConfigChanged', { 
+            detail: { provider, model: activeModel }
+        });
+        document.dispatchEvent(event);
+        console.log('API配置已更新并触发事件:', provider.name, activeModel.name);
+    } catch (err) {
+        console.error('触发配置更改事件失败:', err);
+    }
     
     return true;
 }
