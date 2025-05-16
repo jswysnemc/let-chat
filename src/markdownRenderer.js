@@ -690,6 +690,44 @@ function enhanceTable(tableElement) {
 }
 
 /**
+ * 处理Markdown中的折叠面板交互
+ * @param {HTMLElement} container - 包含Markdown内容的容器
+ */
+function setupCollapsiblePanels(container) {
+    if (!container) return;
+    
+    // 查找所有折叠面板的头部
+    const collapsibleHeaders = container.querySelectorAll('.collapsible-header');
+    
+    collapsibleHeaders.forEach(header => {
+        // 查找相关的内容部分
+        const content = header.nextElementSibling;
+        if (!content || !content.classList.contains('collapsible-content')) return;
+        
+        // 设置初始状态（默认关闭）
+        content.style.display = 'none';
+        
+        // 添加点击事件
+        header.addEventListener('click', () => {
+            // 切换展开/折叠状态
+            const isExpanded = header.classList.contains('expanded');
+            
+            if (isExpanded) {
+                // 收起面板
+                header.classList.remove('expanded');
+                content.classList.remove('expanded');
+                content.style.display = 'none';
+            } else {
+                // 展开面板
+                header.classList.add('expanded');
+                content.classList.add('expanded');
+                content.style.display = 'block';
+            }
+        });
+    });
+}
+
+/**
  * 处理指定容器内的代码块：应用语法高亮、添加语言标签和复制代码按钮。
  * @param {HTMLElement} container - 要处理其内部代码块的容器元素。
  */
@@ -900,6 +938,9 @@ export function highlightCodeBlocks(container) {
         // 标记表格已处理
         tableElement.dataset.tableProcessed = 'true';
     });
+    
+    // 处理折叠面板
+    setupCollapsiblePanels(container);
 }
 
 // 提供给浏览器控制台使用的测试函数

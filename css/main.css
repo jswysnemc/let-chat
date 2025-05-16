@@ -362,1113 +362,471 @@ h2 { /* Removed h1 styling */
 
 /* New Wrapper Style */
 .code-block-wrapper {
-    position: relative; /* Context for absolute positioning of buttons/labels */
-    background-color: #f5f5f5; /* Move background here */
-    border-radius: 4px;
-    margin-bottom: 0; /* Wrapper handles bottom margin via expand button */
-    /* overflow: hidden; */ /* Controlled by JS now */
-    /* max-height: 800px; */ /* Controlled by JS now */
-    transition: height 0.3s ease-out; /* Transition height instead of max-height */
-}
-/* Remove expanded class styling for height/overflow */
-/* .code-block-wrapper.expanded {
-    max-height: none;
-    overflow: visible;
-} */
-
-/* Adjusted Pre Style */
-.assistant-message-content pre {
-    /* background-color: #f5f5f5; */ /* Moved to wrapper */
-    padding: 0.8em;
-    padding-top: 2.8em; /* Increased top padding for fixed elements */
-    /* border-radius: 4px; */ /* Moved to wrapper */
-    overflow: auto; /* Allow both x and y scroll always */
-    /* max-height: calc(800px - 2.8em); */ /* Remove max-height from pre */
-    margin-bottom: 0; /* Reset margin */
-    /* position:relative; */ /* No longer needed */
-    /* transition: max-height 0.3s ease-out; */ /* No transition needed on pre */
-    /* Ensure pre takes full available height within wrapper when wrapper has fixed height */
-    height: 100%; /* Try making pre fill wrapper height */
-    box-sizing: border-box; /* Include padding in height calculation */
- }
-/* Remove expanded style for pre */
-/* .code-block-wrapper.expanded .assistant-message-content pre {
-    max-height: none;
-} */
-
-.assistant-message-content code { font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace; font-size: 0.9em; }
-.assistant-message-content pre code { display: block; padding: 0; background: none; color: inherit; }
-
-/* Style for the expand/collapse button (Positioned after wrapper) */
-.code-expand-button {
-    display: block; /* Place button below the wrapper block */
-    /* width: calc(100% - 1.6em); */ /* Let it take full width relative to parent */
-    width: 100%;
-    margin: 0 auto 0.8em auto; /* Center and add bottom margin */
-    padding: 5px 10px;
-    text-align: center;
-    background-color: #e0e0e0;
-    border: 1px solid #ccc;
-    border-top: none; /* Remove top border */
-    border-radius: 0; /* Remove radius */
-    border-bottom-left-radius: 4px; /* Round bottom corners */
-    border-bottom-right-radius: 4px;
-    cursor: pointer;
-    font-size: 0.85em;
-    color: #333;
-    transition: background-color 0.2s;
-    box-sizing: border-box; /* Include padding/border in width */
-}
-.code-expand-button:hover {
-    background-color: #d0d0d0;
+    margin: 1.5em 0;
+    border-radius: 8px;
+    background-color: #282c34;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+    overflow: hidden;
+    position: relative;
 }
 
-/* 消息复制按钮样式 */
-.copy-button { /* Message copy button */
-    position: absolute;
-    bottom: 8px; /* Position at bottom right */
-    right: 10px;
-    background-color: rgba(0, 0, 0, 0.05); /* Very subtle background */
-    border: none; /* Remove border */
-    color: #666; /* Grey icon color */
-    padding: 4px 6px; /* Adjust padding */
-    font-size: 1em; /* Use emoji/icon font size */
-    border-radius: 50%; /* Make it circular */
-    cursor: pointer;
-    opacity: 0; /* 默认隐藏 */
-    transition: opacity 0.2s, background-color 0.2s;
-    z-index: 10; /* 确保在内容之上 */
-    line-height: 1; /* Ensure icon centers */
-    width: 24px; /* Fixed size */
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.assistant-bubble:hover .copy-button {
-    opacity: 0.7; /* 悬停时显示 */
-}
-.copy-button:hover {
-    background-color: rgba(0, 0, 0, 0.1); /* Slightly darker on hover */
-    opacity: 1;
-}
-.copy-button:active {
-    background-color: rgba(0, 0, 0, 0.15); /* Even darker when active */
-}
-
-/* 代码块语言标签样式 (Positioned relative to wrapper) */
+/* 代码语言标签优化 */
 .code-language-label {
     position: absolute;
     top: 0;
     left: 0;
-    font-size: 0.8em;
-    color: #888;
-    background-color: #e0e0e0; /* 标签背景 */
-    padding: 3px 8px; /* Adjusted padding */
-    border-bottom-right-radius: 4px; /* 右下角圆角 */
-    z-index: 10; /* Ensure above pre content */
-    text-transform: lowercase;
-    border-top-left-radius: 4px; /* Match wrapper radius */
-}
-
-/* 代码块复制按钮样式 (Positioned relative to wrapper) */
-.code-copy-button { /* Code block copy button */
-    position: absolute;
-    top: 0px; /* Align with top */
-    right: 0px; /* Align with right */
-    background-color: rgba(0, 0, 0, 0.08); /* Subtle background */
-    border: none;
-    color: #555;
-    padding: 4px 8px; /* Adjust padding */
-    font-size: 0.8em; /* Smaller text */
-    border-radius: 0; /* Remove radius */
-    border-bottom-left-radius: 4px; /* Round bottom left */
-    cursor: pointer;
-    opacity: 0.7; /* Make slightly visible by default? Or keep 0? */
-    transition: opacity 0.2s, background-color 0.2s;
-    z-index: 10; /* Ensure above pre content */
-    border-top-right-radius: 4px; /* Match wrapper radius */
-}
-/* Show button on wrapper hover */
-.code-block-wrapper:hover .code-copy-button {
-    opacity: 1;
-}
-.code-copy-button:hover {
-    background-color: rgba(0, 0, 0, 0.15);
-    opacity: 1;
-}
-.code-copy-button:active {
-    background-color: rgba(0, 0, 0, 0.2);
-}
-/* --- 结束聊天气泡样式 --- */
-
-
-#chat-input-container {
-    padding: 0;
-    background-color: transparent; /* Let wrapper handle background */
-    display: flex; /* Use Flexbox */
-    flex-direction: column; /* Arrange input and preview vertically */
-    flex-grow: 1; /* Take available horizontal space */
-    position: relative; /* Keep for internal positioning if needed */
-    border: 1px solid #e0e0e0; /* Add border around the input+preview */
-    border-radius: 8px; /* Add slight radius to the container */
-    overflow: hidden; /* Clip children to the rounded corners */
-}
-#chat-input { /* contenteditable div */
-    min-height: 50px;
-    max-height: 150px;
-    padding: 12px 15px;
-    box-sizing: border-box;
-    width: 100%;
-    font-size: 16px;
-    line-height: 1.5;
-    border: none; /* Remove border from input itself */
-    /* border-radius: 18px; */ /* Remove radius from input itself */
-    border-radius: 0; /* Ensure no radius */
-    outline: none;
-    resize: none;
-    overflow-y: auto;
-    background-color: #fff; /* White background for input */
-    position: relative;
-    z-index: 2;
-    /* Remove specific border-radius adjustments */
-    /* border-bottom-left-radius: 0; */
-    /* border-bottom-right-radius: 0; */
-}
-/* Style adjustment when image preview is shown */
-/* Remove specific border-radius adjustments based on preview */
-/* #chat-input-container:has(#input-image-preview:not(:empty)) #chat-input {
-     border-bottom-left-radius: 0;
-     border-bottom-right-radius: 0;
-} */
-/* #chat-input-container:not(:has(#input-image-preview:not(:empty))) #chat-input {
-     border-bottom-left-radius: 18px;
-     border-bottom-right-radius: 18px;
-} */
-
-
-/* --- 输入框 Placeholder 样式 --- */
-#chat-input::before {
-    content: attr(data-placeholder); /* 从 data 属性获取文本 */
-    color: #aaa;
-    font-style: italic;
-    position: absolute;
-    top: 12px; /* 与 #chat-input 内边距匹配 */
-    left: 15px; /* 与 #chat-input 内边距匹配 */
-    right: 15px; /* Add right constraint */
-    pointer-events: none; /* 允许点击穿透 */
-    display: none; /* 默认隐藏 */
-    z-index: 1; /* 在输入内容之下 */
-    font-size: 16px; /* 匹配输入框字体 */
-    line-height: 1.5; /* 匹配输入框行高 */
-    /* Add styles for ellipsis */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    /* width: calc(100% - 30px); */ /* Let left/right constraints handle width */
-}
-#chat-input.is-placeholder-showing::before {
-    display: block; /* 当类存在时显示 */
-}
-/* --- 结束 Placeholder 样式 --- */
-
-#chat-input img { /* 输入区域内图片的样式 */
-    max-width: 60px; /* 缩小图片 */
-    max-height: 60px;
-    vertical-align: middle;
-    margin: 2px;
-    border: 1px solid #eee;
-    border-radius: 3px;
-}
-/* Style for placeholder text inside image preview */
-#input-image-preview .placeholder-text {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: inline-block; /* Needed for ellipsis to work correctly on span */
-    max-width: 100%; /* Ensure it doesn't overflow container */
-    vertical-align: middle; /* Align nicely if other elements are present */
-}
-#input-image-preview {
-    padding: 8px 15px;
-    min-height: 40px; /* Keep min-height */
-    background-color: #f8f8f8;
-    border-top: 1px solid #e0e0e0; /* Add top border to separate from input */
-    /* Remove side/bottom borders, handled by container */
-    /* border-left: 1px solid #ccc; */
-    /* border-right: 1px solid #ccc; */
-    /* border-bottom: 1px solid #ccc; */
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    align-items: center;
-    /* border-bottom-left-radius: 18px; */ /* Remove radius */
-    /* border-bottom-right-radius: 18px; */
-    border-radius: 0;
-    cursor: pointer; /* Indicate clickable for upload */
-}
-/* Hide preview area if it's empty (only contains the placeholder) */
-
-
-#input-image-preview img { /* Style images within the preview */
-    max-width: 40px;
-    max-height: 40px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-}
-/* Remove old #input-controls styles */
-/*
-#input-controls {
-     display: flex;
-     justify-content: flex-end;
-     align-items: center;
-     padding: 5px 15px 8px 15px;
-     flex-shrink: 0;
-     min-height: 40px;
-     box-sizing: border-box;
-}
-*/
-
-/* --- Image Preview Item Styles --- */
-.image-preview-item {
-    position: relative; /* For absolute positioning of delete button */
-    display: inline-block; /* Align items inline */
-    margin: 2px; /* Spacing between items */
-    vertical-align: top; /* Align wrappers nicely if they wrap */
-}
-
-.image-preview-item img { /* Style image inside the wrapper */
-    display: block; /* Prevent extra space below image */
-    max-width: 45px; /* Consistent size */
-    max-height: 45px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-}
-
-.delete-image-btn {
-    position: absolute;
-    top: -5px; /* Position slightly above the top right */
-    right: -5px;
-    width: 18px;
-    height: 18px;
-    background-color: rgba(0, 0, 0, 0.6); /* Dark semi-transparent background */
-    color: white;
-    border: none;
-    border-radius: 50%; /* Circular button */
-    font-size: 12px;
-    font-weight: bold; /* Make '×' bolder */
-    line-height: 16px; /* Center the '×' */
-    text-align: center;
-    cursor: pointer;
-    padding: 0;
-    opacity: 0.7;
-    transition: opacity 0.2s, background-color 0.2s;
-    z-index: 1; /* Ensure it's above the image */
-    box-shadow: 0 0 2px rgba(0,0,0,0.5); /* Add slight shadow for visibility */
-}
-
-.delete-image-btn:hover {
-    background-color: rgba(200, 0, 0, 0.8); /* Redder on hover */
-    opacity: 1;
-}
-
-/* --- Lightbox Styles --- */
-.lightbox-overlay {
-    position: fixed; /* Cover the entire viewport */
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent black background */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000; /* Ensure it's on top */
-    cursor: pointer; /* Indicate clicking closes it */
-    padding: 20px; /* Add padding for smaller screens */
-    box-sizing: border-box;
-}
-
-.lightbox-content {
-    position: relative;
-    max-width: 90%;
-    max-height: 90%;
-    cursor: default; /* Default cursor for the content area */
-    background-color: #333; /* Dark background for image frame */
-    padding: 5px;
-    border-radius: 5px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-}
-
-.lightbox-content img {
-    display: block; /* Prevent extra space */
-    max-width: 100%;
-    max-height: calc(90vh - 50px); /* Limit height considering padding/close button */
-    width: auto;
-    height: auto;
-    object-fit: contain; /* Scale image while preserving aspect ratio */
-}
-
-.lightbox-close {
-    position: absolute;
-    top: -15px; /* Position above the top right */
-    right: -15px;
-    width: 30px;
-    height: 30px;
-    background-color: white;
-    color: #333;
-    border: none;
-    border-radius: 50%;
-    font-size: 20px;
-    font-weight: bold;
-    line-height: 28px; /* Adjust for vertical centering */
-    text-align: center;
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-    z-index: 1001; /* Above the content */
-}
-.lightbox-close:hover {
-    background-color: #eee;
-}
-
-/* --- Control Buttons --- */
-.control-button {
-    padding: 8px 15px; /* Base padding */
-    border: none;
-    border-radius: 20px; /* Circular */
-    cursor: pointer;
-    font-size: 15px;
-    transition: background-color 0.2s ease, opacity 0.2s;
-    margin-left: 8px; /* Space between buttons */
-    line-height: 1.2; /* Adjust line height for potential icons */
-}
-.control-button:disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
-}
-
-#send-button {
-    background-color: #007bff; /* Blue */
-    color: white;
-    padding: 8px 18px; /* Keep slightly wider padding for text */
-}
-#send-button:hover:not(:disabled) {
-    background-color: #0056b3;
-}
-#send-button:disabled {
-     background-color: #cccccc;
-}
-
-
-#upload-image-button {
-    background-color: #e9e9e9; /* Light grey */
-    color: #333;
-    padding: 8px 12px; /* Slightly less horizontal padding for icon */
-    font-size: 18px; /* Make icon slightly larger */
-}
-#upload-image-button:hover {
-    background-color: #dcdcdc;
-}
-
-
-/* --- User Message Content Layout --- */
-.user-bubble .message-content-wrapper {
-    display: flex;
-    flex-wrap: wrap; /* Allow items to wrap to the next line */
-    align-items: center; /* Align items vertically */
-    gap: 5px; /* Add spacing between text and images */
-}
-
-.user-bubble .message-image {
-    max-width: 80px; /* Make images smaller */
-    max-height: 80px;
-    border-radius: 4px;
-    vertical-align: middle; /* Helps alignment with text */
-    border: 1px solid rgba(0,0,0,0.1); /* Add subtle border */
-}
-#send-button {
-    padding: 8px 18px; /* 调整按钮大小 */
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 20px; /* 圆角按钮 */
-    cursor: pointer;
-    font-size: 15px;
-    transition: background-color 0.2s ease;
-    margin-top: 0; /* 移除上边距 */
-    margin-left: 10px; /* 与加载指示的间距 */
-}
-#send-button:hover {
-    background-color: #0056b3;
-}
-#send-button:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-}
-.placeholder-text { /* 用于其他区域的占位符 */
-    color: #aaa;
-    font-style: italic;
-    font-size: 0.9em;
-}
-.loading-indicator {
-    display: inline-block;
-    font-style: italic;
-    color: #888;
-    font-size: 0.9em;
-}
-/* --- New Unified Input Area Styles --- */
-#unified-input-area {
-    display: flex;
-    align-items: flex-end; /* Align input container and button to bottom */
-    gap: 8px; /* Space between input container and button */
-    padding: 10px 15px; /* Padding around the whole area */
-    margin: 0; /* Remove margin, part of chat-container now */
-    background-color: #ffffff; /* White background */
-    border-top: 1px solid #e0e0e0; /* Separator line from chat messages */
-    flex-shrink: 0; /* Prevent shrinking */
-}
-
-#unified-input-area #send-button {
-    height: 40px; /* Adjust height */
-    padding: 0 18px; /* Adjust padding */
-    flex-shrink: 0; /* Prevent button shrinking */
-    border-radius: 6px; /* Standard button radius */
-    background-color: #007bff; /* Example primary color */
-    color: white;
-    border: none;
-    cursor: pointer;
-    font-size: 15px; /* Adjust font size */
-    transition: background-color 0.2s;
-    margin-bottom: 0; /* Align with bottom of input container */
-}
-#unified-input-area #send-button:hover {
-    background-color: #0056b3;
-}
-#unified-input-area #send-button:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-}
-
-
-#unified-input-area #loading {
-    margin-left: 8px; /* Space between button and loading */
-    height: 40px; /* Match button height */
-    display: flex; /* Use flex to center vertically */
-    align-items: center;
-    color: #555; /* Style loading text */
-}
-/* --- Edit Session Modal Styles --- */
-.modal-overlay {
-    position: fixed; /* Stay in place */
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.6); /* Dark overlay */
-    display: flex; /* Center content */
-    justify-content: center;
-    align-items: center;
-    z-index: 1000; /* On top */
-    opacity: 0; /* Start hidden */
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-}
-
-.modal-overlay.visible { /* Class to show modal */
-    opacity: 1;
-    visibility: visible;
-}
-
-/* Assign specific z-index values */
-#edit-session-modal-overlay {
-    z-index: 1000; /* Base level for modals */
-}
-
-#edit-message-modal-overlay {
-    z-index: 1010; /* Higher z-index to appear on top */
-}
-
-.modal-content {
-    background-color: #ffffff;
-    padding: 25px 30px;
-    border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    width: 90%;
-    max-width: 550px; /* Adjust max width as needed */
-    display: flex;
-    flex-direction: column;
-    gap: 15px; /* Spacing */
-    transform: scale(0.95); /* Start slightly smaller */
-    transition: transform 0.3s ease;
-}
-
-.modal-overlay.visible .modal-content {
-    transform: scale(1); /* Scale to full size when visible */
-}
-
-
-.modal-content h3 {
-    margin-top: 0;
-    margin-bottom: 10px;
-    text-align: center;
-    color: #333;
-    font-size: 1.3em;
-}
-
-.modal-content .form-group {
-    margin-bottom: 15px;
-}
-.modal-content .form-group:last-of-type {
-     margin-bottom: 0; /* No margin on last form group before actions */
-}
-
-
-.modal-content label {
-    display: block;
-    margin-bottom: 6px;
-    font-weight: 600; /* Slightly bolder label */
-    color: #444;
-    font-size: 0.9em;
-}
-
-.modal-content input[type="text"],
-.modal-content textarea {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-    font-size: 1em;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-.modal-content input[type="text"]:focus,
-.modal-content textarea:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-    outline: none;
-}
-
-
-.modal-content textarea {
-    resize: vertical;
-    min-height: 80px;
-    font-family: inherit; /* Ensure textarea uses same font */
-    line-height: 1.5;
-}
-
-.modal-actions {
-    display: flex;
-    justify-content: flex-end; /* Align buttons to the right */
-    gap: 10px;
-    margin-top: 20px; /* More space before actions */
-    padding-top: 15px; /* Add padding above actions */
-    border-top: 1px solid #eee; /* Separator line */
-}
-
-.modal-actions button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 0.95em;
+    font-size: 0.75em;
     font-weight: 500;
-    transition: background-color 0.2s, box-shadow 0.2s;
-}
-
-.modal-actions .button-primary {
-    background-color: #007bff;
-    color: white;
-}
-.modal-actions .button-primary:hover {
-    background-color: #0056b3;
-    box-shadow: 0 2px 5px rgba(0, 123, 255, 0.3);
-}
-
-.modal-actions .button-secondary {
-    background-color: #6c757d;
-    color: white;
-}
-.modal-actions .button-secondary:hover {
-    background-color: #5a6268;
-    box-shadow: 0 2px 5px rgba(108, 117, 125, 0.3);
-}
-
-.display-none {
-    display: none; /* Hide elements */
-}
-
-.hidden {
-    display: none;
-}
-/* --- End Modal Styles --- */
-/* --- Sidebar Toggle Button (Mobile Only) --- */
-.sidebar-toggle-button {
-    display: none; /* Hidden by default, shown in media query */
-    position: absolute; /* Position relative to main-content */
-    top: 10px;       /* Adjust position as needed */
-    left: 10px;
-    z-index: 1001;   /* Ensure it's clickable, above other main-content children if any overlap */
-    background-color: rgba(0, 123, 255, 0.8); /* Semi-transparent */
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 8px 10px; /* Adjusted padding for better icon centering */
-    font-size: 1.2em; /* Slightly smaller icon size */
-    line-height: 1; /* Keep line-height 1 */
-    /* Optional: Use flex for perfect centering if needed */
-    /* display: inline-flex;
-    align-items: center;
-    justify-content: center; */
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    transition: background-color 0.2s;
-}
-
-.sidebar-toggle-button:hover {
-    background-color: rgba(0, 86, 179, 0.9); /* Darker on hover */
-}
-
-/* --- Sidebar Overlay (Mobile Only) --- */
-.sidebar-overlay {
-    display: none; /* Hidden by default */
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
-    z-index: 998; /* Below sidebar, above main content */
-    cursor: pointer; /* Indicate clickable to close */
-}
-
-/* --- Mobile Responsiveness --- */
-@media (max-width: 768px) {
-    .app-container {
-        /* Ensure container still works, maybe add position relative if needed for fixed sidebar */
-        position: relative;
-        overflow-x: hidden; /* Prevent horizontal scroll if sidebar slides */
-    }
-
-    #sidebar {
-        position: fixed; /* Take out of flow, fixed position */
-        left: -260px; /* Hide off-screen (adjust based on actual width + padding/border) */
-        top: 0;
-        height: 100vh; /* Full viewport height */
-        z-index: 999; /* Above overlay, below toggle button/modals */
-        transition: left 0.3s ease-in-out; /* Smooth slide animation */
-        box-shadow: 2px 0 8px rgba(0,0,0,0.25); /* Add shadow when open */
-        width: 250px; /* Keep width or adjust slightly */
-        border-right: none; /* Remove border when it's an overlay */
-    }
-
-    /* State when sidebar is open */
-    .sidebar-open #sidebar {
-        left: 0; /* Slide sidebar in */
-    }
-
-    .sidebar-open .sidebar-overlay {
-        display: block; /* Show overlay when sidebar is open */
-    }
-
-    #main-content {
-        width: 100%; /* Main content takes full width */
-        flex-grow: 1; /* Ensure it still grows if needed */
-        transition: margin-left 0.3s ease-in-out; /* Optional: Animate content shift if sidebar pushes */
-        /* If sidebar overlays, no margin-left needed. If it pushes, add: */
-        /* margin-left: 0; */
-    }
-    /* Example if sidebar pushes content instead of overlaying: */
-    /* .sidebar-open #main-content {
-        margin-left: 250px;
-        width: calc(100% - 250px);
-    } */
-
-
-    .sidebar-toggle-button {
-        display: block; /* Show the toggle button on mobile */
-    }
-/* Adjust chat container margin/padding */
-#chat-container {
-    margin: 5px;
-    padding: 10px; /* Reduce padding slightly */
-    /* height: calc(100% - 10px); */ /* REMOVED: Let flexbox handle height distribution */
-}
-
-
-     #ai-response {
-        padding: 10px;
-     }
-
-    /* Adjust input area */
-    #unified-input-area {
-        padding: 8px 10px;
-        margin: 0 5px 5px 5px;
-        gap: 5px; /* Reduce gap */
-    }
-
-    #chat-input {
-        font-size: 15px;
-        min-height: 45px;
-        padding: 10px 12px;
-        /* border-radius: 15px; */ /* Remove radius */
-        border-radius: 0;
-    }
-    /* Adjust input radius when preview shown/hidden */
-     /* Remove mobile specific radius adjustments */
-     /* #chat-input-container:has(#input-image-preview:not(:empty)) #chat-input {
-         border-bottom-left-radius: 0;
-         border-bottom-right-radius: 0;
-     } */
-     /* #chat-input-container:not(:has(#input-image-preview:not(:empty))) #chat-input {
-         border-bottom-left-radius: 15px;
-         border-bottom-right-radius: 15px;
-     } */
-     #input-image-preview {
-         padding: 6px 10px;
-         min-height: 35px;
-         /* border-bottom-left-radius: 15px; */ /* Remove radius */
-         /* border-bottom-right-radius: 15px; */
-         border-radius: 0;
-     }
-
-
-     #unified-input-area #send-button {
-        height: 40px; /* Match adjusted height */
-        padding: 0 15px;
-        font-size: 15px;
-        border-radius: 6px; /* Match standard radius */
-     }
-     #unified-input-area #loading {
-         height: 40px; /* Match adjusted height */
-         font-size: 0.85em;
-     }
-
-    /* Adjust chat bubbles */
-    .message-bubble {
-        max-width: 85%; /* Allow slightly wider bubbles */
-        padding: 8px 12px;
-    }
-
-    /* Modal adjustments */
-    .modal-content {
-        width: 95%;
-        max-width: none; /* Allow full width on small screens */
-        padding: 20px 15px;
-    }
-    .modal-actions {
-        gap: 8px;
-    }
-    .modal-actions button {
-        padding: 8px 15px;
-    }
-
-    /* Session list item adjustments */
-    #session-list li {
-        padding: 8px 10px;
-    }
-    .session-controls {
-        opacity: 1; /* Always show controls on mobile? Or keep hover? */
-    }
-}
-/* --- Bubble Loading Spinner --- */
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.bubble-loading-spinner {
-    display: inline-block;
-    border: 3px solid rgba(0, 0, 0, 0.1); /* Light grey border */
-    border-left-color: #666; /* Darker grey for spinning part */
-    border-radius: 50%;
-    width: 18px; /* Size of the spinner */
-    height: 18px;
-    animation: spin 1s linear infinite; /* Apply the animation */
-    margin: 5px; /* Add some margin */
-}
-
-/* --- 表格样式 --- */
-.assistant-message-content table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 1.5em 0;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-    overflow: hidden;
-    font-size: 0.95em;
-}
-
-.assistant-message-content table thead {
+    color: #ffffff;
     background-color: #0d6efd;
-    color: white;
-}
-
-.assistant-message-content table th {
-    padding: 12px 15px;
-    text-align: left;
-    font-weight: 600;
+    padding: 0.25em 0.75em;
+    border-bottom-right-radius: 6px;
     text-transform: uppercase;
-    font-size: 0.85em;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.05em;
+    border-top-left-radius: 8px;
+    z-index: 10;
 }
 
-.assistant-message-content table td {
-    padding: 10px 15px;
-    border-bottom: 1px solid #eee;
-    vertical-align: middle;
+/* 代码块样式优化 */
+.assistant-message-content pre {
+    margin: 0;
+    padding: 1.5em;
+    padding-top: 2em;
+    overflow-x: auto;
+    background-color: #282c34;
+    color: #d5d5d5;
+    line-height: 1.5;
+    border-radius: 0;
+    tab-size: 2;
 }
 
-.assistant-message-content table tbody tr {
-    transition: background-color 0.2s;
-}
-
-.assistant-message-content table tbody tr:nth-child(even) {
-    background-color: #f8f9fa;
-}
-
-.assistant-message-content table tbody tr:hover {
-    background-color: #f0f7ff;
-}
-
-.assistant-message-content table tbody tr:last-child td {
-    border-bottom: none;
-}
-
-/* 表格响应式设计 */
-@media (max-width: 768px) {
-    .assistant-message-content table {
-        font-size: 0.85em;
-    }
-    
-    .assistant-message-content table th,
-    .assistant-message-content table td {
-        padding: 8px 10px;
-    }
-    
-    /* 使超宽的表格可以水平滚动 */
-    .assistant-message-content .table-container {
-        width: 100%;
-        overflow-x: auto;
-        margin: 1.5em 0;
-    }
-}
-
-/* 确保Markdown中的表格正确显示 */
-.assistant-message-content table code {
-    background-color: rgba(0, 0, 0, 0.05);
-    padding: 2px 4px;
-    border-radius: 3px;
+.assistant-message-content pre code {
+    background: none;
+    padding: 0;
     font-size: 0.9em;
+    color: inherit;
+    white-space: pre;
+    word-spacing: normal;
+    word-break: normal;
+    word-wrap: normal;
+    border-radius: 0;
 }
 
-/* 表格标题样式 */
-.assistant-message-content table caption {
-    caption-side: top;
-    padding: 10px 0;
-    font-weight: bold;
-    color: #555;
+/* 代码块复制按钮美化 */
+.code-copy-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #d5d5d5;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.75em;
+    padding: 0.4em 0.8em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    opacity: 0.7;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.code-copy-button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    opacity: 1;
+}
+
+.code-copy-button:active {
+    transform: scale(0.95);
+}
+
+/* 代码块展开按钮美化 */
+.code-expand-button {
+    background-color: #2e3440;
+    color: #d5d5d5;
+    border: none;
+    border-radius: 0 0 6px 6px;
+    font-size: 0.85em;
+    padding: 0.5em 1em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    width: 100%;
+    display: block;
+    margin: 0;
     text-align: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.code-expand-button:hover {
+    background-color: #3b4252;
+}
+
+.code-expand-button:active {
+    transform: translateY(1px);
+}
+
+/* --- 特殊内容块样式 --- */
+
+/* 卡片样式 */
+.assistant-message-content .card {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    margin: 1.5em 0;
+    padding: 1.2em;
+    position: relative;
+    overflow: hidden;
+}
+
+.assistant-message-content .card-header {
+    border-bottom: 1px solid #edf2f7;
+    padding-bottom: 0.8em;
+    margin-bottom: 1em;
+    font-weight: 600;
+    color: #2d3748;
     font-size: 1.1em;
 }
 
-/* --- 表格样式变体 --- */
-
-/* 紧凑型表格 */
-.assistant-message-content table.compact {
+.assistant-message-content .card-footer {
+    border-top: 1px solid #edf2f7;
+    padding-top: 0.8em;
+    margin-top: 1em;
     font-size: 0.9em;
+    color: #718096;
 }
 
-.assistant-message-content table.compact th,
-.assistant-message-content table.compact td {
-    padding: 6px 10px;
-}
-
-/* 条纹型表格 - 更明显的条纹 */
-.assistant-message-content table.striped tbody tr:nth-child(odd) {
-    background-color: #f2f8ff;
-}
-
-.assistant-message-content table.striped tbody tr:nth-child(even) {
-    background-color: #ffffff;
-}
-
-/* 无边框表格 */
-.assistant-message-content table.borderless {
-    box-shadow: none;
-}
-
-.assistant-message-content table.borderless th {
-    border-bottom: 2px solid #0d6efd;
-}
-
-.assistant-message-content table.borderless td {
-    border-bottom: 1px solid #eee;
-}
-
-/* 卡片式表格 */
-.assistant-message-content table.card {
-    border: none;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-}
-
-.assistant-message-content table.card thead {
-    background-color: #4a89dc;
-}
-
-.assistant-message-content table.card th {
-    padding: 14px 18px;
-}
-
-/* 彩色表格 */
-.assistant-message-content table.colorful thead {
-    background: linear-gradient(135deg, #1e90ff, #0056b3);
-}
-
-.assistant-message-content table.colorful tbody tr:nth-child(odd) {
-    background-color: #f0f7ff;
-}
-
-.assistant-message-content table.colorful tbody tr:nth-child(even) {
-    background-color: #f9fcff;
-}
-
-/* 自动添加行号的表格 */
-.assistant-message-content table.numbered {
-    counter-reset: rowNumber;
-}
-
-.assistant-message-content table.numbered tbody tr {
-    counter-increment: rowNumber;
-}
-
-.assistant-message-content table.numbered tbody tr td:first-child::before {
-    content: counter(rowNumber);
-    min-width: 1em;
-    margin-right: 0.5em;
-    font-weight: 500;
-    color: #0d6efd;
-    display: inline-block;
-}
-
-/* 表格单元格内文本对齐方式 */
-.assistant-message-content table td.text-left {
-    text-align: left;
-}
-
-.assistant-message-content table td.text-center {
-    text-align: center;
-}
-
-.assistant-message-content table td.text-right {
-    text-align: right;
-}
-
-/* 表格格式化增强 */
-.assistant-message-content table td.number {
-    text-align: right;
-    font-family: monospace;
-    font-size: 0.9em;
-}
-
-.assistant-message-content table td.highlight {
-    background-color: #fff8e6;
-    font-weight: 500;
-}
-
-.assistant-message-content table td.success {
-    background-color: #e6fff2;
-    color: #00875a;
-}
-
-.assistant-message-content table td.warning {
-    background-color: #fff8e6;
-    color: #c27803;
-}
-
-.assistant-message-content table td.error {
-    background-color: #ffece6;
-    color: #d73a49;
-}
-
-/* --- 表格动画效果 --- */
-
-/* 表格淡入效果 */
-@keyframes tableAppear {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.assistant-message-content .table-container {
-    animation: tableAppear 0.4s ease-out;
-}
-
-/* 表格行悬停动画 */
-.assistant-message-content table tbody tr {
-    transition: transform 0.15s ease-out, background-color 0.2s;
-}
-
-.assistant-message-content table:not(.no-hover) tbody tr:hover {
-    transform: translateX(3px);
-    background-color: #f0f7ff !important;
-    box-shadow: -3px 0 0 #0d6efd;
-}
-
-/* 表格单元格内容更改动画 */
-@keyframes cellUpdate {
-    0% {
-        background-color: rgba(13, 110, 253, 0.15);
-    }
-    100% {
-        background-color: transparent;
-    }
-}
-
-.assistant-message-content table td.updated {
-    animation: cellUpdate 1.5s ease-out;
-}
-
-/* 卡片样式表格的特殊悬停效果 */
-.assistant-message-content table.card {
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.assistant-message-content table.card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-}
-
-/* 突出显示行 */
-.assistant-message-content table tr.highlight {
-    background-color: #fff8e6 !important;
-    font-weight: 500;
-}
-
-/* 表格搜索高亮 */
-.assistant-message-content table td.search-highlight {
-    background-color: #ffff9f;
+/* 信息框样式 */
+.assistant-message-content .info-box {
+    background-color: #ebf8ff;
+    border: 1px solid #bee3f8;
+    border-radius: 6px;
+    padding: 1em 1.5em;
+    margin: 1.5em 0;
     position: relative;
 }
 
-.assistant-message-content table td.search-highlight::after {
-    content: '';
+.assistant-message-content .info-box:before {
+    content: "ℹ️";
     position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background-color: #0d6efd;
-    transform: scaleX(0);
-    transition: transform 0.3s ease-out;
+    top: -0.7em;
+    left: 1em;
+    background-color: #ebf8ff;
+    padding: 0 0.5em;
+    font-size: 1.2em;
 }
 
-.assistant-message-content table td.search-highlight:hover::after {
-    transform: scaleX(1);
+/* 彩色标记 */
+.assistant-message-content .marker-yellow {
+    background: linear-gradient(transparent 40%, #ffff8d 40%, #ffff8d 60%, transparent 60%);
+    padding: 0 0.2em;
+}
+
+.assistant-message-content .marker-green {
+    background: linear-gradient(transparent 40%, #b9f6ca 40%, #b9f6ca 60%, transparent 60%);
+    padding: 0 0.2em;
+}
+
+.assistant-message-content .marker-blue {
+    background: linear-gradient(transparent 40%, #b3e5fc 40%, #b3e5fc 60%, transparent 60%);
+    padding: 0 0.2em;
+}
+
+.assistant-message-content .marker-pink {
+    background: linear-gradient(transparent 40%, #f8bbd0 40%, #f8bbd0 60%, transparent 60%);
+    padding: 0 0.2em;
+}
+
+.assistant-message-content .marker-purple {
+    background: linear-gradient(transparent 40%, #e1bee7 40%, #e1bee7 60%, transparent 60%);
+    padding: 0 0.2em;
+}
+
+/* 徽章样式 */
+.assistant-message-content .badge {
+    display: inline-block;
+    padding: 0.2em 0.6em;
+    font-size: 0.75em;
+    font-weight: 600;
+    border-radius: 9999px;
+    color: #fff;
+    background-color: #4a5568;
+    margin: 0 0.3em;
+    vertical-align: middle;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.assistant-message-content .badge-blue {
+    background-color: #3182ce;
+}
+
+.assistant-message-content .badge-green {
+    background-color: #38a169;
+}
+
+.assistant-message-content .badge-red {
+    background-color: #e53e3e;
+}
+
+.assistant-message-content .badge-yellow {
+    background-color: #d69e2e;
+    color: #2d3748;
+}
+
+.assistant-message-content .badge-purple {
+    background-color: #805ad5;
+}
+
+.assistant-message-content .badge-teal {
+    background-color: #319795;
+}
+
+/* 按钮样式 */
+.assistant-message-content .button {
+    display: inline-block;
+    padding: 0.5em 1em;
+    font-size: 0.9em;
+    font-weight: 500;
+    border-radius: 4px;
+    color: #fff;
+    background-color: #4a5568;
+    margin: 0.5em 0.3em;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    text-decoration: none;
+    border: none;
+}
+
+.assistant-message-content .button:hover {
+    background-color: #2d3748;
+}
+
+.assistant-message-content .button:active {
+    transform: translateY(1px);
+}
+
+.assistant-message-content .button-primary {
+    background-color: #3182ce;
+}
+
+.assistant-message-content .button-primary:hover {
+    background-color: #2c5282;
+}
+
+.assistant-message-content .button-success {
+    background-color: #38a169;
+}
+
+.assistant-message-content .button-success:hover {
+    background-color: #276749;
+}
+
+.assistant-message-content .button-danger {
+    background-color: #e53e3e;
+}
+
+.assistant-message-content .button-danger:hover {
+    background-color: #c53030;
+}
+
+/* 文本颜色样式 */
+.assistant-message-content .text-primary {
+    color: #3182ce;
+}
+
+.assistant-message-content .text-success {
+    color: #38a169;
+}
+
+.assistant-message-content .text-danger {
+    color: #e53e3e;
+}
+
+.assistant-message-content .text-warning {
+    color: #d69e2e;
+}
+
+.assistant-message-content .text-info {
+    color: #3182ce;
+}
+
+.assistant-message-content .text-muted {
+    color: #718096;
+}
+
+/* 步骤指示器 */
+.assistant-message-content ol.steps {
+    counter-reset: steps;
+    list-style-type: none;
+    padding-left: 0;
+    margin-left: 0;
+}
+
+.assistant-message-content ol.steps li {
+    position: relative;
+    padding-left: 3em;
+    padding-bottom: 1.5em;
+    margin-bottom: 0;
+}
+
+.assistant-message-content ol.steps li:before {
+    content: counter(steps);
+    counter-increment: steps;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 2em;
+    height: 2em;
+    line-height: 2em;
+    text-align: center;
+    background-color: #4299e1;
+    color: white;
+    border-radius: 50%;
+    font-weight: 600;
+    font-size: 0.9em;
+}
+
+.assistant-message-content ol.steps li:after {
+    content: "";
+    position: absolute;
+    top: 2.5em;
+    left: 1em;
+    height: calc(100% - 2.5em);
+    width: 1px;
+    background-color: #e2e8f0;
+}
+
+.assistant-message-content ol.steps li:last-child {
+    padding-bottom: 0;
+}
+
+.assistant-message-content ol.steps li:last-child:after {
+    display: none;
+}
+
+/* 特殊容器 */
+.assistant-message-content .container {
+    padding: 1.5em;
+    margin: 1.5em 0;
+    background-color: #f7fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.assistant-message-content .container-blue {
+    background-color: #ebf8ff;
+    border-color: #bee3f8;
+}
+
+.assistant-message-content .container-green {
+    background-color: #f0fff4;
+    border-color: #c6f6d5;
+}
+
+.assistant-message-content .container-yellow {
+    background-color: #fffbeb;
+    border-color: #fefcbf;
+}
+
+.assistant-message-content .container-red {
+    background-color: #fff5f5;
+    border-color: #fed7d7;
+}
+
+.assistant-message-content .container-gray {
+    background-color: #f7fafc;
+    border-color: #edf2f7;
+}
+
+/* 折叠面板 */
+.assistant-message-content .collapsible {
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    margin: 1em 0;
+    background-color: #f7fafc;
+}
+
+.assistant-message-content .collapsible-header {
+    padding: 0.8em 1em;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid transparent;
+    transition: background-color 0.2s;
+}
+
+.assistant-message-content .collapsible-header:hover {
+    background-color: #edf2f7;
+}
+
+.assistant-message-content .collapsible-header:after {
+    content: "▼";
+    font-size: 0.7em;
+    margin-left: 1em;
+    transition: transform 0.2s;
+}
+
+.assistant-message-content .collapsible-header.expanded:after {
+    transform: rotateZ(180deg);
+}
+
+.assistant-message-content .collapsible-content {
+    padding: 1em;
+    overflow: hidden;
+    display: none;
+}
+
+.assistant-message-content .collapsible-content.expanded {
+    display: block;
+}
+
+/* 扁平化卡片 */
+.assistant-message-content .flat-card {
+    padding: 1em;
+    background-color: #f7fafc;
+    border-left: 4px solid #4299e1;
+    margin: 1.2em 0;
+}
+
+.assistant-message-content .flat-card-title {
+    font-weight: 600;
+    color: #2c5282;
+    margin-bottom: 0.5em;
+}
+
+.assistant-message-content .flat-card-green {
+    border-left-color: #48bb78;
+}
+
+.assistant-message-content .flat-card-green .flat-card-title {
+    color: #276749;
+}
+
+.assistant-message-content .flat-card-red {
+    border-left-color: #f56565;
+}
+
+.assistant-message-content .flat-card-red .flat-card-title {
+    color: #c53030;
+}
+
+.assistant-message-content .flat-card-yellow {
+    border-left-color: #ecc94b;
+}
+
+.assistant-message-content .flat-card-yellow .flat-card-title {
+    color: #975a16;
+}
+
+.assistant-message-content .flat-card-purple {
+    border-left-color: #9f7aea;
+}
+
+.assistant-message-content .flat-card-purple .flat-card-title {
+    color: #553c9a;
 }
