@@ -1,28 +1,45 @@
 // src/ui/loadingIndicator.js
-import { loadingIndicator } from './domElements.js'; // 导入加载指示器元素引用
+import { loadingIndicator, aiResponseArea } from './domElements.js'; // 导入DOM元素引用
 
 /**
  * 显示加载指示器。
+ * 在AI回复框中创建一个正在输入的加载动效
  */
 export function showLoading() {
-    // 不再显示加载指示器
-    // if (loadingIndicator) {
-    //     loadingIndicator.style.display = 'inline-block'; // 设置为内联块以显示
-    // } else {
-    //     console.warn("[UI] showLoading: loadingIndicator 元素引用为 null。");
-    // }
-    return; // 直接返回，不执行任何操作
+    // 不再使用原始的loadingIndicator元素
+    
+    // 如果已经有加载指示器，先清除
+    hideLoading();
+    
+    // 创建一个新的加载指示器，显示在AI回复框中
+    if (aiResponseArea) {
+        const typingIndicator = document.createElement('div');
+        typingIndicator.className = 'ai-typing-indicator message-bubble assistant-bubble';
+        typingIndicator.id = 'ai-typing-indicator';
+        typingIndicator.innerHTML = 'AI 正在思考中<div class="typing-dots"><span></span><span></span><span></span></div>';
+        
+        // 添加到AI回复区域
+        aiResponseArea.appendChild(typingIndicator);
+        
+        // 滚动到底部
+        aiResponseArea.scrollTop = aiResponseArea.scrollHeight;
+    } else {
+        console.warn("[UI] showLoading: aiResponseArea 元素引用为 null。");
+    }
 }
 
 /**
  * 隐藏加载指示器。
  */
 export function hideLoading() {
-     // console.log("[UI] hideLoading 调用。"); // 调试日志，可以按需启用
-     if (loadingIndicator) {
-         // console.log("[UI] 隐藏加载指示器元素:", loadingIndicator); // 调试日志
-         loadingIndicator.style.display = 'none'; // 设置为 none 以隐藏
-     } else {
-         console.warn("[UI] hideLoading: loadingIndicator 元素引用为 null。");
-     }
+    // 移除AI回复框中的加载指示器
+    const typingIndicator = document.getElementById('ai-typing-indicator');
+    if (typingIndicator) {
+        typingIndicator.remove();
+    }
+    
+    // 保留原始的 loadingIndicator 处理，以防万一
+    if (loadingIndicator) {
+        loadingIndicator.style.display = 'none';
+    }
 }
