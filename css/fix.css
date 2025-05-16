@@ -358,53 +358,112 @@
     color: #333;
 }
 
-/* 确保粗体文本样式在不同模型下保持一致 */
-.assistant-message-content strong,
-.assistant-message-content b {
-    font-weight: 600;
-    color: #000;
+/* 聊天图片的通用样式 */
+.message-bubble img:not(.emoji) {
+    max-width: 250px !important; /* 增加最大宽度 */
+    max-height: 200px !important; /* 增加最大高度 */
+    border-radius: 8px !important; /* 增加圆角边框 */
+    border: 1px solid #e0e0e0 !important; /* 轻微边框 */
+    object-fit: contain !important; /* 保持图片比例且完整显示 */
+    margin: 8px 0 !important; /* 增加上下间距 */
+    cursor: zoom-in !important; /* 显示放大指针 */
+    transition: all 0.2s ease !important; /* 平滑过渡效果 */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05) !important; /* 默认轻微阴影 */
 }
 
-/* 确保Markdown列表在所有模型下显示一致 */
-.assistant-message-content ul,
-.assistant-message-content ol {
-    padding-left: 2em;
-    margin: 1em 0;
+/* 用户消息中的图片 */
+.user-bubble img:not(.emoji) {
+    border-color: #c5e1a5 !important; /* 用户图片边框颜色 */
+    box-shadow: 0 2px 5px rgba(0, 150, 0, 0.05) !important; /* 用户图片特有的阴影 */
 }
 
-.assistant-message-content ul li,
-.assistant-message-content ol li {
-    margin-bottom: 0.5em;
+/* 图片悬停效果 */
+.message-bubble img:not(.emoji):hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2) !important; /* 增强悬停时阴影 */
+    transform: scale(1.03) !important; /* 轻微放大效果 */
+    border-color: #0d6efd !important; /* 高亮边框 */
 }
 
-/* 确保代码样式统一 */
-.assistant-message-content code {
-    font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
-    background-color: rgba(0, 0, 0, 0.05);
-    border-radius: 3px;
-    padding: 0.2em 0.4em;
-    font-size: 0.9em;
+/* 预览弹窗背景 */
+.lightbox-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background-color: rgba(0, 0, 0, 0.9) !important; /* 更暗的背景 */
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    z-index: 10000 !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transition: opacity 0.3s ease, visibility 0.3s ease !important;
+    -webkit-backdrop-filter: blur(5px) !important; /* Safari支持 */
+    backdrop-filter: blur(5px) !important; /* 背景模糊效果 */
 }
 
-/* 确保链接样式一致 */
-.assistant-message-content a {
-    color: #0d6efd;
-    text-decoration: none;
-    border-bottom: 1px dotted #0d6efd;
-    transition: all 0.2s ease;
+.lightbox-overlay.visible {
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
-.assistant-message-content a:hover {
-    color: #0a58ca;
-    border-bottom: 1px solid #0a58ca;
+/* 预览弹窗内的图片 */
+.lightbox-image {
+    max-width: 90% !important;
+    max-height: 90% !important;
+    object-fit: contain !important;
+    border-radius: 8px !important;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5) !important;
+    transform: scale(0.9) !important;
+    opacity: 0 !important;
+    transition: all 0.3s ease !important;
+    background-color: rgba(255, 255, 255, 0.05) !important; /* 图片背景 */
+    padding: 2px !important; /* 内边距 */
 }
 
-/* 确保段落间距一致 */
-.assistant-message-content p {
-    margin: 0.75em 0;
+.lightbox-overlay.visible .lightbox-image {
+    transform: scale(1) !important;
+    opacity: 1 !important;
 }
 
-/* 响应式样式 - 底部输入区域适配 */
+/* 关闭按钮 */
+.lightbox-close {
+    position: absolute !important;
+    top: 20px !important;
+    right: 20px !important;
+    color: white !important;
+    font-size: 30px !important;
+    cursor: pointer !important;
+    width: 40px !important;
+    height: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+    background-color: rgba(0, 0, 0, 0.4) !important;
+    transition: all 0.2s ease !important;
+    z-index: 10001 !important; /* 确保在图片之上 */
+}
+
+.lightbox-close:hover {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    transform: rotate(90deg) !important;
+}
+
+/* 用户消息中的小图片 */
+.user-bubble .user-message-content img {
+    max-width: 250px !important; /* 与上面保持一致 */
+    max-height: 200px !important; /* 与上面保持一致 */
+    vertical-align: middle !important;
+    margin: 8px 0 !important;
+    border: 1px solid #ddd !important;
+    border-radius: 8px !important;
+    cursor: zoom-in !important; /* 使用放大镜指针 */
+    object-fit: contain !important; /* 保持图片比例且完整显示 */
+}
+
+/* 响应式调整 - 移动设备上图片更小 */
 @media (max-width: 768px) {
     #unified-input-area {
         padding: 8px 10px;
@@ -455,4 +514,65 @@
     .typing-indicator-text {
         font-size: 13px;
     }
+
+    .message-bubble img:not(.emoji) {
+        max-width: 200px !important; /* 调整移动设备上的最大宽度 */
+        max-height: 150px !important; /* 调整移动设备上的最大高度 */
+    }
+    
+    .user-bubble .user-message-content img {
+        max-width: 200px !important;
+        max-height: 150px !important;
+    }
+    
+    .lightbox-close {
+        top: 10px !important;
+        right: 10px !important;
+    }
+}
+
+/* 确保粗体文本样式在不同模型下保持一致 */
+.assistant-message-content strong,
+.assistant-message-content b {
+    font-weight: 600;
+    color: #000;
+}
+
+/* 确保Markdown列表在所有模型下显示一致 */
+.assistant-message-content ul,
+.assistant-message-content ol {
+    padding-left: 2em;
+    margin: 1em 0;
+}
+
+.assistant-message-content ul li,
+.assistant-message-content ol li {
+    margin-bottom: 0.5em;
+}
+
+/* 确保代码样式统一 */
+.assistant-message-content code {
+    font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 3px;
+    padding: 0.2em 0.4em;
+    font-size: 0.9em;
+}
+
+/* 确保链接样式一致 */
+.assistant-message-content a {
+    color: #0d6efd;
+    text-decoration: none;
+    border-bottom: 1px dotted #0d6efd;
+    transition: all 0.2s ease;
+}
+
+.assistant-message-content a:hover {
+    color: #0a58ca;
+    border-bottom: 1px solid #0a58ca;
+}
+
+/* 确保段落间距一致 */
+.assistant-message-content p {
+    margin: 0.75em 0;
 } 
