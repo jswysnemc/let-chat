@@ -53,11 +53,25 @@
                     <div id="input-image-preview">
                          <span class="placeholder-text">点击此处或粘贴图片进行上传...</span>
                     </div>
+                    <!-- 输入框内按钮容器 -->
+                    <div class="input-buttons-container">
+                        <!-- 左侧图标按钮 -->
+                        <div class="left-buttons">
+                            <!-- 上传图片按钮 -->
+                            <button type="button" id="upload-image-btn" class="input-icon-btn" title="上传图片">
+                                <i class="fas fa-image"></i>
+                            </button>
+                            <!-- 模型切换按钮 -->
+                            <button type="button" id="switch-model-btn" class="input-icon-btn" title="切换模型">
+                                <i class="fas fa-robot"></i>
+                            </button>
+                        </div>
+                        <!-- 右侧发送按钮 -->
+                        <button type="button" id="send-button" class="control-button" title="发送消息">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
                 </div>
-                <!-- Send button and loading indicator moved next to the input container -->
-                <button type="button" id="send-button" class="control-button">发送</button>
-                <!-- <span id="loading" class="hidden loading-indicator display-none">AI 正在回复中...</span> -->
-                <!-- Upload button removed -->
             </div>
     <!-- Sidebar Overlay (Mobile Only) -->
     <div class="sidebar-overlay"></div>

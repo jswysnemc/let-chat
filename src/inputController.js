@@ -1,13 +1,15 @@
 // src/inputController.js
 import { getElement } from './ui/domElements.js'; // Import getElement from its new location
 import { updateChatInputPlaceholderVisually, updatePreviewPlaceholderVisually } from './ui/placeholderManager.js'; // Import placeholder functions from their new location
+import { getApiConfig, loadProviders, setActiveProvider, saveProviders } from './config.js'; // 导入配置模块
 
 // --- Module-scoped variables ---
 let chatInputElement = null;
 let imagePreviewAreaElement = null;
 let sendButtonElement = null;
 let onSendCallback = null;
-let uploadImageButtonElement = null; // Reference for upload button
+let uploadImageButtonElement = null; // 新的上传图片按钮
+let switchModelButtonElement = null; // 新的模型切换按钮
 let imageUploadInputElement = null; // Reference for hidden file input
 
 // --- Helper Functions (Moved from index.html) ---
@@ -225,7 +227,7 @@ function handlePaste(event) {
                 };
                  reader.onerror = (e) => { // Add specific error handling for paste reader
                      console.error("[InputController] FileReader error on paste:", e);
-                     alert("读取粘贴的图片数据时出错。");
+                     showNotification("读取粘贴的图片数据时出错", 'error');
                  };
                 console.log("[InputController] Calling reader.readAsDataURL for pasted blob.");
                 reader.readAsDataURL(blob);
@@ -242,7 +244,7 @@ function handleFileUpload(event) {
     const file = event.target.files?.[0];
     if (!file || !file.type.startsWith('image/')) {
         if (file) { // Only alert if a file was selected but wasn't an image
-             alert('请选择一个图片文件。');
+             showNotification('请选择一个图片文件', 'warning');
         }
         // Reset file input value in case user selected non-image then cancels next time
         event.target.value = null;
@@ -260,7 +262,7 @@ function handleFileUpload(event) {
     };
     reader.onerror = (e) => {
         console.error("FileReader error:", e);
-        alert("读取文件时出错。");
+        showNotification("读取文件时出错", 'error');
     };
     reader.readAsDataURL(file);
 
@@ -307,8 +309,8 @@ function handleSendTrigger() {
     console.log("[InputController] Extracted contentParts:", JSON.stringify(contentParts)); // Log extracted content
 
     if (contentParts.length === 0) {
-        console.log("[InputController] No content extracted, showing alert.");
-        alert('请输入要发送的内容或粘贴图片！');
+        console.log("[InputController] No content extracted, showing notification.");
+        showNotification('请输入要发送的内容或粘贴图片', 'warning');
         return;
     }
 
@@ -321,6 +323,7 @@ function handleSendTrigger() {
         console.log("[InputController] onSendCallback completed.");
     } catch (e) {
         console.error("[InputController] Error during onSendCallback execution:", e);
+        showNotification('发送消息时发生错误，请重试', 'error');
         // Attempt to re-enable button etc. if callback failed badly? Or rely on main.js finally block.
     }
 }
@@ -362,6 +365,231 @@ function handleDeleteImage(event) {
     updateChatInputPlaceholderVisually();
 }
 
+// --- 模型切换处理器 ---
+function handleModelSwitch() {
+    console.log("[InputController] Model switch button clicked");
+    
+    // 获取当前服务商配置和模型信息
+    const { providers, activeProviderId } = loadProviders();
+    const currentProvider = providers.find(p => p.id === activeProviderId);
+    
+    if (!currentProvider || !currentProvider.models || currentProvider.models.length <= 1) {
+        showNotification('当前服务商没有可用的备选模型', 'warning');
+        return;
+    }
+    
+    // 创建模型选择菜单
+    const modelsMenu = document.createElement('div');
+    modelsMenu.className = 'models-quick-menu';
+    modelsMenu.style.position = 'absolute';
+    modelsMenu.style.bottom = '50px';
+    modelsMenu.style.left = '10px';
+    modelsMenu.style.backgroundColor = 'white';
+    modelsMenu.style.border = '1px solid #ddd';
+    modelsMenu.style.borderRadius = '8px';
+    modelsMenu.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+    modelsMenu.style.padding = '8px';
+    modelsMenu.style.zIndex = '1000';
+    modelsMenu.style.maxHeight = '300px';
+    modelsMenu.style.overflowY = 'auto';
+    modelsMenu.style.width = '200px';
+    
+    // 添加标题
+    const menuTitle = document.createElement('div');
+    menuTitle.textContent = '选择模型';
+    menuTitle.style.fontWeight = 'bold';
+    menuTitle.style.borderBottom = '1px solid #eee';
+    menuTitle.style.paddingBottom = '5px';
+    menuTitle.style.marginBottom = '5px';
+    modelsMenu.appendChild(menuTitle);
+    
+    // 添加关闭按钮
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '&times;';
+    closeBtn.style.position = 'absolute';
+    closeBtn.style.top = '5px';
+    closeBtn.style.right = '5px';
+    closeBtn.style.background = 'none';
+    closeBtn.style.border = 'none';
+    closeBtn.style.fontSize = '16px';
+    closeBtn.style.cursor = 'pointer';
+    closeBtn.style.color = '#666';
+    closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.body.removeChild(modelsMenu);
+    });
+    modelsMenu.appendChild(closeBtn);
+    
+    // 添加当前激活的模型和其他模型
+    currentProvider.models.forEach(model => {
+        const modelItem = document.createElement('div');
+        modelItem.className = 'model-menu-item';
+        modelItem.style.padding = '8px 10px';
+        modelItem.style.margin = '5px 0';
+        modelItem.style.borderRadius = '4px';
+        modelItem.style.cursor = 'pointer';
+        modelItem.style.display = 'flex';
+        modelItem.style.alignItems = 'center';
+        modelItem.style.transition = 'background-color 0.2s';
+        
+        // 激活的模型显示不同的背景色和复选标记
+        if (model.isActive) {
+            modelItem.style.backgroundColor = '#e6f7ff';
+            modelItem.style.borderLeft = '3px solid #0d6efd';
+            modelItem.innerHTML = `<i class="fas fa-check" style="margin-right: 8px; color: #0d6efd;"></i> ${model.name}`;
+        } else {
+            modelItem.innerHTML = `<span style="width: 16px; display: inline-block; margin-right: 8px;"></span>${model.name}`;
+            modelItem.style.backgroundColor = '#f9f9f9';
+            
+            // 鼠标悬停效果
+            modelItem.addEventListener('mouseover', () => {
+                modelItem.style.backgroundColor = '#f0f0f0';
+            });
+            modelItem.addEventListener('mouseout', () => {
+                modelItem.style.backgroundColor = '#f9f9f9';
+            });
+            
+            // 点击事件 - 切换模型
+            modelItem.addEventListener('click', () => {
+                // 更新模型激活状态
+                currentProvider.models.forEach(m => {
+                    m.isActive = (m.id === model.id);
+                });
+                
+                // 先保存到localStorage，再设置活动模型
+                saveProviders(providers, activeProviderId);
+                
+                // 保存更改并设置活动服务商
+                if (setActiveProvider(activeProviderId)) {
+                    // 用通知条替代alert
+                    showNotification(`已切换到模型: ${model.name}`, 'success');
+                    console.log(`[InputController] 切换到模型: ${model.name}`);
+                    document.body.removeChild(modelsMenu);
+                } else {
+                    showNotification('模型切换失败，请稍后再试', 'error');
+                }
+            });
+        }
+        
+        modelsMenu.appendChild(modelItem);
+    });
+    
+    // 添加菜单到页面
+    document.body.appendChild(modelsMenu);
+    
+    // 点击菜单外部区域关闭菜单
+    const closeMenuOnOutsideClick = (e) => {
+        if (!modelsMenu.contains(e.target) && e.target !== switchModelButtonElement) {
+            document.body.removeChild(modelsMenu);
+            document.removeEventListener('click', closeMenuOnOutsideClick);
+        }
+    };
+    
+    // 延迟添加点击事件，避免立即触发
+    setTimeout(() => {
+        document.addEventListener('click', closeMenuOnOutsideClick);
+    }, 100);
+}
+
+// 显示通知条
+function showNotification(message, type = 'info') {
+    // 创建通知元素
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.style.position = 'fixed';
+    notification.style.bottom = '20px';
+    notification.style.right = '20px';
+    notification.style.padding = '10px 15px';
+    notification.style.borderRadius = '4px';
+    notification.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+    notification.style.zIndex = '9999';
+    notification.style.minWidth = '200px';
+    notification.style.maxWidth = '350px';
+    notification.style.animation = 'notification-slide-in 0.3s ease-out';
+    notification.style.display = 'flex';
+    notification.style.alignItems = 'center';
+    notification.style.transition = 'opacity 0.3s ease';
+    
+    // 根据类型设置颜色
+    let iconClass = 'fa-info-circle';
+    switch (type) {
+        case 'success':
+            notification.style.backgroundColor = '#d4edda';
+            notification.style.color = '#155724';
+            notification.style.borderLeft = '4px solid #28a745';
+            iconClass = 'fa-check-circle';
+            break;
+        case 'warning':
+            notification.style.backgroundColor = '#fff3cd';
+            notification.style.color = '#856404';
+            notification.style.borderLeft = '4px solid #ffc107';
+            iconClass = 'fa-exclamation-triangle';
+            break;
+        case 'error':
+            notification.style.backgroundColor = '#f8d7da';
+            notification.style.color = '#721c24';
+            notification.style.borderLeft = '4px solid #dc3545';
+            iconClass = 'fa-times-circle';
+            break;
+        default: // info
+            notification.style.backgroundColor = '#d1ecf1';
+            notification.style.color = '#0c5460';
+            notification.style.borderLeft = '4px solid #17a2b8';
+    }
+    
+    // 添加图标和消息
+    notification.innerHTML = `
+        <i class="fas ${iconClass}" style="margin-right: 10px; font-size: 16px;"></i>
+        <span style="flex-grow: 1;">${message}</span>
+        <i class="fas fa-times" style="cursor: pointer; padding: 5px; font-size: 14px;"></i>
+    `;
+    
+    // 添加样式到head
+    if (!document.querySelector('#notification-styles')) {
+        const styleElement = document.createElement('style');
+        styleElement.id = 'notification-styles';
+        styleElement.textContent = `
+            @keyframes notification-slide-in {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes notification-slide-out {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(styleElement);
+    }
+    
+    // 添加到页面
+    document.body.appendChild(notification);
+    
+    // 点击关闭按钮移除通知
+    notification.querySelector('.fa-times').addEventListener('click', () => {
+        notification.style.animation = 'notification-slide-out 0.3s ease-out forwards';
+        setTimeout(() => {
+            try {
+                document.body.removeChild(notification);
+            } catch (e) {
+                // 元素可能已经被移除，忽略错误
+            }
+        }, 300);
+    });
+    
+    // 自动3秒后消失
+    setTimeout(() => {
+        if (document.body.contains(notification)) {
+            notification.style.animation = 'notification-slide-out 0.3s ease-out forwards';
+            setTimeout(() => {
+                try {
+                    document.body.removeChild(notification);
+                } catch (e) {
+                    // 元素可能已经被移除，忽略错误
+                }
+            }, 300);
+        }
+    }, 3000);
+}
 
 // --- Initialization ---
 
@@ -375,20 +603,27 @@ export function initInputHandling({ onSend }) {
     chatInputElement = getElement('chatInput');
     imagePreviewAreaElement = getElement('imagePreviewArea');
     sendButtonElement = getElement('sendButton');
-    // Get reference only to the hidden file input, as the button was removed
-    // uploadImageButtonElement = document.getElementById('upload-image-button'); // REMOVED - Button no longer exists
     imageUploadInputElement = document.getElementById('image-upload-input');
+    uploadImageButtonElement = document.getElementById('upload-image-btn');
+    switchModelButtonElement = document.getElementById('switch-model-btn');
 
-
-    // Update the check: remove uploadImageButtonElement
+    // Check if required elements exist
     if (!chatInputElement || !sendButtonElement || !imageUploadInputElement) {
         console.error("InputController Error: Required input elements (chat, send, file input) not found. Check IDs: chat-input, send-button, image-upload-input");
-        // No need to disable the non-existent button
-        return; // Stop initialization if critical elements are missing
+        return;
     }
-     if (!imagePreviewAreaElement) {
-         console.warn("InputController Warning: Image preview area element not found via ui.getElement(). Paste preview might not work.");
-     }
+    
+    if (!imagePreviewAreaElement) {
+        console.warn("InputController Warning: Image preview area element not found. Paste preview might not work.");
+    }
+    
+    if (!uploadImageButtonElement) {
+        console.warn("InputController Warning: Upload image button not found. Manual image upload might not work.");
+    }
+    
+    if (!switchModelButtonElement) {
+        console.warn("InputController Warning: Switch model button not found. Model switching might not work.");
+    }
 
     if (typeof onSend !== 'function') {
         console.error("InputController Error: 'onSend' callback function is required.");
@@ -403,68 +638,65 @@ export function initInputHandling({ onSend }) {
     chatInputElement.addEventListener('input', handleInput);
     chatInputElement.addEventListener('keydown', handleKeyDown);
     sendButtonElement.addEventListener('click', handleSendTrigger);
+    
+    // 上传图片按钮事件
+    if (uploadImageButtonElement && imageUploadInputElement) {
+        uploadImageButtonElement.addEventListener('click', () => {
+            imageUploadInputElement.click();
+        });
+    }
+    
+    // 模型切换按钮事件
+    if (switchModelButtonElement) {
+        switchModelButtonElement.addEventListener('click', handleModelSwitch);
+    }
 
-    // Combined click listener for image preview area (handles both upload trigger and delete)
+    // 图片预览区域点击事件（同时处理上传触发和删除）
     if (imagePreviewAreaElement) {
-        // Get placeholder reference within this scope
-        const previewPlaceholderElement = imagePreviewAreaElement.querySelector('.placeholder-text');
-
         imagePreviewAreaElement.addEventListener('click', (event) => {
             console.log("[InputController] Click detected on image preview area.");
-            console.log("[InputController] Target Element:", event.target);
-            // console.log("[InputController] Target Tag:", event.target.tagName, "Target Class:", event.target.className);
-
-            // Check if the click was on a delete button
+            
+            // 检查是否点击的是删除按钮
             const deleteButton = event.target.closest('.delete-image-btn');
             if (deleteButton) {
                 console.log("[InputController] Delete button clicked. Calling handleDeleteImage.");
-                handleDeleteImage(event); // Call the delete handler
-                return; // Stop further processing
+                handleDeleteImage(event);
+                return;
             }
-
-            // Check if the click was specifically on an image within a preview item
+            
+            // 检查是否点击的是已有的预览图片
             if (event.target.tagName === 'IMG' && event.target.closest('.image-preview-item')) {
-                 console.log("[InputController] Clicked on an existing preview image. Ignoring for upload trigger.");
-                 // Allow other actions like lightbox
-                 return;
+                console.log("[InputController] Clicked on an existing preview image. Ignoring for upload trigger.");
+                return;
             }
-
-            // Check if the click was on the wrapper div of a preview item (but not the delete button handled above)
+            
+            // 检查是否点击的是预览项的包装元素
             if (event.target.classList.contains('image-preview-item')) {
-                 console.log("[InputController] Clicked on a preview item wrapper. Ignoring for upload trigger.");
-                 return;
+                console.log("[InputController] Clicked on a preview item wrapper. Ignoring for upload trigger.");
+                return;
             }
-
-            // If the click target is anything else within the preview area (background, placeholder span), trigger upload.
+            
+            // 如果点击的是预览区域的其他部分（背景、占位符等），触发上传
             console.log("[InputController] Click target is neither delete nor existing item. Attempting to trigger upload.");
-
+            
             if (imageUploadInputElement) {
-                console.log("[InputController] Attempting to click hidden file input:", imageUploadInputElement);
+                console.log("[InputController] Attempting to click hidden file input.");
                 try {
-                     imageUploadInputElement.click(); // Trigger the hidden file input
-                     console.log("[InputController] Hidden file input .click() called successfully.");
+                    imageUploadInputElement.click();
+                    console.log("[InputController] Hidden file input .click() called successfully.");
                 } catch (e) {
-                     console.error("[InputController] Error clicking hidden file input:", e);
-                     alert("无法打开文件选择对话框。");
+                    console.error("[InputController] Error clicking hidden file input:", e);
+                    showNotification("无法打开文件选择对话框", 'error');
                 }
             } else {
-                console.error("[InputController] Cannot trigger upload: Hidden file input element (#image-upload-input) not found or not initialized.");
-                alert("图片上传功能当前不可用。");
+                console.error("[InputController] Cannot trigger upload: Hidden file input element not found.");
+                showNotification("图片上传功能当前不可用", 'warning');
             }
         });
-        // The single listener above handles both delete and upload trigger logic.
     }
 
-    // Remove listener for the non-existent upload button
-    // uploadImageButtonElement.addEventListener('click', () => {
-    //     if (imageUploadInputElement) {
-    //          imageUploadInputElement.click(); // Trigger hidden file input
-    //     }
-    // });
-
-    // Add listener for the hidden file input
+    // 添加文件上传处理
     imageUploadInputElement.addEventListener('change', handleFileUpload);
-
 
     console.log("Input Controller Initialized.");
 }

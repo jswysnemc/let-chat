@@ -3,8 +3,6 @@
 /* 统一输入区域 */
 #unified-input-area {
     display: flex;
-    align-items: flex-end;
-    gap: 8px;
     padding: 10px 15px;
     margin: 0;
     background-color: #ffffff;
@@ -21,7 +19,7 @@
     flex-grow: 1;
     position: relative;
     border: 1px solid #e0e0e0;
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
 }
 
@@ -30,6 +28,7 @@
     min-height: 50px;
     max-height: 150px;
     padding: 12px 15px;
+    padding-bottom: 50px; /* 为底部按钮留出空间 */
     box-sizing: border-box;
     width: 100%;
     font-size: 16px;
@@ -145,28 +144,73 @@
     opacity: 1;
 }
 
+/* 输入框内的按钮容器 */
+.input-buttons-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    background-color: #f8f8f8;
+    border-top: 1px solid #eee;
+    z-index: 3;
+}
+
+/* 左侧图标按钮组 */
+.left-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+/* 图标按钮样式 */
+.input-icon-btn {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background-color: transparent;
+    color: #555;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 16px;
+}
+
+.input-icon-btn:hover {
+    background-color: #e0e0e0;
+    color: #0d6efd;
+}
+
 /* 发送按钮 */
-#unified-input-area #send-button {
+#send-button {
+    width: 40px;
     height: 40px;
-    padding: 0 18px;
-    flex-shrink: 0;
-    border-radius: 6px;
+    border-radius: 50%;
     background-color: #0d6efd;
     color: white;
     border: none;
     cursor: pointer;
-    font-size: 15px;
-    transition: background-color 0.2s;
-    margin-bottom: 0;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
 }
 
-#unified-input-area #send-button:hover {
+#send-button:hover {
     background-color: #0056b3;
+    transform: scale(1.05);
 }
 
-#unified-input-area #send-button:disabled {
+#send-button:disabled {
     background-color: #cccccc;
     cursor: not-allowed;
+    transform: none;
 }
 
 /* 加载提示 */
@@ -332,13 +376,13 @@
     #unified-input-area {
         padding: 8px 10px;
         margin: 0 5px 5px 5px;
-        gap: 5px;
     }
 
     #chat-input {
         font-size: 15px;
         min-height: 45px;
         padding: 10px 12px;
+        padding-bottom: 45px; /* 为底部按钮留出空间 */
         border-radius: 0;
     }
 
@@ -347,12 +391,21 @@
         min-height: 35px;
         border-radius: 0;
     }
-
-    #unified-input-area #send-button {
-        height: 40px;
-        padding: 0 15px;
-        font-size: 15px;
-        border-radius: 6px;
+    
+    .input-buttons-container {
+        padding: 6px 8px;
+    }
+    
+    .input-icon-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+    }
+    
+    #send-button {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
     }
 
     #unified-input-area #loading {
