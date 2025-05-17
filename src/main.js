@@ -12,7 +12,7 @@ import { disableSendButton, enableSendButton } from './ui/buttonStates.js';
 import { clearInput } from './ui/inputArea.js';
 import { getEditModalFormElements, getEditModalValues, hideEditModal, setEditModalValues, showEditModal } from './ui/editModal.js';
 // Import settings manager
-import { initializeSettingsManager } from './ui/settingsManager.js';
+import { initializeSettingsManager, getTavilyApiKey } from './ui/settingsManager.js';
 // Import other modules
 import { getElement } from './ui/domElements.js'; // Import getElement
 import { aiResponseArea } from './ui/domElements.js'; // Import the chat area element
@@ -22,6 +22,8 @@ import { renderMarkdown, renderMarkdownAsync, highlightCodeBlocks } from './mark
 import { showConfirmationModal } from './ui/confirmModal.js'; // Import the new modal function
 import { copyTextFallback } from './ui/copyUtils.js'; // Import copy fallback
 import { showSuccess, showError, showWarning, showConfirm } from './ui/notification.js'; // Import notification functions
+// 导入联网搜索相关模块
+import { initializeWebSearchToggle } from './ui/webSearchToggle.js';
 
 
 /**
@@ -542,6 +544,9 @@ function main() {
     
     console.log("Main: Initializing settings manager...");
     initializeSettingsManager(); // Initialize settings manager
+    
+    console.log("Main: Initializing web search toggle...");
+    initializeWebSearchToggle(); // 初始化联网搜索按钮功能
     
     // 监听API配置更改事件
     document.addEventListener('apiConfigChanged', (event) => {

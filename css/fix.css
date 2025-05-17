@@ -771,4 +771,14 @@
     margin-top: 20px;
     padding-top: 15px;
     border-top: 1px solid #e9ecef;
+}
+
+/* 联网搜索按钮活跃状态 */
+#web-search-btn.active {
+    color: #0d6efd; /* 使用蓝色表示活跃状态 */
+    background-color: rgba(13, 110, 253, 0.1); /* 浅蓝色背景 */
+}
+
+#web-search-btn.active:hover {
+    background-color: rgba(13, 110, 253, 0.2); /* 鼠标悬停时稍微加深背景 */
 } 

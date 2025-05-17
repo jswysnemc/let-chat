@@ -45,12 +45,14 @@ async function testExtract() {
         const url = 'https://www.anthropic.com/news/claude-3-family';
         console.log(`执行内容提取，URL: "${url}"...`);
         
-        const extractResult = await tavilyAPI.extract(API_KEY, [url]);
+        const extractResult = await tavilyAPI.extract(API_KEY, url);
         
         console.log('提取成功! 结果摘要:');
-
-        console.log(extractResult);
-
+        console.log(`- 标题: ${extractResult.title || '无标题'}`);
+        console.log(`- 内容长度: ${extractResult.content ? extractResult.content.length : 0} 字符`);
+        if (extractResult.content) {
+            console.log(`- 内容预览: ${extractResult.content.substring(0, 200)}...`);
+        }
         
         console.log('提取测试成功!');
         return true;
