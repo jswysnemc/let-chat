@@ -1,2 +1,7 @@
 node_modules/
 .gitignore
+q.json
+*.http
+*.roo
+tests/
+tests/*
