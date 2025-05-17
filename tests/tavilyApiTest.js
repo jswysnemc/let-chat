@@ -19,6 +19,11 @@ async function testSearch() {
             maxResults: 3,
             searchDepth: 'basic'
         });
+
+        console.log(searchResults);
+        
+
+        
         
         console.log('搜索成功! 结果摘要:');
         console.log(`- 结果数量: ${searchResults.results.length}`);

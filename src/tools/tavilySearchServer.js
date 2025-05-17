@@ -13,10 +13,18 @@ import { getTavilyApiKey } from '../ui/settingsManager.js';
  * @param {boolean} options.includeImages - 是否包含图片，默认false
  * @param {Array<string>} options.includeDomains - 要包含的域名列表
  * @param {Array<string>} options.excludeDomains - 要排除的域名列表
- * @returns {Promise<Object>} 搜索结果
+ * @returns {string}   返回json字符串
  */
-export function search_tool(query, options={}){
-    return tavilyAPI.search(getTavilyApiKey(), query, options);
+export async function search_tool(query, options={}){
+    try{
+        const data = await tavilyAPI.search(getTavilyApiKey(), query, options);
+        return JSON.stringify(data);
+    }catch(error){
+        console.error('搜索失败:', error);
+        return JSON.stringify({error: error.message});
+    }finally{
+        return "{\"error\":\"搜索失败\"}";
+    }
 }
 
 /**
@@ -25,8 +33,17 @@ export function search_tool(query, options={}){
  * @param {Object} options - 可选参数
  * @param {boolean} options.includeRawContent - 是否包含原始HTML内容，默认false
  * @param {string} options.extractMode - 提取模式，可选值：'article'(默认),'code','auto'
- * @returns {Promise<Object>} 提取结果
+ * @returns {string} 返回json字符串
  */
-export function extract_tool(urls, options={}){
-    return tavilyAPI.extract(getTavilyApiKey(), urls, options);
+export async function extract_tool(urls, options={}){
+
+    try {
+        const data = await tavilyAPI.extract(getTavilyApiKey(), urls, options);
+        return JSON.stringify(data);
+    }catch(error){
+        console.error('提取失败:', error);
+        return JSON.stringify({error: error.message});
+    }finally{
+        return "{\"error\":\"提取失败\"}";
+    }
 }
