@@ -1,0 +1,201 @@
+# Variables
+@baseUrl = https://snemc-gemini-balance.hf.space
+@authToken = sk-snemc123
+@textModel = gemini-2.5-flash-preview-04-17
+@imageGenModelGemini = gemini-2.0-flash-exp-image
+
+POST {{baseUrl}}/hf/v1/chat/completions
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{"model":"gemini-2.5-flash-preview-04-17","messages":[{"role":"system","content":"你是一个中文助手，帮助用户回答问题,回答时需要使用中文。如果需要代码，请使用markdown格式输出，并明确指定代码语言类型，例如 ```python ... ```。"},{"role":"user","content":[{"type":"text","text":"你好"}]},{"role":"assistant","content":"你好！有什么可以帮助您的吗？"},{"role":"user","content":[{"type":"text","text":"这是什么"}]},{"role":"assistant","content":"您问“这是什么”，是指什么呢？\n\n这个问题有点笼统，您是指：\n\n1.  **我**： 我是一个大型语言模型，由 Google 训练。\n2.  **我们正在进行的对话**： 这是您和我之间的一个互动，您可以向我提问，我将尽力用中文回答并提供帮助。\n3.  **其他什么东西**： 如果您是指其他事物，请提供更多信息或上下文，这样我才能理解您在问什么。\n\n请您提供更多信息，这样我才能更准确地回答您的问题。"},{"role":"user","content":[{"type":"image_url","image_url":{"url":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAA8CAMAAAANIilAAAABCFBMVEUAAAAAi/95wv95w/8Ai/8Ai/95wv95w/8Ajv8alv8Hjv93wf8DjP92wv95w/8fmf8Ij/8Aiv8Ai/8JkP8AjP8AjP8Ajf95w/8AjP8Ajv8AkP+Gz/9Nrf8qnv8Aiv8+p/95wf95wf94wv95wv9KrP9juP95wf95wv8Ai/8Aiv8Aiv94wf8Aiv8Ai/94w/9ZtP94wv8Aiv95wv97wv97wf95w/8Akf96yP95yf8Aiv////9Mrf94wf8EjP8Qkf8/p//j8v9vvf9ouv8Kj//t9v+63/+Z0P+Fx/+Bxf9gtv9dtf9Pr/9Fqv84pP8rnv8mnP8WlP/2+v/G5P+x2/+RzP+Hx/9Vsf8un/+XJ3SmAAAAOXRSTlMA/P1dWvb3IR/9+vO6o2/+6OfbenBkV1Y4FhMK+vXu7Ojk3dnZw7qvraakjIyKf3t5aWVTOjclFxMxViL8AAABaElEQVRIx+3V13KCQBSAYTABu8ZYoqb33uuuC3aNPT3v/yYhEOfoLMs65y4j/yVnvjkLw4Di5zcnhTKxpUgkvL4Xv111rhSy1hXVTG7uJ4Ke9OFEJX8Z5eiFxYtnGhk3rMU9+KJGJqp3t+/zKTKR0dNXRDZNpjNKayqZrsyuBHvJDPWY6+6QNj7uoGwIsVHT3e772Jm+tF4p/STChizustiZfVeo1TMRVwvwqzP2xLRs82tEPOqzBIdj9qQNW0Ul2QGHl+1Jhb4RSSbb4bBmPy1KqzJsMJ3DG8QqTGlHjqOCYzdoW37sXQ4f2ZN32jAleMQOOZx13l1KWxLcZzccLmj26IM2Jbdc1R8VrnNn1gl74wE7VfiKKTJD9erWExgorxF5Xf1OcS2nSm0psCD8DKkYCxpjQWMsaIwFjbGgMRY0xoLGWNAYCxpjQWMsaJwFDRalHYsop/3+oqOWxRS6Tl8mgoqf37/sB3zv8jJst/WRAAAAAElFTkSuQmCC"}}]},{"role":"assistant","content":"您好！您发来的是一张图片。\n\n图片中显示的是一个**蓝色的心形图标**。\n\n心形通常代表：\n\n*   **爱**\n*   **情感**\n*   **关心**\n*   **喜欢**\n\n蓝色的心形可以有更具体的含义，例如：\n\n*   **信任**\n*   **忠诚**\n*   **友谊**\n*   **稳定**\n*   **平静**\n\n它的具体含义会根据它出现在哪里而有所不同，比如：\n\n*   在社交媒体上，可能表示“喜欢”或者某种特定的情感回应。\n*   在某个应用或网站中，可能是某个功能按钮或者状态指示。\n*   在聊天中，可能是表达信任或友谊。\n\n如果您是在某个特定的地方看到这个图标，告诉我是在哪里看到的，我可以尝试给出更具体的解释。"},{"role":"user","content":[{"type":"text","text":"刚刚的图片是什么颜色"}]}],"stream":true,"temperature":0.7,"top_p":1}
+
+
+### 1. 测试 OpenAI 兼容聊天端点 (/v1/chat/completions) - 流式传输
+POST {{baseUrl}}/v1/chat/completions
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "model": "gemini-2.5-flash-preview-04-17",
+    "messages": [
+        {
+            "role": "system",
+            "content": "你是一个中文助手，帮助用户回答问题,回答时需要使用中文。如果需要代码，请使用markdown格式输出，并明确指定代码语言类型，例如 ```python ... ```。"
+        },
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "你好,我叫小红"
+                }
+            ]
+        },
+        {
+            "role": "assistant",
+            "content": "你好！有什么可以帮助您的吗？"
+        },
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "我是谁呀"
+                }
+            ]
+        }
+    ],
+    "stream": true,
+    "temperature": 0.7,
+    "top_p": 1
+}
+
+HTTP/1.1 200 OK
+Date: Fri, 16 May 2025 15:34:30 GMT
+Content-Type: text/event-stream; charset=utf-8
+Transfer-Encoding: chunked
+Connection: close
+server: uvicorn
+x-proxied-host: http://10.108.47.26
+x-proxied-replica: jdwpudj6-mp2cy
+x-proxied-path: /v1/chat/completions
+link: <https://huggingface.co/spaces/snemc/gemini-balance>;rel="canonical"
+x-request-id: vd7WXD
+vary: origin, access-control-request-method, access-control-request-headers
+access-control-allow-credentials: true
+
+data: {"id": "chatcmpl-2d47f184-bec3-44f2-b98a-bd92f47ca7ee", "object": "chat.completion.chunk", "created": 1747409673, "model": "gemini-2.5-flash-preview-04-17", "choices": [{"index": 0, "delta": {"content": "\u6839\u636e\u4f60\u521a\u624d\u544a\u8bc9\u6211\u7684\u4fe1\u606f\uff0c\u4f60\u53eb\u5c0f\u7ea2\u3002\n\n\u6709\u4ec0\u4e48\u6211\u53ef\u4ee5\u5e2e\u4f60\u505a\u7684\u5417\uff1f", "role": "assistant"}, "finish_reason": null}], "usage": {"prompt_tokens": 60, "completion_tokens": 19, "total_tokens": 486}}
+
+data: {"id": "chatcmpl-6d8bf3a1-f767-4c91-b189-4e89f07679ed", "object": "chat.completion.chunk", "created": 1747409673, "model": "gemini-2.5-flash-preview-04-17", "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}], "usage": {"prompt_tokens": 60, "completion_tokens": 19, "total_tokens": 486}}
+
+data: [DONE]
+
+
+
+### 图升文
+POST {{baseUrl}}/v1/chat/completions
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "model": "gemini-2.5-flash-preview-04-17",
+    "messages": [
+        {
+            "role": "system",
+            "content": "你是一个中文助手，帮助用户回答问题,回答时需要使用中文。如果需要代码，请使用markdown格式输出，并明确指定代码语言类型，例如 ```python ... ```。"
+        },
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "你好,图片是什么颜色"   
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAA8CAMAAAANIilAAAABCFBMVEUAAAAAi/95wv95w/8Ai/8Ai/95wv95w/8Ajv8alv8Hjv93wf8DjP92wv95w/8fmf8Ij/8Aiv8Ai/8JkP8AjP8AjP8Ajf95w/8AjP8Ajv8AkP+Gz/9Nrf8qnv8Aiv8+p/95wf95wf94wv95wv9KrP9juP95wf95wv8Ai/8Aiv8Aiv94wf8Aiv8Ai/94w/9ZtP94wv8Aiv95wv97wv97wf95w/8Akf96yP95yf8Aiv////9Mrf94wf8EjP8Qkf8/p//j8v9vvf9ouv8Kj//t9v+63/+Z0P+Fx/+Bxf9gtv9dtf9Pr/9Fqv84pP8rnv8mnP8WlP/2+v/G5P+x2/+RzP+Hx/9Vsf8un/+XJ3SmAAAAOXRSTlMA/P1dWvb3IR/9+vO6o2/+6OfbenBkV1Y4FhMK+vXu7Ojk3dnZw7qvraakjIyKf3t5aWVTOjclFxMxViL8AAABaElEQVRIx+3V13KCQBSAYTABu8ZYoqb33uuuC3aNPT3v/yYhEOfoLMs65y4j/yVnvjkLw4Di5zcnhTKxpUgkvL4Xv111rhSy1hXVTG7uJ4Ke9OFEJX8Z5eiFxYtnGhk3rMU9+KJGJqp3t+/zKTKR0dNXRDZNpjNKayqZrsyuBHvJDPWY6+6QNj7uoGwIsVHT3e772Jm+tF4p/STChizustiZfVeo1TMRVwvwqzP2xLRs82tEPOqzBIdj9qQNW0Ul2QGHl+1Jhb4RSSbb4bBmPy1KqzJsMJ3DG8QqTGlHjqOCYzdoW37sXQ4f2ZN32jAleMQOOZx13l1KWxLcZzccLmj26IM2Jbdc1R8VrnNn1gl74wE7VfiKKTJD9erWExgorxF5Xf1OcS2nSm0psCD8DKkYCxpjQWMsaIwFjbGgMRY0xoLGWNAYCxpjQWMsaJwFDRalHYsop/3+oqOWxRS6Tl8mgoqf37/sB3zv8jJst/WRAAAAAElFTkSuQmCC"
+                    }
+                }
+            ]
+        }
+    ],
+    "stream": true,
+    "temperature": 0.7,
+    "top_p": 1
+}
+
+
+### ok
+HTTP/1.1 200 OK
+Date: Fri, 16 May 2025 15:35:33 GMT
+Content-Type: text/event-stream; charset=utf-8
+Transfer-Encoding: chunked
+Connection: close
+server: uvicorn
+x-proxied-host: http://10.108.47.26
+x-proxied-replica: jdwpudj6-mp2cy
+x-proxied-path: /v1/chat/completions
+link: <https://huggingface.co/spaces/snemc/gemini-balance>;rel="canonical"
+x-request-id: nRAsw4
+vary: origin, access-control-request-method, access-control-request-headers
+access-control-allow-credentials: true
+
+data: {"id": "chatcmpl-68637523-1e27-44ae-867b-9ad95db7df85", "object": "chat.completion.chunk", "created": 1747409736, "model": "gemini-2.5-flash-preview-04-17", "choices": [{"index": 0, "delta": {"content": "\u4f60\u597d\uff0c\u56fe\u7247\u4e2d\u7684\u5fc3\u5f62\u662f**\u84dd\u8272**\u7684\u3002", "role": "assistant"}, "finish_reason": null}], "usage": {"prompt_tokens": 304, "completion_tokens": 12, "total_tokens": 675}}
+
+data: {"id": "chatcmpl-feeae691-6e59-4059-a195-a1006ff3d8ce", "object": "chat.completion.chunk", "created": 1747409736, "model": "gemini-2.5-flash-preview-04-17", "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}], "usage": {"prompt_tokens": 304, "completion_tokens": 12, "total_tokens": 675}}
+
+data: [DONE]
+
+
+### 图升文   // 非流式，所有请求应该使用流式
+POST {{baseUrl}}/v1/chat/completions
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "model": "gemini-2.0-flash-exp-image",
+    "messages": [
+        {
+            "role": "system",
+            "content": "你是一个中文助手，帮助用户回答问题,回答时需要使用中文。如果需要代码，请使用markdown格式输出，并明确指定代码语言类型，例如 ```python ... ```。"
+        },
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "将图片改为粉色"   
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAA8CAMAAAANIilAAAABCFBMVEUAAAAAi/95wv95w/8Ai/8Ai/95wv95w/8Ajv8alv8Hjv93wf8DjP92wv95w/8fmf8Ij/8Aiv8Ai/8JkP8AjP8AjP8Ajf95w/8AjP8Ajv8AkP+Gz/9Nrf8qnv8Aiv8+p/95wf95wf94wv95wv9KrP9juP95wf95wv8Ai/8Aiv8Aiv94wf8Aiv8Ai/94w/9ZtP94wv8Aiv95wv97wv97wf95w/8Akf96yP95yf8Aiv////9Mrf94wf8EjP8Qkf8/p//j8v9vvf9ouv8Kj//t9v+63/+Z0P+Fx/+Bxf9gtv9dtf9Pr/9Fqv84pP8rnv8mnP8WlP/2+v/G5P+x2/+RzP+Hx/9Vsf8un/+XJ3SmAAAAOXRSTlMA/P1dWvb3IR/9+vO6o2/+6OfbenBkV1Y4FhMK+vXu7Ojk3dnZw7qvraakjIyKf3t5aWVTOjclFxMxViL8AAABaElEQVRIx+3V13KCQBSAYTABu8ZYoqb33uuuC3aNPT3v/yYhEOfoLMs65y4j/yVnvjkLw4Di5zcnhTKxpUgkvL4Xv111rhSy1hXVTG7uJ4Ke9OFEJX8Z5eiFxYtnGhk3rMU9+KJGJqp3t+/zKTKR0dNXRDZNpjNKayqZrsyuBHvJDPWY6+6QNj7uoGwIsVHT3e772Jm+tF4p/STChizustiZfVeo1TMRVwvwqzP2xLRs82tEPOqzBIdj9qQNW0Ul2QGHl+1Jhb4RSSbb4bBmPy1KqzJsMJ3DG8QqTGlHjqOCYzdoW37sXQ4f2ZN32jAleMQOOZx13l1KWxLcZzccLmj26IM2Jbdc1R8VrnNn1gl74wE7VfiKKTJD9erWExgorxF5Xf1OcS2nSm0psCD8DKkYCxpjQWMsaIwFjbGgMRY0xoLGWNAYCxpjQWMsaJwFDRalHYsop/3+oqOWxRS6Tl8mgoqf37/sB3zv8jJst/WRAAAAAElFTkSuQmCC"
+                    }
+                }
+            ]
+        }
+    ],
+    "stream": true,
+    "temperature": 0.7,
+    "top_p": 1
+}
+
+
+HTTP/1.1 200 OK
+Date: Fri, 16 May 2025 15:37:13 GMT
+Content-Type: application/json
+Content-Length: 493
+Connection: close
+server: uvicorn
+x-proxied-host: http://10.108.47.26
+x-proxied-replica: jdwpudj6-mp2cy
+x-proxied-path: /v1/chat/completions
+link: <https://huggingface.co/spaces/snemc/gemini-balance>;rel="canonical"
+x-request-id: hZv43F
+vary: origin, access-control-request-method, access-control-request-headers
+access-control-allow-credentials: true
+
+{
+  "id": "chatcmpl-86034ce3-5623-4b57-ae90-5eb490ec311a",
+  "object": "chat.completion",
+  "created": 1747409833,
+  "model": "gemini-2.0-flash-exp-image",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "将图片中的蓝色心形图案更改为亮粉色，保持原有的形状和光泽效果。\n\n\n\n![image](https://cloudflare-imgbed-4dq.pages.dev/file/bfbd274f.png)\n\n",
+        "tool_calls": []
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 264,
+    "completion_tokens": 1312,
+    "total_tokens": 1576
+  }
+}
