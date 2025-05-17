@@ -95,8 +95,11 @@ export function displayUserMessage(contentParts, messageIndex) {
     const contentWrapper = document.createElement('div');
     contentWrapper.className = 'user-message-content'; // 确保与CSS选择器匹配
     bubbleDiv.appendChild(contentWrapper);
+    
+    // 标记是否已添加文本，用于确定是否需要添加换行符
+    let hasAddedText = false;
 
-    // 将内容部分添加到包装器
+    // 将内容部分添加到包装器，先添加文本部分
     contentParts.forEach(part => {
         if (part.type === 'text' && part.text.trim()) {
             // 为文本创建 span 以允许 white-space: pre-wrap
@@ -104,8 +107,26 @@ export function displayUserMessage(contentParts, messageIndex) {
             textSpan.textContent = part.text; // 直接设置文本内容
             textSpan.style.whiteSpace = 'pre-wrap'; // 确保保留换行符
             contentWrapper.appendChild(textSpan);
+            hasAddedText = true;
             console.log("[UI] 添加文本内容:", part.text.substring(0, 50) + (part.text.length > 50 ? "..." : ""));
-        } else if (part.type === 'image_url' && part.image_url?.url) {
+        }
+    });
+    
+    // 如果同时存在文本和图片，添加换行元素
+    if (hasAddedText && hasImages) {
+        const breakElement = document.createElement('br');
+        contentWrapper.appendChild(breakElement);
+        
+        // 为了视觉效果更好，添加第二个换行符
+        const breakElement2 = document.createElement('br');
+        contentWrapper.appendChild(breakElement2);
+        
+        console.log("[UI] 添加文本和图片间的换行");
+    }
+    
+    // 然后添加图片部分
+    contentParts.forEach(part => {
+        if (part.type === 'image_url' && part.image_url?.url) {
             // 如果是图片 URL，创建 img 元素
             const img = document.createElement('img');
             img.src = part.image_url.url;
