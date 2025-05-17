@@ -305,9 +305,23 @@ h2 { /* Removed h1 styling */
     overflow-y: auto; /* THE single scrollbar */
     margin-bottom: 0; /* Remove margin */
     border-radius: 0; /* Remove radius */
-    display: flex; /* 使用 Flexbox 排列气泡 */
-    flex-direction: column; /* 垂直排列 */
+    display: flex; /* 使用 Flexbox */
+    flex-direction: column; /* 默认垂直排列消息气泡 */
     gap: 15px; /* Increase gap between bubbles slightly */
+    /* justify-content: center; */ /*  初始时不居中，由占位符自身处理 */
+    /* align-items: center; */   /*  初始时不居中，由占位符自身处理 */
+}
+
+/* Specific styles for the placeholder text within #ai-response */
+#ai-response > .placeholder-text {
+    display: flex; /* Default to flex, JS will toggle to 'none' when messages appear */
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    flex-grow: 1; /* Make placeholder take up all space when it's the only child */
+    color: #aaa; /* Lighter color for placeholder */
+    font-size: 1.1em; /* Slightly larger placeholder text */
+    padding: 20px; /* Add some padding around the text */
 }
 
 /* --- 聊天气泡样式 --- */
