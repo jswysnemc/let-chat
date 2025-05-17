@@ -901,3 +901,66 @@ h2 { /* Removed h1 styling */
 .assistant-message-content .flat-card-purple .flat-card-title {
     color: #553c9a;
 }
+
+/* 新增消息图片样式 - 适用于所有消息中的图片 */
+.message-image {
+    max-width: 200px;
+    max-height: 200px;
+    vertical-align: middle;
+    margin: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.message-image:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* 图片包装器样式 */
+.input-image-wrapper {
+    position: relative;
+    display: inline-block;
+    margin: 4px;
+    vertical-align: middle;
+}
+
+/* 删除按钮样式改进 */
+.delete-image-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: rgba(255, 0, 0, 0.7);
+    color: white;
+    border: none;
+    font-size: 14px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    transition: background-color 0.2s;
+}
+
+.delete-image-btn:hover {
+    background-color: rgba(255, 0, 0, 0.9);
+}
+
+/* 确保用户气泡中图片正确显示 */
+.user-bubble .user-message-content img { /* 用户发送的图片 */
+     max-width: 100px;
+     max-height: 100px;
+     vertical-align: middle;
+     margin: 5px 5px 5px 0;
+     border: 1px solid #ddd;
+     border-radius: 4px;
+     display: inline-block; /* 让图片和文本能在同一行 */
+}

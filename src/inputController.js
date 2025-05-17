@@ -21,86 +21,87 @@ let imageUploadInputElement = null; // Reference for hidden file input
  */
 function extractContentFromInput(element) {
     if (!element) return [];
+    
+    console.log("[extractContent] 开始提取内容，元素：", element);
+    
     const parts = [];
-    const nodes = element.childNodes;
-
-    for (let i = 0; i < nodes.length; i++) {
-        const node = nodes[i];
-        // console.log(`[extractContent] Node ${i}: type=${node.nodeType}, name=${node.nodeName}`); // Add logging
-
-        if (node.nodeType === Node.TEXT_NODE) {
-            const text = node.textContent;
-            if (text) {
-                // console.log(`[extractContent] Handling TEXT_NODE: "${text}"`);
-                if (parts.length > 0 && parts[parts.length - 1].type === 'text') {
-                    parts[parts.length - 1].text += text;
-                } else {
-                    parts.push({ type: 'text', text: text });
-                }
-            }
-        } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'IMG') {
-            const base64Data = node.getAttribute('data-base64');
-            const mimeType = node.getAttribute('data-mime-type');
+    
+    // 处理图片元素（直接查找所有图片，不依赖于childNodes遍历）
+    const images = element.querySelectorAll('img');
+    if (images.length > 0) {
+        console.log("[extractContent] 找到图片元素数量：", images.length);
+        
+        images.forEach(img => {
+            const base64Data = img.getAttribute('data-base64');
+            const mimeType = img.getAttribute('data-mime-type');
+            
             if (base64Data && mimeType) {
-                // console.log(`[extractContent] Handling IMG node.`);
+                console.log("[extractContent] 处理图片数据，MIME类型：", mimeType);
                 const dataUrl = `data:${mimeType};base64,${base64Data}`;
                 parts.push({
                     type: 'image_url',
                     image_url: { url: dataUrl }
                 });
-            }
-        } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'DIV') {
-            // Simple handling for DIVs (e.g., from pasting formatted text)
-            const text = node.textContent;
-            if (text) {
-                 // console.log(`[extractContent] Handling DIV node, text: "${text}"`);
-                if (parts.length > 0 && parts[parts.length - 1].type === 'text') {
-                    parts[parts.length - 1].text += text;
-                } else {
-                    parts.push({ type: 'text', text: text });
-                }
-            }
-        } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'BR') {
-            // Handle line breaks
-            // console.log(`[extractContent] Handling BR node.`);
-            if (parts.length > 0 && parts[parts.length - 1].type === 'text') {
-                 if (!parts[parts.length - 1].text.endsWith('\n')) { // Avoid double line breaks if BR is last
-                    parts[parts.length - 1].text += '\n';
-                 }
             } else {
-                // Add newline only if it's meaningful (e.g., not at the very beginning)
-                if (parts.length > 0) {
-                     parts.push({ type: 'text', text: '\n' });
-                }
+                console.warn("[extractContent] 图片元素缺少必要属性：", img);
             }
-        } else if (node.nodeType === Node.ELEMENT_NODE) { // <<< NEW CATCH-ALL for other elements
-             // Try to get text content from any other element node
-             const text = node.textContent;
-             if (text) {
-                 // console.log(`[extractContent] Handling generic ELEMENT_NODE (${node.tagName}), text: "${text}"`);
-                 if (parts.length > 0 && parts[parts.length - 1].type === 'text') {
-                     // Add a space if the previous text doesn't end with whitespace, to prevent words merging
-                     if (!/\s$/.test(parts[parts.length - 1].text)) {
-                          parts[parts.length - 1].text += ' ';
-                     }
-                     parts[parts.length - 1].text += text; // Append to previous text part
-                 } else {
-                     parts.push({ type: 'text', text: text }); // Create new text part
-                 }
-             } else {
-                  // console.log(`[extractContent] Ignoring empty generic ELEMENT_NODE (${node.tagName})`);
-             }
-        } else {
-             // console.log(`[extractContent] Ignoring node type ${node.nodeType}`);
+        });
+    }
+    
+    // 处理文本内容
+    let textContent = '';
+    
+    // 函数用于递归提取文本，同时排除删除按钮的文本
+    function extractTextFromNode(node) {
+        if (!node) return;
+        
+        // 跳过删除按钮
+        if (node.nodeType === Node.ELEMENT_NODE && 
+            (node.classList.contains('delete-image-btn') || 
+             node.closest('.delete-image-btn'))) {
+            console.log("[extractContent] 跳过删除按钮元素");
+            return;
+        }
+        
+        // 处理文本节点
+        if (node.nodeType === Node.TEXT_NODE) {
+            if (node.textContent.trim()) {
+                textContent += node.textContent;
+            }
+            return;
+        }
+        
+        // 如果是图片或其包装器，跳过（已单独处理）
+        if (node.nodeType === Node.ELEMENT_NODE && 
+            (node.tagName === 'IMG' || 
+             node.classList.contains('input-image-wrapper'))) {
+            return;
+        }
+        
+        // 对于其他元素，处理其子节点
+        if (node.childNodes && node.childNodes.length > 0) {
+            node.childNodes.forEach(childNode => {
+                extractTextFromNode(childNode);
+            });
+        } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'BR') {
+            // 处理换行
+            textContent += '\n';
         }
     }
-     // Trim whitespace and filter empty text parts AFTER processing all nodes
-    return parts.map(part => {
-        if (part.type === 'text') {
-            part.text = part.text.replace(/\n{3,}/g, '\n\n').trim(); // Keep max double newlines
-        }
-        return part;
-    }).filter(part => part.type !== 'text' || part.text.length > 0);
+    
+    // 对整个元素进行文本提取
+    extractTextFromNode(element);
+    
+    // 清理文本（去除多余换行和空格）
+    textContent = textContent.replace(/\n{3,}/g, '\n\n').trim();
+    
+    // 只在有非空文本时添加文本部分
+    if (textContent) {
+        parts.push({ type: 'text', text: textContent });
+    }
+    
+    console.log("[extractContent] 提取完成，内容部分：", parts);
+    return parts;
 }
 
 /**
@@ -183,6 +184,10 @@ function _addImageToInputAndPreview(dataUrl, mimeType, base64Data) {
         deleteInputBtn.textContent = '×';
         deleteInputBtn.title = '移除图片';
         deleteInputBtn.setAttribute('data-target-id', imageId);
+        deleteInputBtn.setAttribute('type', 'button'); // 明确设置为button类型
+        deleteInputBtn.setAttribute('tabindex', '-1'); // 移除Tab顺序
+        deleteInputBtn.setAttribute('aria-hidden', 'true'); // 对屏幕阅读器隐藏
+        deleteInputBtn.setAttribute('data-ignore-content', 'true'); // 自定义属性标记忽略内容
         
         // 组装并插入到文档
         inputImageWrapper.appendChild(imgInInput);
@@ -199,6 +204,13 @@ function _addImageToInputAndPreview(dataUrl, mimeType, base64Data) {
             }).catch(err => {
                 console.error('无法加载预览功能:', err);
             });
+        });
+        
+        // 为删除按钮添加点击事件
+        deleteInputBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleDeleteImage(e);
         });
     }
 
@@ -217,6 +229,10 @@ function _addImageToInputAndPreview(dataUrl, mimeType, base64Data) {
         deleteBtn.textContent = '×'; // 使用 '×' 符号表示删除
         deleteBtn.title = '移除图片';
         deleteBtn.setAttribute('data-target-id', imageId); // 将按钮链接到 ID
+        deleteBtn.setAttribute('type', 'button'); // 明确设置为button类型
+        deleteBtn.setAttribute('tabindex', '-1'); // 移除Tab顺序
+        deleteBtn.setAttribute('aria-hidden', 'true'); // 对屏幕阅读器隐藏
+        deleteBtn.setAttribute('data-ignore-content', 'true'); // 自定义属性标记忽略内容
 
         previewWrapper.appendChild(imgInPreview);
         previewWrapper.appendChild(deleteBtn);
@@ -233,6 +249,13 @@ function _addImageToInputAndPreview(dataUrl, mimeType, base64Data) {
             }).catch(err => {
                 console.error('无法加载预览功能:', err);
             });
+        });
+        
+        // 为删除按钮添加点击事件
+        deleteBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleDeleteImage(e);
         });
     } else {
          console.warn("[InputController] imagePreviewAreaElement not found, cannot add preview image.");
@@ -339,14 +362,43 @@ function handleSendTrigger() {
         console.error("[InputController] Send trigger failed: chatInputElement is null.");
         return;
     }
-     if (!onSendCallback) {
+    if (!onSendCallback) {
         console.error("[InputController] Send trigger failed: onSendCallback is null.");
         return;
     }
 
     console.log("[InputController] Extracting content...");
+    // 首先检查是否存在图片
+    const hasImages = chatInputElement.querySelectorAll('img').length > 0;
+    if (hasImages) {
+        console.log(`[InputController] 检测到${chatInputElement.querySelectorAll('img').length}张图片，准备提取`);
+    }
+    
     const contentParts = extractContentFromInput(chatInputElement);
-    console.log("[InputController] Extracted contentParts:", JSON.stringify(contentParts)); // Log extracted content
+    console.log("[InputController] Extracted contentParts:", JSON.stringify(contentParts));
+    
+    // 检查提取结果
+    const textParts = contentParts.filter(p => p.type === 'text');
+    const imageParts = contentParts.filter(p => p.type === 'image_url');
+    console.log(`[InputController] 提取结果：${textParts.length}个文本部分，${imageParts.length}个图片部分`);
+    
+    // 如果有图片但提取失败，尝试进行更直接的提取
+    if (hasImages && imageParts.length === 0) {
+        console.warn("[InputController] 检测到图片但未能提取，尝试直接提取");
+        const images = chatInputElement.querySelectorAll('img');
+        images.forEach(img => {
+            const base64Data = img.getAttribute('data-base64');
+            const mimeType = img.getAttribute('data-mime-type');
+            if (base64Data && mimeType) {
+                const dataUrl = `data:${mimeType};base64,${base64Data}`;
+                contentParts.push({
+                    type: 'image_url',
+                    image_url: { url: dataUrl }
+                });
+                console.log(`[InputController] 直接提取到图片：${mimeType.substring(0, 15)}...`);
+            }
+        });
+    }
 
     if (contentParts.length === 0) {
         console.log("[InputController] No content extracted, showing notification.");
@@ -354,7 +406,7 @@ function handleSendTrigger() {
         return;
     }
 
-    console.log("[InputController] Content found, calling onSendCallback...");
+    console.log("[InputController] Content found, calling onSendCallback with content parts:", contentParts);
     // Call the provided onSend callback with the extracted content
     // The callback (in main.js) will handle UI updates (loading, disable button),
     // state updates, API calls, etc.

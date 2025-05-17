@@ -93,7 +93,7 @@ export function displayUserMessage(contentParts, messageIndex) {
 
     // 创建内容包装器 (Content wrapper remains)
     const contentWrapper = document.createElement('div');
-    contentWrapper.className = 'message-content-wrapper'; // 添加样式类
+    contentWrapper.className = 'user-message-content'; // 更改为与CSS选择器匹配的类名
     bubbleDiv.appendChild(contentWrapper);
 
     // 将内容部分添加到包装器
