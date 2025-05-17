@@ -179,7 +179,7 @@
     .lightbox-help-tip {
         width: auto !important;
         max-width: 90% !important;
-        bottom: 50px !important; /* 确保在底部有足够空间 */
+        bottom: 110px !important; /* 调整位置以避免与缩放控件重叠 */
         font-size: 10px !important;
         padding: 6px 10px !important;
         border-radius: 15px !important;
@@ -200,6 +200,23 @@
         right: 15px !important;
         font-size: 12px !important;
         padding: 3px 8px !important;
+    }
+    
+    /* 缩放控制按钮移动端适配 */
+    .zoom-controls {
+        bottom: 70px !important;
+        padding: 4px !important;
+        gap: 4px !important;
+    }
+    
+    .zoom-btn {
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 14px !important;
+    }
+    
+    .zoom-fit, .zoom-reset {
+        font-size: 9px !important;
     }
     
     .lightbox-close {
@@ -323,7 +340,7 @@
     
     /* 为超小屏幕的Lightbox进一步优化 */
     .lightbox-help-tip {
-        bottom: 60px !important; /* 在更小的屏幕上进一步增加底部边距 */
+        bottom: 130px !important; /* 在更小的屏幕上进一步增加底部边距，避免与缩放控件重叠 */
         font-size: 9px !important;
         padding: 5px 8px !important;
     }
@@ -339,6 +356,23 @@
     
     .input-buttons-container {
         padding-bottom: calc(6px + env(safe-area-inset-bottom, 8px)) !important;
+    }
+    
+    /* 超小屏幕上的缩放控件 */
+    .zoom-controls {
+        bottom: 90px !important;
+        padding: 3px !important;
+        gap: 3px !important;
+    }
+    
+    .zoom-btn {
+        width: 26px !important;
+        height: 26px !important;
+        font-size: 12px !important;
+    }
+    
+    .zoom-fit, .zoom-reset {
+        font-size: 8px !important;
     }
 }
 

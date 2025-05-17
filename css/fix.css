@@ -462,6 +462,7 @@
     transition: opacity 0.3s ease, visibility 0.3s ease !important;
     -webkit-backdrop-filter: blur(5px) !important; /* Safari支持 */
     backdrop-filter: blur(5px) !important; /* 背景模糊效果 */
+    overflow: hidden !important; /* 防止滚动 */
 }
 
 .lightbox-overlay.visible {
@@ -469,18 +470,30 @@
     visibility: visible !important;
 }
 
+/* 预览弹窗内的图片容器 */
+.lightbox-image-container {
+    position: relative !important;
+    max-width: 95% !important;
+    max-height: 95% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    overflow: hidden !important;
+    border-radius: 8px !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5) !important;
+}
+
 /* 预览弹窗内的图片 */
 .lightbox-image {
-    max-width: 90% !important;
-    max-height: 90% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
     object-fit: contain !important;
-    border-radius: 8px !important;
-    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5) !important;
-    transform: scale(0.9) !important;
+    border-radius: 6px !important;
+    transform: scale(0.95) !important;
     opacity: 0 !important;
     transition: all 0.3s ease !important;
-    background-color: rgba(255, 255, 255, 0.05) !important; /* 图片背景 */
-    padding: 2px !important; /* 内边距 */
+    transform-origin: center center !important; /* 确保缩放从中心点开始 */
 }
 
 .lightbox-overlay.visible .lightbox-image {
@@ -510,6 +523,98 @@
 .lightbox-close:hover {
     background-color: rgba(255, 255, 255, 0.2) !important;
     transform: rotate(90deg) !important;
+}
+
+/* 缩放指示器 */
+.zoom-indicator {
+    position: absolute !important;
+    bottom: 20px !important;
+    right: 20px !important;
+    background: rgba(0, 0, 0, 0.6) !important;
+    color: white !important;
+    padding: 5px 10px !important;
+    border-radius: 15px !important;
+    font-size: 14px !important;
+    opacity: 0 !important;
+    transition: opacity 0.3s ease !important;
+    z-index: 10001 !important;
+    font-family: monospace !important; /* 更好的数字显示 */
+}
+
+/* 缩放控制按钮 */
+.zoom-controls {
+    position: fixed !important;
+    bottom: 60px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    background: rgba(0, 0, 0, 0.6) !important;
+    border-radius: 20px !important;
+    padding: 5px !important;
+    z-index: 10003 !important;
+    display: flex !important;
+    gap: 5px !important;
+}
+
+.zoom-btn {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 50% !important;
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: background 0.2s !important;
+}
+
+.zoom-btn:hover {
+    background: rgba(255, 255, 255, 0.4) !important;
+}
+
+.zoom-fit, .zoom-reset {
+    font-size: 10px !important;
+    font-weight: bold !important;
+}
+
+/* 帮助提示 */
+.lightbox-help-tip {
+    position: fixed !important;
+    bottom: 20px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    background: rgba(0, 0, 0, 0.6) !important;
+    color: white !important;
+    padding: 8px 15px !important;
+    border-radius: 20px !important;
+    font-size: 12px !important;
+    opacity: 0 !important;
+    transition: opacity 0.5s ease !important;
+    z-index: 10002 !important;
+    max-width: 90% !important;
+    margin: 0 auto !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* 加载指示器 */
+.lightbox-loader {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    color: white !important;
+    text-align: center !important;
+    font-size: 14px !important;
+    background: rgba(0, 0, 0, 0.6) !important;
+    padding: 15px 20px !important;
+    border-radius: 10px !important;
+    z-index: 10002 !important;
 }
 
 /* 用户消息中的小图片 */

@@ -6,8 +6,9 @@ import { aiResponseArea, imagePreviewArea } from './domElements.js'; // 导入�
 let isLightboxOpen = false; // 跟踪 Lightbox 是否打开
 let currentImageUrl = null; // 当前显示的图片 URL
 let currentScale = 1; // 当前缩放级别
-let maxScale = 3; // 最大缩放倍数
-let minScale = 0.5; // 最小缩放倍数
+let maxScale = 5; // 增加最大缩放倍数，方便查看细节
+let minScale = 0.1; // 减小最小缩放倍数，便于查看整体
+let origImgRatio = 1; // 存储原始图片比例
 
 /**
  * 处理 Esc 键按下事件，用于关闭 Lightbox，以及其他键盘交互。
@@ -34,6 +35,12 @@ function handleLightboxKeydown(event) {
         case '0':
             // 重置缩放
             resetZoom();
+            event.preventDefault();
+            break;
+        case 'f':
+        case 'F':
+            // 适应窗口
+            fitToWindow();
             event.preventDefault();
             break;
     }
@@ -73,6 +80,41 @@ function resetZoom() {
     
     // 更新缩放指示器
     updateZoomIndicator();
+}
+
+/**
+ * 适应窗口大小
+ */
+function fitToWindow() {
+    if (!isLightboxOpen) return;
+    
+    const img = document.querySelector('.lightbox-image');
+    if (!img) return;
+    
+    // 计算最佳的适应窗口缩放比例
+    const container = document.querySelector('.lightbox-image-container');
+    if (!container) return;
+    
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+    
+    // 考虑原始图片比例，计算适合窗口的比例
+    const imgWidth = img.naturalWidth;
+    const imgHeight = img.naturalHeight;
+    
+    if (imgWidth && imgHeight) {
+        // 计算图片需要缩放的比例
+        const scaleX = containerWidth / imgWidth;
+        const scaleY = containerHeight / imgHeight;
+        
+        // 取较小值以确保图片完全可见
+        currentScale = Math.min(scaleX, scaleY) * 0.95; // 乘以0.95留出一些边距
+        
+        img.style.transform = `scale(${currentScale})`;
+        
+        // 更新缩放指示器
+        updateZoomIndicator();
+    }
 }
 
 /**
@@ -117,6 +159,7 @@ function closeLightbox() {
             isLightboxOpen = false;
             currentImageUrl = null;
             currentScale = 1; // 重置缩放级别
+            origImgRatio = 1; // 重置图片比例
             // 移除全局键盘事件监听器
             document.removeEventListener('keydown', handleLightboxKeydown);
             console.log("Lightbox closed.");
@@ -135,11 +178,10 @@ function openLightbox(imageUrl) {
         return;
     }
     
-    // 防止打开 data: URL 过长的 base64 字符串（可能导致性能问题或错误）
-    if (imageUrl.startsWith('data:image') && imageUrl.length > 1024 * 1024) { // 限制 1MB
-        console.warn("Lightbox open aborted. Image data URL is too large.");
-        alert("无法预览过大的图片。");
-        return;
+    // 防止打开 data: URL 过长的 base64 字符串（可能导致性能问题）
+    // 不再直接拒绝大图，而是总是尝试加载并缩放
+    if (imageUrl.startsWith('data:image') && imageUrl.length > 5 * 1024 * 1024) { // 限制提高到5MB
+        console.warn("Lightbox: Large image detected, will attempt scaling.");
     }
 
     console.log("Opening lightbox for:", imageUrl);
@@ -149,6 +191,7 @@ function openLightbox(imageUrl) {
     
     // 获取视口高度，用于计算安全区域
     const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
     const isMobile = window.matchMedia('(max-width: 768px)').matches;
 
     // 创建遮罩层
@@ -173,7 +216,6 @@ function openLightbox(imageUrl) {
     // 创建图片元素
     const img = document.createElement('img');
     img.className = 'lightbox-image';
-    img.src = imageUrl;
     img.alt = '放大预览'; // 图片替代文本
     
     // 添加滚轮缩放支持
@@ -184,7 +226,15 @@ function openLightbox(imageUrl) {
     });
     
     // 添加双击重置功能
-    img.addEventListener('dblclick', resetZoom);
+    img.addEventListener('dblclick', function(e) {
+        // 如果当前是原始大小，则切换到适应窗口
+        if (Math.abs(currentScale - 1) < 0.1) {
+            fitToWindow();
+        } else {
+            // 否则重置到原始大小
+            resetZoom();
+        }
+    });
     
     // 图片容器（便于控制）
     const imgContainer = document.createElement('div');
@@ -249,14 +299,18 @@ function openLightbox(imageUrl) {
         
         .lightbox-image-container {
             position: relative;
-            max-width: 90%;
+            max-width: 95%;
             max-height: 90%;
             display: flex;
             justify-content: center;
             align-items: center;
+            overflow: hidden;
         }
         
         .lightbox-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
             transition: transform 0.2s ease-out;
         }
     `;
@@ -264,22 +318,75 @@ function openLightbox(imageUrl) {
     
     img.style.display = 'none'; // 默认隐藏图片，直到加载完成
     
+    // 监听图片加载完成事件前，先设置src，确保事件能正确触发
+    img.src = imageUrl;
+    
     // 图片加载处理
     img.onload = () => {
+        console.log(`Lightbox: Image loaded - Size: ${img.naturalWidth}x${img.naturalHeight}`);
+        
+        // 获取图片原始尺寸
+        const imgWidth = img.naturalWidth;
+        const imgHeight = img.naturalHeight;
+        
+        // 计算图片尺寸是否超过容器
+        const containerWidth = viewportWidth * 0.9; // 留出一些边距
+        const containerHeight = viewportHeight * 0.85; // 留出一些边距
+        
+        let needsScaling = false;
+        let scaleFactor = 1;
+        
+        // 存储原始图片比例
+        origImgRatio = imgWidth / imgHeight;
+        
+        // 检查图片是否太大，需要缩放
+        if (imgWidth > containerWidth || imgHeight > containerHeight) {
+            needsScaling = true;
+            
+            // 计算最佳缩放比例
+            const scaleX = containerWidth / imgWidth;
+            const scaleY = containerHeight / imgHeight;
+            
+            // 使用较小的缩放比例确保图片完全适应
+            scaleFactor = Math.min(scaleX, scaleY);
+            currentScale = scaleFactor;
+            
+            console.log(`Lightbox: Image needs scaling. Factor: ${scaleFactor}`);
+        }
+        
         // 图片加载完成后，移除加载指示器，显示图片
         if (loader.parentNode) {
             loader.parentNode.removeChild(loader);
         }
+        
+        // 显示图片并应用缩放
         img.style.display = 'block';
         
-        // 图片加载完成后，显示缩放指示器
-        zoomIndicator.style.opacity = '1';
-        setTimeout(() => {
-            zoomIndicator.style.opacity = '0';
-        }, 2000);
+        if (needsScaling) {
+            // 自动缩放过大的图片
+            img.style.transform = `scale(${scaleFactor})`;
+            
+            // 显示缩放比例指示器
+            zoomIndicator.textContent = `${Math.round(scaleFactor * 100)}%`;
+            zoomIndicator.style.opacity = '1';
+            
+            // 几秒后淡出指示器
+            setTimeout(() => {
+                zoomIndicator.style.opacity = '0';
+            }, 3000);
+        } else {
+            // 标准尺寸图片，显示缩放指示器后消失
+            zoomIndicator.textContent = '100%';
+            zoomIndicator.style.opacity = '1';
+            
+            setTimeout(() => {
+                zoomIndicator.style.opacity = '0';
+            }, 2000);
+        }
     };
     
-    img.onerror = () => { // 添加错误处理
+    // 错误处理
+    img.onerror = () => {
         console.error("Lightbox: Failed to load image:", imageUrl);
         if (loader.parentNode) {
             loader.parentNode.removeChild(loader);
@@ -297,7 +404,8 @@ function openLightbox(imageUrl) {
         errorMsg.innerHTML = `
             <div style="font-size: 40px; margin-bottom: 10px;">😕</div>
             <div>图片加载失败</div>
-            <div style="font-size: 12px; margin-top: 10px; opacity: 0.7;">点击任意位置关闭</div>
+            <div style="font-size: 12px; margin-top: 10px; opacity: 0.7;">可能图片过大或格式不支持</div>
+            <div style="font-size: 12px; margin-top: 5px; opacity: 0.7;">点击任意位置关闭</div>
         `;
         overlay.appendChild(errorMsg);
         
@@ -321,9 +429,10 @@ function openLightbox(imageUrl) {
     helpTip.innerHTML = `
         <div>
             <kbd>+</kbd>/<kbd>-</kbd> 缩放 | 
-            <kbd>0</kbd> 重置 | 
+            <kbd>0</kbd> 原始大小 | 
+            <kbd>F</kbd> 适应窗口 | 
             <kbd>ESC</kbd> 关闭 | 
-            滚轮缩放
+            双击切换 | 滚轮缩放
         </div>
     `;
     helpTip.style.cssText = `
@@ -348,6 +457,62 @@ function openLightbox(imageUrl) {
         text-overflow: ellipsis;
     `;
     
+    // 添加缩放控制按钮
+    const zoomControls = document.createElement('div');
+    zoomControls.className = 'zoom-controls';
+    zoomControls.innerHTML = `
+        <button class="zoom-btn zoom-out" title="缩小">-</button>
+        <button class="zoom-btn zoom-fit" title="适应窗口">适应</button>
+        <button class="zoom-btn zoom-reset" title="原始大小">1:1</button>
+        <button class="zoom-btn zoom-in" title="放大">+</button>
+    `;
+    zoomControls.style.cssText = `
+        position: fixed;
+        bottom: 60px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.5);
+        border-radius: 20px;
+        padding: 5px;
+        z-index: 10003;
+        display: flex;
+        gap: 5px;
+    `;
+    
+    // 缩放按钮样式
+    const zoomBtnStyle = `
+        .zoom-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .zoom-btn:hover {
+            background: rgba(255,255,255,0.4);
+        }
+        
+        .zoom-fit, .zoom-reset {
+            font-size: 10px;
+            font-weight: bold;
+        }
+    `;
+    style.textContent += zoomBtnStyle;
+    
+    // 添加按钮事件
+    zoomControls.querySelector('.zoom-in').addEventListener('click', () => zoomImage(0.2));
+    zoomControls.querySelector('.zoom-out').addEventListener('click', () => zoomImage(-0.2));
+    zoomControls.querySelector('.zoom-reset').addEventListener('click', resetZoom);
+    zoomControls.querySelector('.zoom-fit').addEventListener('click', fitToWindow);
+    
     // 添加媒体查询以处理移动设备
     if (isMobile) {
         // 在移动设备上使用更紧凑的样式
@@ -355,16 +520,21 @@ function openLightbox(imageUrl) {
             <div>
                 <kbd>+</kbd>/<kbd>-</kbd> 缩放 | 
                 <kbd>0</kbd> 重置 | 
-                <kbd>ESC</kbd> 关闭
+                <kbd>F</kbd> 适应窗口 |
+                双击切换
             </div>
         `;
-        helpTip.style.bottom = '50px'; // 在移动端提高位置，避免被系统UI遮挡
+        helpTip.style.bottom = '110px'; // 在移动端提高位置，避免与缩放控制冲突
         helpTip.style.fontSize = '10px';
         helpTip.style.padding = '6px 12px';
         
+        // 调整缩放控制尺寸
+        zoomControls.style.bottom = '70px';
+        
         // 如果视口高度明显小于设备高度，说明软键盘可能打开
         if (viewportHeight < window.screen.height * 0.8) {
-            helpTip.style.bottom = '80px'; // 软键盘打开时提高更多
+            helpTip.style.bottom = '150px'; // 软键盘打开时提高更多
+            zoomControls.style.bottom = '110px';
         }
     }
     
@@ -393,6 +563,7 @@ function openLightbox(imageUrl) {
     overlay.appendChild(closeBtn);
     overlay.appendChild(zoomIndicator);
     overlay.appendChild(helpTip);
+    overlay.appendChild(zoomControls);
     document.body.appendChild(overlay);
     
     // 添加可见性类来触发动画（在下一帧渲染）
@@ -421,10 +592,12 @@ function openLightbox(imageUrl) {
             const currentHeight = window.visualViewport.height;
             if (currentHeight < viewportHeight * 0.8) {
                 // 软键盘可能打开，调整位置
-                helpTip.style.bottom = '80px';
+                helpTip.style.bottom = '150px';
+                zoomControls.style.bottom = '110px';
             } else {
                 // 恢复正常位置
-                helpTip.style.bottom = isMobile ? '50px' : '20px';
+                helpTip.style.bottom = isMobile ? '110px' : '20px';
+                zoomControls.style.bottom = isMobile ? '70px' : '60px';
             }
         };
         
