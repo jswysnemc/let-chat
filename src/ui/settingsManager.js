@@ -21,79 +21,134 @@ let activeProviderId = '';
 let currentEditingProvider = null;
 let isNewProvider = false;
 
+// 用于存储真实密码，键为输入框的ID
+let actualPasswordStore = {}; 
+// 用于存储密码框的可见性状态和计时器
+let passwordFieldStates = {}; 
+
+const FIXED_MASK_CHARACTER = '●'; // 或 '*', '•' 等
+const FIXED_MASK_LENGTH = 8; // 固定显示的掩码字符数量
+
+function getFixedMask() {
+    return FIXED_MASK_CHARACTER.repeat(FIXED_MASK_LENGTH);
+}
+
 /**
- * 初始化密码可见性切换功能
+ * 初始化密码可见性切换和固定掩码功能
  */
 function initializePasswordVisibilityToggle() {
-    const toggleIcons = document.querySelectorAll('.toggle-password-visibility');
-    let visibilityTimers = {}; // 用于存储每个密码框的计时器ID
+    const passwordInputs = [
+        document.getElementById('provider-key'), 
+        document.getElementById('tavily-api-key')
+    ].filter(Boolean); // Filter out nulls if an ID is not found
 
-    toggleIcons.forEach(icon => {
-        if (icon.dataset.listenerAttached === 'true') {
-            const targetInputId = icon.dataset.target;
-            const targetInput = document.getElementById(targetInputId);
-            if (targetInput) {
-                if (targetInput.type === "password") {
-                    icon.classList.remove('fa-eye-slash');
-                    icon.classList.add('fa-eye');
-                    icon.title = "显示密码";
-                } else {
-                    icon.classList.remove('fa-eye');
-                    icon.classList.add('fa-eye-slash');
-                    icon.title = "隐藏密码";
-                }
-            }
-            return;
+    passwordInputs.forEach(input => {
+        const inputId = input.id;
+        const toggleIcon = document.querySelector(`.toggle-password-visibility[data-target="${inputId}"]`);
+
+        // 初始化状态
+        if (!passwordFieldStates[inputId]) {
+            passwordFieldStates[inputId] = {
+                isActuallyVisible: false, // 内部追踪是否应显示真实密码
+                timerId: null
+            };
         }
-        icon.dataset.listenerAttached = 'true';
+        // 确保输入框初始为password类型，以便CSS选择器生效，但实际值由JS控制
+        // input.type = 'text'; // 我们将一直用 text 类型，用JS控制显示
+        // input.value = actualPasswordStore[inputId] && actualPasswordStore[inputId].length > 0 ? getFixedMask() : '';
 
-        icon.addEventListener('click', function () {
-            const targetInputId = this.dataset.target;
-            const targetInput = document.getElementById(targetInputId);
+        // 如果store中有值，则显示固定掩码，否则为空
+        if (actualPasswordStore[inputId] && actualPasswordStore[inputId].length > 0) {
+            input.value = getFixedMask();
+        } else {
+            input.value = '';
+        }
+        input.type = 'text'; // 始终是text，用JS模拟密码行为
 
-            if (targetInput) {
-                // 清除可能存在的旧计时器
-                if (visibilityTimers[targetInputId]) {
-                    clearTimeout(visibilityTimers[targetInputId]);
-                    delete visibilityTimers[targetInputId];
-                }
 
-                if (targetInput.type === "password") {
-                    targetInput.type = "text";
+        if (toggleIcon) {
+            // 更新图标初始状态
+            toggleIcon.classList.remove('fa-eye-slash');
+            toggleIcon.classList.add('fa-eye');
+            toggleIcon.title = "显示密码";
+
+            if (toggleIcon.dataset.listenerAttached === 'true') return;
+            toggleIcon.dataset.listenerAttached = 'true';
+
+            toggleIcon.addEventListener('click', function () {
+                const state = passwordFieldStates[inputId];
+                clearTimeout(state.timerId); // 清除旧计时器
+
+                state.isActuallyVisible = !state.isActuallyVisible;
+
+                if (state.isActuallyVisible) {
+                    input.value = actualPasswordStore[inputId] || '';
                     this.classList.remove('fa-eye');
                     this.classList.add('fa-eye-slash');
                     this.title = "隐藏密码";
 
-                    // 启动1秒后自动隐藏的计时器
-                    visibilityTimers[targetInputId] = setTimeout(() => {
-                        if (targetInput.type === "text") { // 再次检查，以防用户手动改回
-                            targetInput.type = "password";
-                            this.classList.remove('fa-eye-slash');
-                            this.classList.add('fa-eye');
-                            this.title = "显示密码";
-                        }
-                        delete visibilityTimers[targetInputId];
-                    }, 1000); // 1000毫秒 = 1秒
-
+                    state.timerId = setTimeout(() => {
+                        state.isActuallyVisible = false;
+                        input.value = actualPasswordStore[inputId] && actualPasswordStore[inputId].length > 0 ? getFixedMask() : '';
+                        this.classList.remove('fa-eye-slash');
+                        this.classList.add('fa-eye');
+                        this.title = "显示密码";
+                    }, 1000);
                 } else {
-                    targetInput.type = "password";
+                    input.value = actualPasswordStore[inputId] && actualPasswordStore[inputId].length > 0 ? getFixedMask() : '';
                     this.classList.remove('fa-eye-slash');
                     this.classList.add('fa-eye');
                     this.title = "显示密码";
-                    // 如果是从text切回password，也清除计时器（虽然上面已经清了，双重保险）
-                    if (visibilityTimers[targetInputId]) {
-                        clearTimeout(visibilityTimers[targetInputId]);
-                        delete visibilityTimers[targetInputId];
-                    }
+                }
+            });
+        }
+
+        // 拦截输入
+        if (input.dataset.inputListenerAttached === 'true') return;
+        input.dataset.inputListenerAttached = 'true';
+
+        input.addEventListener('input', function(event) {
+            const state = passwordFieldStates[inputId];
+            if (state.isActuallyVisible) {
+                // 如果是明文显示状态，直接更新真实密码存储
+                actualPasswordStore[inputId] = this.value;
+            } else {
+                // 如果是掩码状态，这是非预期的直接输入，因为keydown应该处理
+                // 但作为回退，如果真实密码为空，且输入框变为空，则接受
+                if (!actualPasswordStore[inputId] && this.value === '') {
+                    // 允许清空
+                } else {
+                    // 阻止更改，并恢复掩码 (或基于真实密码长度决定是否显示掩码)
+                    this.value = actualPasswordStore[inputId] && actualPasswordStore[inputId].length > 0 ? getFixedMask() : '';
                 }
             }
         });
-        const initialTargetInput = document.getElementById(icon.dataset.target);
-        if (initialTargetInput && initialTargetInput.type === "password") {
-             icon.title = "显示密码";
-        } else if (initialTargetInput) {
-             icon.title = "隐藏密码";
-        }
+
+        input.addEventListener('keydown', function(event) {
+            const state = passwordFieldStates[inputId];
+            if (state.isActuallyVisible) {
+                // 明文模式下，允许正常输入，input事件会处理
+                return;
+            }
+
+            // 掩码模式下，拦截输入，更新actualPasswordStore
+            event.preventDefault(); // 阻止字符出现在输入框
+            let currentPassword = actualPasswordStore[inputId] || '';
+
+            if (event.key === 'Backspace') {
+                currentPassword = currentPassword.slice(0, -1);
+            } else if (event.key === 'Delete') {
+                // 如果需要支持光标移动和Delete键，会更复杂
+                // 简单处理：等同于清空或无操作，取决于光标位置，这里简化为无操作，因为我们不显示光标
+            } else if (event.key.length === 1) { // 单个字符输入
+                currentPassword += event.key;
+            }
+            // 其他控制键 (如箭头, Tab, Enter) 应该被忽略或有特定处理，这里简化
+
+            actualPasswordStore[inputId] = currentPassword;
+            // 更新视觉显示
+            this.value = currentPassword.length > 0 ? getFixedMask() : '';
+        });
     });
 }
 
@@ -142,8 +197,9 @@ function loadInitialData() {
     providers = result.providers;
     activeProviderId = result.activeProviderId;
     
-    // 加载并显示全局Tavily API Key
-    tavilyApiKeyInput.value = getGlobalTavilyApiKey(); 
+    // 加载全局Tavily API Key 到真实密码存储
+    actualPasswordStore['tavily-api-key'] = getGlobalTavilyApiKey();
+    // UI由 initializePasswordVisibilityToggle 更新
     
     refreshProviderList();
 }
@@ -175,8 +231,9 @@ function addEventListeners() {
  * 显示设置模态框
  */
 export function showSettingsModal() {
-    loadInitialData(); // 刷新数据，包括加载全局 Tavily Key 到输入框
+    loadInitialData(); 
     settingsModalOverlay.classList.add('visible');
+    // 现在 initializePasswordVisibilityToggle 会处理密码框的初始显示
     initializePasswordVisibilityToggle(); 
 }
 
@@ -285,34 +342,29 @@ function refreshProviderList() {
  * @param {string} providerId 服务商ID
  */
 function loadProviderDetails(providerId) {
-    // 更新活动状态
     activeProviderId = providerId;
-    
-    // 更新列表UI
     document.querySelectorAll('.service-provider-item').forEach(item => {
         item.classList.remove('active');
-        if (item.getAttribute('data-id') === providerId) {
-            item.classList.add('active');
-        }
+        if (item.getAttribute('data-id') === providerId) item.classList.add('active');
     });
-    
-    // 获取服务商数据
+
     currentEditingProvider = providers.find(p => p.id === providerId);
     if (!currentEditingProvider) {
         console.error('未找到服务商:', providerId);
         return;
     }
-    
-    isNewProvider = false; // 设置为编辑模式
-    
-    // 填充表单
+    isNewProvider = false;
+
     providerNameInput.value = currentEditingProvider.name || '';
     providerBaseurlInput.value = currentEditingProvider.baseurl || '';
-    providerKeyInput.value = currentEditingProvider.key || '';
-    systemPromptTextarea.value = currentEditingProvider.system_prompt || '';
     
-    // 刷新模型列表
+    // 从真实密码存储加载服务商的API Key
+    actualPasswordStore['provider-key'] = currentEditingProvider.key || '';
+    // UI由 initializePasswordVisibilityToggle 更新
+    
+    systemPromptTextarea.value = currentEditingProvider.system_prompt || '';
     refreshModelsList(currentEditingProvider.models || []);
+    initializePasswordVisibilityToggle(); // 确保切换服务商时也重新初始化密码框状态和显示
 }
 
 /**
@@ -771,29 +823,38 @@ async function deleteProvider(providerId) {
  * @param {boolean} forNewProvider - 是否为新服务商清空
  */
 function clearProviderForm(forNewProvider = false) {
-    providerNameInput.value = forNewProvider ? providerNameInput.value : '';
+    providerNameInput.value = forNewProvider ? (currentEditingProvider ? currentEditingProvider.name : '（新服务商）') : '';
     providerBaseurlInput.value = '';
-    providerKeyInput.value = '';
-    systemPromptTextarea.value = getApiConfig().system_prompt || '';
+    actualPasswordStore['provider-key'] = ''; // 清空真实密码
+    if (providerKeyInput) providerKeyInput.value = ''; // 清空显示
+    
+    // Tavily key 是全局的，不清空，除非是应用首次加载且无保存值
+    // actualPasswordStore['tavily-api-key'] 清理逻辑在全局保存/加载处
+    if (tavilyApiKeyInput && (!actualPasswordStore['tavily-api-key'] || actualPasswordStore['tavily-api-key'].length === 0)) {
+        tavilyApiKeyInput.value = '';
+    } else if (tavilyApiKeyInput) {
+        tavilyApiKeyInput.value = getFixedMask();
+    }
+
+    systemPromptTextarea.value = currentEditingProvider ? (currentEditingProvider.system_prompt || '') : (getApiConfig().system_prompt || '');
     modelsContainer.innerHTML = ''; 
     if (currentEditingProvider && !forNewProvider) { 
         currentEditingProvider.models = [];
     }
+    initializePasswordVisibilityToggle(); // 确保清空后密码框状态正确
 }
 
 /**
  * 保存设置
  */
 function saveSettings() {
-    if (!currentEditingProvider && !isNewProvider) { // currentEditingProvider 可能在新服务商流程中被设置
-        // 如果没有当前编辑的服务商，并且也不是正在创建新服务商后首次保存的流程
-        // (额外判断isNewProvider是为了确保新服务商的保存流程能继续)
-        // 实际上，除非用户在没有选择任何服务商的情况下（例如列表为空时）能触发保存，否则此情况较少。
-        // 但作为防御性编程，如果 settings 表单是可见的，至少全局 Tavily key 应该可以保存。
-        const globalTavilyToSave = tavilyApiKeyInput.value.trim();
+    const globalTavilyToSave = actualPasswordStore['tavily-api-key'] || '';
+    const providerKeyToSave = actualPasswordStore['provider-key'] || '';
+
+    if (!currentEditingProvider && !isNewProvider) {
         if (!globalTavilyToSave) {
             showWarning('请输入Tavily API密钥');
-            tavilyApiKeyInput.focus();
+            if(tavilyApiKeyInput) tavilyApiKeyInput.focus();
             return;
         }
         saveGlobalTavilyApiKey(globalTavilyToSave);
@@ -802,15 +863,19 @@ function saveSettings() {
         return;
     }
 
-    // 如果是服务商相关的保存：
     const currentModelsInForm = currentEditingProvider ? (currentEditingProvider.models || []) : [];
-    if (!validateForm(currentModelsInForm)) return; // validateForm 内部也需要调整对 Tavily Key 的处理
+    // 更新 validateForm 以使用 actualPasswordStore 中的值
+    if (!validateForm(currentModelsInForm, providerKeyToSave, globalTavilyToSave)) return;
 
-    // 保存全局 Tavily Key
-    saveGlobalTavilyApiKey(tavilyApiKeyInput.value.trim());
+    saveGlobalTavilyApiKey(globalTavilyToSave);
 
-    // 更新服务商（不含Tavily Key）
-    updateCurrentProvider(currentModelsInForm);
+    if (currentEditingProvider) {
+        currentEditingProvider.name = providerNameInput.value.trim();
+        currentEditingProvider.baseurl = providerBaseurlInput.value.trim();
+        currentEditingProvider.key = providerKeyToSave; // 保存真实密码
+        currentEditingProvider.system_prompt = systemPromptTextarea.value.trim();
+        currentEditingProvider.models = currentModelsInForm;
+    }
     
     saveProviders(providers, activeProviderId);
     setActiveProvider(activeProviderId);
@@ -824,9 +889,11 @@ function saveSettings() {
 /**
  * 验证表单
  * @param {Array} modelsToValidate - 需要验证的模型数组
+ * @param {string} providerKey - 服务商API密钥
+ * @param {string} globalTavilyKey - 全局Tavily API密钥
  * @returns {boolean} 表单是否有效
  */
-function validateForm(modelsToValidate) {
+function validateForm(modelsToValidate, providerKey, globalTavilyKey) {
     if (!providerNameInput.value.trim()) {
         showWarning('请输入服务商名称');
         providerNameInput.focus();
@@ -839,23 +906,19 @@ function validateForm(modelsToValidate) {
         return false;
     }
     
-    if (!providerKeyInput.value.trim()) {
+    // 验证来自 actualPasswordStore 的密码
+    if (!providerKey) {
         showWarning('请输入API密钥');
-        providerKeyInput.focus();
+        if(providerKeyInput) providerKeyInput.focus();
         return false;
     }
-    
-    // 全局 Tavily API Key 验证
-    if (!tavilyApiKeyInput.value.trim()) { // 现在总是检查这个输入框，因为它代表全局key
+    if (!globalTavilyKey) {
         showWarning('请输入Tavily API密钥');
-        tavilyApiKeyInput.focus();
+        if(tavilyApiKeyInput) tavilyApiKeyInput.focus();
         return false;
     }
 
-    if (!currentEditingProvider) { // 如果没有选中服务商（例如列表为空时，理论上不应能到这一步保存服务商）
-        // 但如果能到，且只保存全局Tavily Key，则模型验证跳过
-        return true; // 假设这种情况下只保存Tavily Key
-    }
+    if (!currentEditingProvider) return true; // 如果没有服务商上下文（不太可能到这），只验证Tavily
 
     if (!modelsToValidate || modelsToValidate.length === 0) {
         showWarning('请至少添加一个模型');
@@ -869,22 +932,9 @@ function validateForm(modelsToValidate) {
 }
 
 /**
- * 更新当前编辑的服务商 (不再包含 Tavily Key)
- * @param {Array} modelsInForm - 表单中当前的模型配置
- */
-function updateCurrentProvider(modelsInForm) {
-    if (!currentEditingProvider) return;
-    currentEditingProvider.name = providerNameInput.value.trim();
-    currentEditingProvider.baseurl = providerBaseurlInput.value.trim();
-    currentEditingProvider.key = providerKeyInput.value.trim();
-    currentEditingProvider.system_prompt = systemPromptTextarea.value.trim();
-    currentEditingProvider.models = modelsInForm;
-}
-
-/**
  * 获取当前活动服务商的Tavily API密钥 (现在从全局获取)
  * @returns {string} Tavily API密钥
  */
 export function getTavilyApiKey() {
-    return getGlobalTavilyApiKey(); // 直接调用 config.js 中的新函数
+    return getGlobalTavilyApiKey(); 
 } 
