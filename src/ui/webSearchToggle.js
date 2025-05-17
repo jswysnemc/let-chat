@@ -73,6 +73,6 @@ function updateButtonState() {
  * 注意：此函数仅供内部使用，实际功能未实现
  * @returns {boolean} 联网搜索是否已启用
  */
-function isWebSearchActive() {
+export function isWebSearchActive() {
     return isWebSearchEnabled;
 } 

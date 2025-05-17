@@ -1,0 +1,132 @@
+{
+    "model": "gemini-2.5-flash-preview-04-17",
+    "messages": [
+        {
+            "role": "system",
+            "content": "你是一个中文助手，帮助用户回答问题,回答时需要使用中文。如果需要代码，请使用markdown格式输出，并明确指定代码语言类型，例如 ```python ... ```。"
+        },
+        {
+            "role": "system",
+            "content": "You have access to the following tools:\n- 'search_tool': Use this tool to search the internet for up-to-date information or when the user asks for current events, specific facts, or general knowledge that might require external lookup. For example, if the user asks 'What is the weather like in London?' or 'Tell me about the latest AI research.', you should use this tool.\n- 'extract_tool': Use this tool to extract structured content from a specific webpage URL. Only use this if the user provides a URL and asks to get content from it.\n\nPlease think step-by-step if a user's query can be answered by using these tools. If so, call the appropriate tool with the correct arguments. If you can answer directly without the tools, do so."
+        },
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "搜索中美相关新闻信息"
+                }
+            ]
+        }
+    ],
+    "stream": true,
+    "temperature": 0.7,
+    "top_p": 1,
+    "tools": [
+        {
+            "name": "search_tool",
+            "description": "执行Tavily网络搜索并返回结果",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "搜索关键词或问题，例如：中国最新经济政策"
+                    },
+                    "options": {
+                        "type": "object",
+                        "properties": {
+                            "includeAnswer": {
+                                "type": "boolean",
+                                "description": "是否包含直接回答",
+                                "default": true
+                            },
+                            "maxResults": {
+                                "type": "number",
+                                "description": "最大返回结果数量",
+                                "default": 5
+                            },
+                            "searchDepth": {
+                                "type": "string",
+                                "description": "搜索深度级别",
+                                "enum": [
+                                    "basic",
+                                    "advanced"
+                                ]
+                            },
+                            "includeRawContent": {
+                                "type": "boolean",
+                                "description": "是否包含原始内容",
+                                "default": false
+                            },
+                            "includeImages": {
+                                "type": "boolean",
+                                "description": "是否包含图片",
+                                "default": false
+                            },
+                            "includeDomains": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "description": "要包含的域名白名单"
+                            },
+                            "excludeDomains": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "description": "要排除的域名黑名单"
+                            }
+                        },
+                        "required": []
+                    }
+                },
+                "required": [
+                    "query"
+                ]
+            }
+        },
+        {
+            "name": "extract_tool",
+            "description": "从指定网页URL中提取内容",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "urls": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "要提取内容的网页URL列表"
+                    },
+                    "options": {
+                        "type": "object",
+                        "properties": {
+                            "includeRawContent": {
+                                "type": "boolean",
+                                "description": "是否包含原始HTML内容",
+                                "default": false
+                            },
+                            "extractMode": {
+                                "type": "string",
+                                "enum": [
+                                    "article",
+                                    "code",
+                                    "auto"
+                                ],
+                                "description": "内容提取模式",
+                                "default": "article"
+                            }
+                        },
+                        "required": []
+                    }
+                },
+                "required": [
+                    "urls"
+                ]
+            }
+        }
+    ],
+    "tool_choice": "auto"
+}

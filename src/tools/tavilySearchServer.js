@@ -22,8 +22,6 @@ export async function search_tool(query, options={}){
     }catch(error){
         console.error('搜索失败:', error);
         return JSON.stringify({error: error.message});
-    }finally{
-        return "{\"error\":\"搜索失败\"}";
     }
 }
 
@@ -43,7 +41,5 @@ export async function extract_tool(urls, options={}){
     }catch(error){
         console.error('提取失败:', error);
         return JSON.stringify({error: error.message});
-    }finally{
-        return "{\"error\":\"提取失败\"}";
     }
 }
