@@ -516,10 +516,12 @@ function handleDeleteImage(event) {
 function handleModelSwitch() {
     console.log("[InputController] Model switch button clicked");
     
+    let closeMenuListenerAttached = false; // Ensure this is declared at the top of the function scope
+
     const { providers, activeProviderId } = loadProviders();
     const currentProvider = providers.find(p => p.id === activeProviderId);
     
-    if (!currentProvider || !currentProvider.models || currentProvider.models.length === 0) { // Changed to 0 for consistency
+    if (!currentProvider || !currentProvider.models || currentProvider.models.length === 0) { 
         showNotification('当前服务商没有可用的模型', 'warning');
         return;
     }
@@ -544,13 +546,29 @@ function handleModelSwitch() {
     menuTitleDiv.style.borderBottom = '1px solid #eee';
     menuTitleDiv.style.paddingBottom = '5px';
     menuTitleDiv.style.marginBottom = '5px';
-    menuTitleDiv.style.display = 'flex'; // Use flex to align title and gear icon
+    menuTitleDiv.style.display = 'flex';
     menuTitleDiv.style.justifyContent = 'space-between';
     menuTitleDiv.style.alignItems = 'center';
+    menuTitleDiv.style.paddingRight = '30px'; // 为右上角的关闭按钮留出空间
 
     const menuTitleText = document.createElement('span');
     menuTitleText.textContent = '选择模型';
     menuTitleDiv.appendChild(menuTitleText);
+
+    const closeMenuOnOutsideClick = (e) => {
+        if (modelsMenu && modelsMenu.parentNode === document.body) { 
+            if (!modelsMenu.contains(e.target) && e.target !== switchModelButtonElement) { 
+                document.body.removeChild(modelsMenu);
+                if (closeMenuListenerAttached) {
+                    document.removeEventListener('click', closeMenuOnOutsideClick);
+                    closeMenuListenerAttached = false;
+                }
+            }
+        } else if (closeMenuListenerAttached) { 
+            document.removeEventListener('click', closeMenuOnOutsideClick);
+            closeMenuListenerAttached = false;
+        }
+    };
 
     const settingsGearBtn = document.createElement('button');
     settingsGearBtn.innerHTML = '<i class="fas fa-cog"></i>';
@@ -559,18 +577,24 @@ function handleModelSwitch() {
     settingsGearBtn.style.border = 'none';
     settingsGearBtn.style.color = '#6c757d';
     settingsGearBtn.style.cursor = 'pointer';
-    settingsGearBtn.style.fontSize = '1em'; /* Adjust size as needed */
-    settingsGearBtn.style.padding = '3px';
+    settingsGearBtn.style.fontSize = '1.1em';
+    settingsGearBtn.style.padding = '5px 8px'; 
     settingsGearBtn.style.borderRadius = '4px';
     settingsGearBtn.style.lineHeight = '1';
-    settingsGearBtn.addEventListener('mouseover', () => { settingsGearBtn.style.color = '#0d6efd'; });
-    settingsGearBtn.addEventListener('mouseout', () => { settingsGearBtn.style.color = '#6c757d'; });
+    settingsGearBtn.style.display = 'inline-flex'; 
+    settingsGearBtn.style.alignItems = 'center';
+    settingsGearBtn.style.justifyContent = 'center';
+    settingsGearBtn.addEventListener('mouseover', () => { settingsGearBtn.style.color = '#0d6efd'; settingsGearBtn.style.backgroundColor = 'rgba(0,0,0,0.05)'; });
+    settingsGearBtn.addEventListener('mouseout', () => { settingsGearBtn.style.color = '#6c757d'; settingsGearBtn.style.backgroundColor = 'transparent'; });
     settingsGearBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        document.body.removeChild(modelsMenu); // Close this menu first
-        
-        // We are using a custom event to request opening the settings modal.
-        // The erroneous placeholder line has been removed.
+        if (modelsMenu.parentNode === document.body) {
+            document.body.removeChild(modelsMenu);
+        }
+        if (closeMenuListenerAttached) { 
+            document.removeEventListener('click', closeMenuOnOutsideClick);
+            closeMenuListenerAttached = false;
+        }
         try {
             document.dispatchEvent(new CustomEvent('openSettingsModalRequest'));
         } catch (err) {
@@ -583,17 +607,30 @@ function handleModelSwitch() {
     
     const closeBtn = document.createElement('button');
     closeBtn.innerHTML = '&times;';
+    closeBtn.title = '关闭菜单';
     closeBtn.style.position = 'absolute';
-    closeBtn.style.top = '5px';
-    closeBtn.style.right = '5px';
+    closeBtn.style.top = '6px'; /* 微调以适应menu的padding和title的border */
+    closeBtn.style.right = '6px';
     closeBtn.style.background = 'none';
     closeBtn.style.border = 'none';
-    closeBtn.style.fontSize = '16px';
+    closeBtn.style.fontSize = '22px'; /* 也可以调整大小 */
+    closeBtn.style.color = '#888';
     closeBtn.style.cursor = 'pointer';
-    closeBtn.style.color = '#666';
+    closeBtn.style.padding = '2px 6px'; /* 微调 padding */
+    closeBtn.style.lineHeight = '1'; 
+    closeBtn.style.borderRadius = '4px';
+    closeBtn.style.zIndex = '1001'; //确保在标题内容之上（如果标题内容意外溢出）
+    closeBtn.addEventListener('mouseover', () => { closeBtn.style.color = '#333'; closeBtn.style.backgroundColor = 'rgba(0,0,0,0.05)'; });
+    closeBtn.addEventListener('mouseout', () => { closeBtn.style.color = '#888'; closeBtn.style.backgroundColor = 'transparent'; });
     closeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        document.body.removeChild(modelsMenu);
+        if (modelsMenu.parentNode === document.body) {
+            document.body.removeChild(modelsMenu);
+        }
+        if (closeMenuListenerAttached) { 
+            document.removeEventListener('click', closeMenuOnOutsideClick);
+            closeMenuListenerAttached = false;
+        }
     });
     modelsMenu.appendChild(closeBtn);
     
@@ -641,7 +678,11 @@ function handleModelSwitch() {
                     // 用通知条替代alert
                     showNotification(`已切换到模型: ${model.name}`, 'success');
                     console.log(`[InputController] 切换到模型: ${model.name}`);
-                    document.body.removeChild(modelsMenu);
+                    if (modelsMenu.parentNode === document.body) document.body.removeChild(modelsMenu);
+                    if (closeMenuListenerAttached) { 
+                        document.removeEventListener('click', closeMenuOnOutsideClick);
+                        closeMenuListenerAttached = false;
+                    }
                 } else {
                     showNotification('模型切换失败，请稍后再试', 'error');
                 }
@@ -651,20 +692,13 @@ function handleModelSwitch() {
         modelsMenu.appendChild(modelItem);
     });
     
-    // 添加菜单到页面
     document.body.appendChild(modelsMenu);
     
-    // 点击菜单外部区域关闭菜单
-    const closeMenuOnOutsideClick = (e) => {
-        if (!modelsMenu.contains(e.target) && e.target !== switchModelButtonElement) {
-            document.body.removeChild(modelsMenu);
-            document.removeEventListener('click', closeMenuOnOutsideClick);
-        }
-    };
-    
-    // 延迟添加点击事件，避免立即触发
     setTimeout(() => {
-        document.addEventListener('click', closeMenuOnOutsideClick);
+        if (!closeMenuListenerAttached) {
+            document.addEventListener('click', closeMenuOnOutsideClick);
+            closeMenuListenerAttached = true;
+        }
     }, 100);
 }
 
