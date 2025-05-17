@@ -24,6 +24,57 @@ import { copyTextFallback } from './ui/copyUtils.js'; // Import copy fallback
 import { showSuccess, showError, showWarning, showConfirm } from './ui/notification.js'; // Import notification functions
 
 
+/**
+ * 更新重试按钮的可见性，只显示最后一个AI消息的重试按钮
+ * @returns {HTMLElement|null} 最后一个显示的重试按钮，如果没有则返回null
+ */
+function updateRetryButtonsVisibility() {
+    if (!aiResponseArea) {
+        console.warn("[Main] updateRetryButtonsVisibility: aiResponseArea element is null");
+        return null;
+    }
+    
+    console.log("[Main] 开始更新重试按钮可见性...");
+    const allAssistantBubbles = aiResponseArea.querySelectorAll('.assistant-bubble:not(.error-message)');
+    console.log(`[Main] 找到 ${allAssistantBubbles.length} 个AI消息气泡`);
+    
+    // 首先隐藏所有重试按钮
+    let hiddenCount = 0;
+    allAssistantBubbles.forEach((bubble, index) => {
+        const retryBtn = bubble.querySelector('.message-retry-btn');
+        if (retryBtn) {
+            // 使用style.display直接设置，而不是添加CSS类
+            retryBtn.style.display = 'none';
+            hiddenCount++;
+            console.log(`[Main] 隐藏第 ${index+1} 个气泡的重试按钮，display=${retryBtn.style.display}`);
+        } else {
+            console.log(`[Main] 第 ${index+1} 个气泡没有找到重试按钮`);
+        }
+    });
+    console.log(`[Main] 已隐藏 ${hiddenCount} 个重试按钮`);
+    
+    // 然后只显示最后一个AI消息的重试按钮
+    let lastRetryButton = null;
+    if (allAssistantBubbles.length > 0) {
+        const lastBubble = allAssistantBubbles[allAssistantBubbles.length - 1];
+        const retryBtn = lastBubble.querySelector('.message-retry-btn');
+        if (retryBtn) {
+            console.log(`[Main] 尝试显示最后一个AI消息的重试按钮，当前display=${retryBtn.style.display}`);
+            // 强制显示最后一个重试按钮
+            retryBtn.style.removeProperty('display'); // 移除display属性，回到默认显示状态
+            retryBtn.style.display = 'inline-flex'; // 显式设置为inline-flex，确保与其他按钮一致
+            console.log(`[Main] 已显示最后一个AI消息的重试按钮，现在display=${retryBtn.style.display || '已恢复默认显示'}`);
+            lastRetryButton = retryBtn;
+        } else {
+            console.warn("[Main] Could not find retry button in the last AI message bubble");
+        }
+    } else {
+        console.log("[Main] 没有找到AI消息气泡，不需要显示重试按钮");
+    }
+    
+    return lastRetryButton;
+}
+
 /** Renders the chat messages for the currently active session */
 function renderChatForActiveSession() {
     const activeId = state.getActiveSessionId();
@@ -65,25 +116,16 @@ function renderChatForActiveSession() {
         // Ignore 'system' messages for display here (already handled by index check)
     });
 
-    // 循环结束后，查找最后一个 AI 消息气泡并显示重试按钮
-    const allAssistantBubbles = aiResponseArea.querySelectorAll('.assistant-bubble:not(.error-message)'); // 排除错误消息
-    if (allAssistantBubbles.length > 0) {
-        const lastBubble = allAssistantBubbles[allAssistantBubbles.length - 1];
-        const retryBtn = lastBubble.querySelector('.message-retry-btn');
-        if (retryBtn) {
-            // console.log("[Main] Showing retry button on the last AI message bubble:", lastBubble); // 保留这个有用的日志或移除
-            retryBtn.classList.remove('hidden'); // 显示重试按钮
-        } else {
-             console.warn("[Main] Could not find retry button in the last AI message bubble:", lastBubble);
-        }
-    }
-    // else { // 移除这个日志，因为它在正常情况下也会出现
-    //      console.log("[Main] No assistant messages found, skipping retry button display.");
-    // }
+    // 调用专门的函数来更新重试按钮可见性
+    updateRetryButtonsVisibility();
 
     // Scroll to bottom after rendering history
     // Use a slightly longer delay to ensure images might have loaded
-    setTimeout(() => scrollChatToBottom(), 100);
+    setTimeout(() => {
+        scrollChatToBottom();
+        // 确保在滚动到底部后再次更新重试按钮状态
+        updateRetryButtonsVisibility();
+    }, 100);
 }
 
 /**
@@ -259,6 +301,9 @@ async function handleSend(contentParts) {
         // Finalize UI (enable controls, set raw content) using the UI function
         // Pass only the bubble element and the full content
         finalizeAssistantMessage(assistantBubbleRefs.bubbleElement, accumulatedContent);
+        
+        // 确保只有最后一个AI消息显示重试按钮
+        updateRetryButtonsVisibility();
 
    } catch (error) {
        console.error("Error during AI response fetch/stream:", error);
@@ -276,6 +321,8 @@ async function handleSend(contentParts) {
         console.log("[Main] Send request processing finished. Re-rendering chat area...");
         // 重新渲染聊天区域以确保 UI 与状态同步，并正确显示/隐藏重试按钮
         renderChatForActiveSession();
+        // 确保重试按钮可见性正确
+        ensureRetryButtonsVisibility();
         console.log("[Main] Chat area re-rendered after send.");
    }
 }
@@ -461,6 +508,8 @@ function handleEditMessageSubmit(event) {
 
     if (state.updateMessageInSession(activeId, currentEditingMessageIndex, newContent)) {
         renderChatForActiveSession(); // Re-render chat on success
+        // 额外确保重试按钮显示正确
+        updateRetryButtonsVisibility();
     } else {
         showError("更新消息失败。");
         // Optionally keep modal open on failure? For now, we hide it.
@@ -531,6 +580,8 @@ function main() {
     const initialActiveId = state.getActiveSessionId();
     renderSessionList(initialSessions, initialActiveId);
     renderChatForActiveSession(); // Render messages for the initially active session
+    // 确保初始渲染后重试按钮可见性正确
+    ensureRetryButtonsVisibility();
     // ---------------------
 
     // --- Add Event Listeners for Sidebar and Chat Area ---
@@ -714,6 +765,8 @@ function handleDeleteMessage(sessionId, messageIndex) {
             
             if (state.deleteMessageFromSession(sessionId, messageIndex)) {
                 renderChatForActiveSession(); // 重新渲染聊天区域
+                // 额外确保重试按钮显示正确
+                updateRetryButtonsVisibility();
             } else {
                 showError("删除消息失败。");
             }
@@ -916,6 +969,7 @@ const retryButtonClickHandler = (event) => {
     renderChatForActiveSession();
     
     // 重新处理我们的请求（使用现有的处理逻辑）
+    // 注意：handleSend函数的finally块中会再次调用renderChatForActiveSession
     handleSend(contentParts);
 };
 
@@ -950,4 +1004,31 @@ function messageControlsClickHandler(event) {
     } else if (action === 'copy') {
         copyButtonClickHandler(event);
     }
+}
+
+// 额外添加一个检查，确保重试按钮可见性已更新
+function ensureRetryButtonsVisibility() {
+    console.log("[Main] 开始确保重试按钮可见性...");
+    
+    // 立即调用一次
+    const btn1 = updateRetryButtonsVisibility();
+    console.log(`[Main] 第一次调用获得按钮: ${btn1 ? '成功' : '失败'}`);
+    
+    // 延迟100ms后再次调用，确保浏览器有足够时间更新DOM
+    setTimeout(() => {
+        const btn2 = updateRetryButtonsVisibility();
+        console.log(`[Main] 第二次调用(100ms)获得按钮: ${btn2 ? '成功' : '失败'}`);
+    }, 100);
+    
+    // 延迟300ms后再次调用，处理可能的异步渲染问题
+    setTimeout(() => {
+        const btn3 = updateRetryButtonsVisibility();
+        console.log(`[Main] 第三次调用(300ms)获得按钮: ${btn3 ? '成功' : '失败'}`);
+    }, 300);
+    
+    // 延迟1000ms后最后一次调用，确保所有可能的渲染和状态更新都完成
+    setTimeout(() => {
+        const btn4 = updateRetryButtonsVisibility();
+        console.log(`[Main] 最后一次调用(1000ms)获得按钮: ${btn4 ? '成功' : '失败'}`);
+    }, 1000);
 }

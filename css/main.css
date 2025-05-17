@@ -979,3 +979,8 @@ h2 { /* Removed h1 styling */
      border-radius: 4px;
      display: inline-block; /* 让图片和文本能在同一行 */
 }
+
+/* 实用类 */
+.hidden {
+    display: none !important; /* 使用!important确保隐藏 */
+}

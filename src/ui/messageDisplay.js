@@ -50,14 +50,18 @@ function _createMessageControls(messageIndex, role, isStreaming = false) {
     // --- AI 特有按钮 ---
     if (role === 'assistant') {
         const retryBtn = document.createElement('button');
-        retryBtn.className = 'message-control-button message-retry-btn hidden'; // 默认隐藏
+        // 确保添加hidden类
+        retryBtn.className = 'message-control-button message-retry-btn';
         retryBtn.title = '重试';
         // retryBtn.textContent = '🔄'; // 使用 innerHTML 插入 Font Awesome 图标
         retryBtn.innerHTML = '<i class="fas fa-sync-alt"></i>'; // Font Awesome Retry/Sync Icon
         retryBtn.dataset.action = 'retry';
         // 重试按钮也应在流式传输完成前禁用（如果可见）
         retryBtn.disabled = isStreaming;
+        // 不设置display:none，让main.js通过updateRetryButtonsVisibility控制可见性
         controlsDiv.appendChild(retryBtn);
+        
+        console.log(`[UI] 创建了重试按钮，类名：${retryBtn.className}`);
     }
 
     return controlsDiv;
@@ -258,14 +262,16 @@ export function finalizeAssistantMessage(bubbleElement, fullContent) {
     if (controls) {
         const buttons = controls.querySelectorAll('.message-control-button');
         buttons.forEach(btn => {
-            // 启用所有按钮 (重试按钮的可见性由 main.js 控制)
-            btn.disabled = false;
-
-            // 移除复制按钮监听器的添加逻辑，将统一在 main.js 中处理
-            // if (btn.classList.contains('message-copy-btn') && !btn.dataset.listenerAdded) {
-            //     // ... (removed event listener code) ...
-            //     btn.dataset.listenerAdded = 'true';
-            // }
+            // 启用所有按钮，但保持重试按钮的可见性状态不变
+            if (!btn.classList.contains('message-retry-btn')) {
+                // 对于非重试按钮，取消禁用状态
+                btn.disabled = false;
+            } else {
+                // 对于重试按钮，只取消禁用但不改变其可见性
+                btn.disabled = false;
+                // 重试按钮的可见性由 main.js 中的 updateRetryButtonsVisibility 函数控制
+                console.log(`[UI] 流式传输完成，重试按钮当前状态：display=${btn.style.display}, disabled=${btn.disabled}`);
+            }
         }); // End of buttons.forEach
     } else {
         console.warn("[UI] finalizeAssistantMessage: 未找到控件容器。");
