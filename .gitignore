@@ -5,3 +5,6 @@ q.json
 *.roo
 tests/
 tests/*
+chat_api.http
+chat_api copy.http
+function_calling.http
