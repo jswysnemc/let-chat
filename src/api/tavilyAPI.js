@@ -4,7 +4,7 @@
  */
 
 // Tavily API 基础URL
-const TAVILY_API_BASE_URL = 'https://api.tavily.com/v1';
+const TAVILY_API_BASE_URL = 'https://api.tavily.com';
 
 /**
  * 执行Tavily搜索
@@ -91,19 +91,19 @@ async function search(apiKey, query, options = {}) {
 /**
  * 从网页中提取内容
  * @param {string} apiKey - Tavily API密钥
- * @param {string} url - 要提取内容的网页URL
+ * @param {Array<string>} urls - 要提取内容的网页URL
  * @param {Object} options - 可选参数
  * @param {boolean} options.includeRawContent - 是否包含原始HTML内容，默认false
  * @param {string} options.extractMode - 提取模式，可选值：'article'(默认),'code','auto'
  * @returns {Promise<Object>} 提取结果
  */
-async function extract(apiKey, url, options = {}) {
+async function extract(apiKey, urls, options = {}) {
     if (!apiKey) {
         throw new Error('Tavily API 密钥不能为空');
     }
     
-    if (!url || url.trim() === '') {
-        throw new Error('网页URL不能为空');
+    if (!urls || urls.length === 0) {
+        throw new Error('要提取内容的网页URL不能为空');
     }
 
     const defaultOptions = {
@@ -117,13 +117,13 @@ async function extract(apiKey, url, options = {}) {
     // 构建请求正文
     const requestBody = {
         api_key: apiKey,
-        url: url,
+        urls: urls,
         include_raw_content: requestOptions.includeRawContent,
         extract_mode: requestOptions.extractMode
     };
     
     try {
-        console.log(`[TavilyAPI] 提取网页内容: "${url}"`);
+        console.log(`[TavilyAPI] 提取网页列表: "${urls}"`);
         
         const response = await fetch(`${TAVILY_API_BASE_URL}/extract`, {
             method: 'POST',
