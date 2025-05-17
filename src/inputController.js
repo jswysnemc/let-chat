@@ -516,41 +516,71 @@ function handleDeleteImage(event) {
 function handleModelSwitch() {
     console.log("[InputController] Model switch button clicked");
     
-    // 获取当前服务商配置和模型信息
     const { providers, activeProviderId } = loadProviders();
     const currentProvider = providers.find(p => p.id === activeProviderId);
     
-    if (!currentProvider || !currentProvider.models || currentProvider.models.length <= 1) {
-        showNotification('当前服务商没有可用的备选模型', 'warning');
+    if (!currentProvider || !currentProvider.models || currentProvider.models.length === 0) { // Changed to 0 for consistency
+        showNotification('当前服务商没有可用的模型', 'warning');
         return;
     }
     
-    // 创建模型选择菜单
     const modelsMenu = document.createElement('div');
     modelsMenu.className = 'models-quick-menu';
     modelsMenu.style.position = 'absolute';
-    modelsMenu.style.bottom = '50px';
-    modelsMenu.style.left = '10px';
+    modelsMenu.style.bottom = '50px'; // Adjust if necessary based on input area height
+    modelsMenu.style.left = '10px'; // Adjust if necessary
     modelsMenu.style.backgroundColor = 'white';
     modelsMenu.style.border = '1px solid #ddd';
     modelsMenu.style.borderRadius = '8px';
     modelsMenu.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
     modelsMenu.style.padding = '8px';
-    modelsMenu.style.zIndex = '1000';
+    modelsMenu.style.zIndex = '1000'; // Ensure it's above other elements
     modelsMenu.style.maxHeight = '300px';
     modelsMenu.style.overflowY = 'auto';
-    modelsMenu.style.width = '200px';
+    modelsMenu.style.width = '220px'; // Slightly wider to accommodate gear icon
     
-    // 添加标题
-    const menuTitle = document.createElement('div');
-    menuTitle.textContent = '选择模型';
-    menuTitle.style.fontWeight = 'bold';
-    menuTitle.style.borderBottom = '1px solid #eee';
-    menuTitle.style.paddingBottom = '5px';
-    menuTitle.style.marginBottom = '5px';
-    modelsMenu.appendChild(menuTitle);
+    const menuTitleDiv = document.createElement('div');
+    menuTitleDiv.style.fontWeight = 'bold';
+    menuTitleDiv.style.borderBottom = '1px solid #eee';
+    menuTitleDiv.style.paddingBottom = '5px';
+    menuTitleDiv.style.marginBottom = '5px';
+    menuTitleDiv.style.display = 'flex'; // Use flex to align title and gear icon
+    menuTitleDiv.style.justifyContent = 'space-between';
+    menuTitleDiv.style.alignItems = 'center';
+
+    const menuTitleText = document.createElement('span');
+    menuTitleText.textContent = '选择模型';
+    menuTitleDiv.appendChild(menuTitleText);
+
+    const settingsGearBtn = document.createElement('button');
+    settingsGearBtn.innerHTML = '<i class="fas fa-cog"></i>';
+    settingsGearBtn.title = '服务商设置';
+    settingsGearBtn.style.background = 'none';
+    settingsGearBtn.style.border = 'none';
+    settingsGearBtn.style.color = '#6c757d';
+    settingsGearBtn.style.cursor = 'pointer';
+    settingsGearBtn.style.fontSize = '1em'; /* Adjust size as needed */
+    settingsGearBtn.style.padding = '3px';
+    settingsGearBtn.style.borderRadius = '4px';
+    settingsGearBtn.style.lineHeight = '1';
+    settingsGearBtn.addEventListener('mouseover', () => { settingsGearBtn.style.color = '#0d6efd'; });
+    settingsGearBtn.addEventListener('mouseout', () => { settingsGearBtn.style.color = '#6c757d'; });
+    settingsGearBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.body.removeChild(modelsMenu); // Close this menu first
+        
+        // We are using a custom event to request opening the settings modal.
+        // The erroneous placeholder line has been removed.
+        try {
+            document.dispatchEvent(new CustomEvent('openSettingsModalRequest'));
+        } catch (err) {
+            console.error("Error dispatching openSettingsModalRequest event:", err);
+            showNotification('无法打开设置，请从侧边栏操作', 'warning');
+        }
+    });
+    menuTitleDiv.appendChild(settingsGearBtn);
+    modelsMenu.appendChild(menuTitleDiv);
     
-    // 添加关闭按钮
     const closeBtn = document.createElement('button');
     closeBtn.innerHTML = '&times;';
     closeBtn.style.position = 'absolute';

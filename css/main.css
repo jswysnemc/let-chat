@@ -1002,34 +1002,43 @@ h2 { /* Removed h1 styling */
 /* Sidebar Header for Notifications and Title */
 .sidebar-header {
     display: flex;
-    justify-content: space-between; /* Pushes bell to one side, title to other if they were siblings */
+    justify-content: space-between; 
     align-items: center;
     margin-bottom: 10px;
     padding-bottom: 5px;
-    /* border-bottom: 1px solid #e0e0e0; */ /* Optional separator */
+    padding-left: 5px; /* Align h3 with logo text that has x=10 in SVG and some container padding */
+    /* No bell icon here anymore */
 }
 
+/* Notification Bell Area in the new structure */
 #notification-bell-area {
-    position: relative; /* For unread indicator positioning */
-    /* margin-right: auto; */ /* Pushes bell to the left if title is also flex item */
+    position: relative;
+    margin-right: 8px; /* Space between bell and SVG text logo */
 }
 
-#sidebar .sidebar-header h3 {
+/* Title h3 specific styles when inside .sidebar-header */
+#sidebar .sidebar-header > h3 {
     margin-top: 0;
-    margin-bottom: 0; /* Reset margin as it's now in a flex container */
+    margin-bottom: 0; 
     padding-bottom: 0;
-    flex-grow: 1; /* Allow title to take space */
-    text-align: left; /* Align title to left */
-     margin-left: 10px; /* Space between bell and title if bell is on left */
+    flex-grow: 1; 
+    text-align: left; 
+    color: #495057;
+    font-size: 1.15em; 
+    font-weight: 600;
+    padding-left: 0; /* Was 10px, remove as padding-left on .sidebar-header handles it */
+    line-height: 1.3; 
+    display: flex; 
+    align-items: center; 
 }
 
 /* Notification Bell Button */
 #notification-bell-btn {
     background: none;
     border: none;
-    color: #6c757d;
-    font-size: 1.3em; /* Larger bell */
-    padding: 8px;
+    color: #555; /* Match .logo-text-let color */
+    font-size: 1.2em; /* Slightly smaller bell if needed, or keep 1.3em */
+    padding: 6px; /* Adjust padding for tighter fit */
     border-radius: 50%;
     cursor: pointer;
     transition: background-color 0.2s, color 0.2s;
@@ -1038,8 +1047,8 @@ h2 { /* Removed h1 styling */
 }
 
 #notification-bell-btn:hover {
-    background-color: rgba(0, 0, 0, 0.08);
     color: #0d6efd;
+    background-color: rgba(0,0,0,0.05);
 }
 
 .unread-indicator {
@@ -1177,23 +1186,77 @@ h2 { /* Removed h1 styling */
 
 /* Site Logo Container */
 #site-logo-container {
-    padding: 15px 0 10px 0; /* Vertical padding, less at bottom */
-    text-align: center; /* Center the SVG */
-    border-bottom: 1px solid #e9ecef; /* Light separator line */
-    margin-bottom: 10px; /* Space below logo area */
+    padding: 10px 5px 8px 15px; /* Adjust left padding to match sidebar's overall padding */
+    text-align: left; 
+    border-bottom: 1px solid #e9ecef;
+    margin-bottom: 10px;
+    display: flex; 
+    align-items: center; 
+}
+
+#site-logo-container #notification-bell-area {
+    /* position: relative; */ /* Already set */
+    margin-right: 8px; /* Space between bell and SVG text logo */
+}
+
+/* Notification Bell Button - specific adjustments if needed when next to logo */
+#site-logo-container #notification-bell-btn {
+    font-size: 1.2em; /* Slightly smaller bell if needed, or keep 1.3em */
+    padding: 6px; /* Adjust padding for tighter fit */
+    color: #555; /* Match .logo-text-let color */
+}
+#site-logo-container #notification-bell-btn:hover {
+    color: #0d6efd;
+    background-color: rgba(0,0,0,0.05);
 }
 
 #site-logo-container svg#site-logo-svg {
-    width: 130px; /* Adjust width as needed */
-    height: auto; /* Maintain aspect ratio */
-    display: inline-block;
+    width: auto; 
+    height: 26px; 
+    display: inline-block; /* SVG is naturally inline-block like */
+    vertical-align: middle; /* Helps if other inline elements were present */
+    margin-left: 0; /* Was 5px, bell area now provides spacing */
+}
+
+/* Sidebar Header for Title and Edit button */
+.sidebar-header {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    padding-left: 5px; /* Align h3 with logo text that has x=10 in SVG and some container padding */
+    /* No bell icon here anymore */
+}
+
+#sidebar .sidebar-header > h3 {
+    margin-top: 0;
+    margin-bottom: 0; 
+    padding-bottom: 0;
+    flex-grow: 1; 
+    text-align: left; 
+    color: #495057;
+    font-size: 1.15em; 
+    font-weight: 600;
+    padding-left: 0; /* Was 10px, remove as padding-left on .sidebar-header handles it */
+    line-height: 1.3; 
+    display: flex; 
+    align-items: center; 
+}
+
+#sidebar .sidebar-header > #session-toolbar {
+    /* margin-left: auto; */ /* This can also push toolbar to right */
+    flex-shrink: 0; /* Prevent toolbar from shrinking */
 }
 
 /* Session Toolbar and Bulk Actions */
 .session-toolbar {
     display: flex;
-    justify-content: flex-end; /* Align button to the right or space-between if more buttons */
-    margin-bottom: 10px;
+    justify-content: flex-end; 
+    align-items: center; /* Vertically align edit button */
+    /* margin-bottom: 10px; */ /* Removed to place it next to header */
+    /* margin-top: -XYpx; Negative margin to pull it up if header and toolbar are separate */
+    /* For placing next to h3, structure change in HTML is better */
 }
 
 .bulk-actions-container {
@@ -1222,11 +1285,23 @@ h2 { /* Removed h1 styling */
 
 /* Compact button style for toolbar */
 .sidebar-button.compact-button {
-    padding: 6px 10px;
-    font-size: 0.85em;
+    padding: 6px 12px; /* Slightly more padding for balance */
+    font-size: 0.9em;  /* Slightly larger font for readability */
+    background-color: #ffffff; /* White background */
+    color: #333; /* Dark text */
+    border: 1px solid #ced4da; /* Light grey border, similar to inputs */
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* Subtle shadow */
+    transition: all 0.2s ease;
 }
 .sidebar-button.compact-button i {
-    margin-right: 5px;
+    margin-right: 6px; /* Slightly more space for icon */
+    color: #0d6efd; /* Icon color can be primary blue */
+}
+
+.sidebar-button.compact-button:hover {
+    background-color: #f8f9fa; /* Light grey on hover */
+    border-color: #adb5bd;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.07);
 }
 
 .sidebar-button.danger-button {

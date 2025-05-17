@@ -12,7 +12,7 @@ import { disableSendButton, enableSendButton } from './ui/buttonStates.js';
 import { clearInput } from './ui/inputArea.js';
 import { getEditModalFormElements, getEditModalValues, hideEditModal, setEditModalValues, showEditModal } from './ui/editModal.js';
 // Import settings manager
-import { initializeSettingsManager, getTavilyApiKey } from './ui/settingsManager.js';
+import { initializeSettingsManager, getTavilyApiKey, showSettingsModal } from './ui/settingsManager.js';
 // Import other modules
 import { getElement } from './ui/domElements.js'; // Import getElement
 import { aiResponseArea } from './ui/domElements.js'; // Import the chat area element
@@ -551,6 +551,12 @@ function main() {
     initializeWebSearchToggle(); // 初始化联网搜索按钮功能
     initializeNotificationCenter(); // 新增：初始化通知中心
     initializeBulkSessionManagement(); // 新增：初始化会话批量管理功能
+    
+    // Listen for request to open settings modal (e.g., from model quick switch menu)
+    document.addEventListener('openSettingsModalRequest', () => {
+        console.log("[Main] Received request to open settings modal.");
+        showSettingsModal(); // Call the imported function
+    });
     
     // 监听API配置更改事件
     document.addEventListener('apiConfigChanged', (event) => {

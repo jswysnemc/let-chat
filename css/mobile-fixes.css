@@ -252,6 +252,71 @@
     #main-content {
         padding-bottom: env(safe-area-inset-bottom, 0) !important;
     }
+    
+    #sidebar-toggle-btn {
+        position: fixed;
+        top: 15px; /* 稍微调整与顶部的距离 */
+        left: 15px;  /* 稍微调整与左侧的距离 */
+        z-index: 1001;
+        
+        background-color: rgba(255, 255, 255, 0.75); /* 更透明的白色背景 */
+        border: 1px solid rgba(0, 0, 0, 0.08);    /* 非常浅的边框 */
+        border-radius: 50%;
+        width: 38px;  /* 略微减小尺寸 */
+        height: 38px; /* 略微减小尺寸 */
+        padding: 0;
+        
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* 更轻微的阴影 */
+        cursor: pointer;
+        transition: background-color 0.2s, color 0.2s, opacity 0.3s, box-shadow 0.2s;
+        opacity: 0.7; /* 默认设为部分透明 */
+    }
+    
+    #sidebar-toggle-btn i.fa-bars {
+        color: #555;  /* 深灰色图标，比纯黑柔和 */
+        font-size: 16px; /* 略微减小图标大小 */
+    }
+    
+    #sidebar-toggle-btn:hover {
+        background-color: rgba(255, 255, 255, 0.95);
+        opacity: 1;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    }
+    
+    #sidebar-toggle-btn:active {
+        background-color: rgba(240, 240, 240, 0.95);
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    /* 当聊天区域滚动时，让按钮更透明 (需要JS配合添加/移除 .scrolled 类到 body 或 #main-content) */
+    body.scrolled #sidebar-toggle-btn { 
+        opacity: 0.4;
+    }
+    body.scrolled #sidebar-toggle-btn:hover {
+        opacity: 1; 
+    }
+    
+    /* 确保内联的 display: none !important; 在PC端依然生效 */
+    /* 如果之前PC端是通过 #main-content .sidebar-toggle-button { display: none !important; } 控制的，那没问题 */
+    /* 如果是直接在HTML上写的，需要注意这里的规则是否会覆盖它。 */
+    /* 为了确保移动端显示，PC端隐藏，通常用媒体查询控制 display 属性 */
+    
+    /* Default state for PC (if main.css doesn't already hide it effectively) */
+    /* Consider moving the PC-hide rule from main.css to here if it makes sense */
+    /* @media (min-width: 769px) {
+        #sidebar-toggle-btn {
+            display: none !important;
+        }
+    } */
+    
+    /* Ensure it is shown on mobile (overriding any general .sidebar-button display:none from main.css perhaps) */
+    #sidebar-toggle-btn {
+        display: flex !important; /* 确保在移动端是 flex 以便居中图标 */
+    }
 }
 
 /* 小屏幕手机适配 */

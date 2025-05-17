@@ -21,8 +21,15 @@
 <div class="app-container">
     <aside id="sidebar">
         <div id="site-logo-container">
+            <div id="notification-bell-area">
+                <button type="button" id="notification-bell-btn" class="sidebar-button notification-button" title="通知">
+                    <i class="fas fa-bell"></i>
+                    <span id="notification-unread-indicator" class="unread-indicator" style="display:none;"></span>
+                </button>
+            </div>
             <svg id="site-logo-svg" viewBox="0 0 180 40" xmlns="http://www.w3.org/2000/svg">
               <style>
+                /* .logo-icon-group styles can be removed if icon is gone */
                 .logo-text-let {
                   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
                   font-size: 24px;
@@ -36,18 +43,10 @@
                   fill: #0d6efd;
                 }
               </style>
+              {/* Icon group removed */}
               <text x="10" y="28" class="logo-text-let">let</text>
               <text x="50" y="29" class="logo-text-caht">caht</text>
             </svg>
-        </div>
-        <div class="sidebar-header">
-            <div id="notification-bell-area">
-                <button type="button" id="notification-bell-btn" class="sidebar-button notification-button" title="通知">
-                    <i class="fas fa-bell"></i>
-                    <span id="notification-unread-indicator" class="unread-indicator" style="display:none;"></span>
-                </button>
-            </div>
-            <h3>会话列表</h3>
         </div>
         <div id="notification-panel" class="notification-panel" style="display:none;">
             <div class="notification-panel-header">
@@ -55,18 +54,19 @@
                 <button type="button" id="close-notification-panel-btn" title="关闭通知">&times;</button>
             </div>
             <ul id="notification-list">
-                <!-- Notifications will be populated by JS -->
                 <li class="no-notifications">暂无新通知</li>
             </ul>
         </div>
-
-        <div id="session-toolbar" class="session-toolbar">
-            <button type="button" id="bulk-edit-sessions-btn" class="sidebar-button compact-button" title="批量管理">
-                <i class="fas fa-check-double"></i> 编辑
-            </button>
-            <!-- 批量操作按钮将在这里动态显示 -->
+        <div class="sidebar-header">
+            <h3>会话列表</h3>
+            <div id="session-toolbar" class="session-toolbar">
+                <button type="button" id="bulk-edit-sessions-btn" class="sidebar-button compact-button" title="批量管理">
+                    <i class="fas fa-check-double"></i> 编辑
+                </button>
+            </div>
         </div>
 
+        <!-- This bulk-actions-container is for when bulk edit mode is active -->
         <div id="bulk-actions-container" class="bulk-actions-container" style="display:none;">
             <label class="bulk-select-all-label">
                 <input type="checkbox" id="select-all-sessions-checkbox">
