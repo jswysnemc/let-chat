@@ -428,11 +428,20 @@ function handleSendTrigger() {
 }
 
 function handleKeyDown(event) {
-    if (event.key === 'Enter' && event.shiftKey) {
-        event.preventDefault(); // Prevent default newline
-        // Check if send button is enabled before triggering send
-        if (sendButtonElement && !sendButtonElement.disabled) {
-            handleSendTrigger();
+    if (event.key === 'Enter') {
+        if (event.shiftKey) {
+            // Shift + Enter: 插入换行符 (contenteditable div 的默认行为)
+            // 我们不需要 event.preventDefault()，允许默认的换行行为
+            // 但如果需要更精确的控制，比如确保在光标处插入换行，可以如下操作：
+            // document.execCommand('insertHTML', false, '<br><br>'); // 插入一个可见的换行，或者 <br> 取决于需要
+            // event.preventDefault();
+            return; // 允许默认的换行
+        } else {
+            // Enter: 发送消息
+            event.preventDefault(); // 阻止默认的 Enter 行为（可能是在某些浏览器中换行）
+            if (sendButtonElement && !sendButtonElement.disabled) {
+                handleSendTrigger();
+            }
         }
     }
 }
