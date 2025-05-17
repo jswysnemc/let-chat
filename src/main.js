@@ -128,6 +128,20 @@ function enhanceStreamMarkdownRendering(content) {
  */
 async function handleSend(contentParts) {
     console.log("[Main] handleSend called with contentParts:", JSON.stringify(contentParts)); // Log entry and content
+    
+    // 检查内容类型
+    const textParts = contentParts.filter(p => p.type === 'text');
+    const imageParts = contentParts.filter(p => p.type === 'image_url');
+    console.log(`[Main] 发送内容: ${textParts.length}个文本, ${imageParts.length}个图片`);
+    
+    if (textParts.length > 0) {
+        console.log(`[Main] 文本内容: "${textParts[0].text.substring(0, 50)}${textParts[0].text.length > 50 ? '...' : ''}"`);
+    }
+    
+    if (imageParts.length > 0) {
+        console.log(`[Main] 包含${imageParts.length}张图片`);
+    }
+    
     const activeId = state.getActiveSessionId();
     if (!activeId) {
         console.error("[Main] Cannot send message, no active session ID.");

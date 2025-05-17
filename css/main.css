@@ -948,10 +948,25 @@ h2 { /* Removed h1 styling */
     z-index: 10;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     transition: background-color 0.2s;
+    opacity: 1 !important; /* 强制显示 */
+    visibility: visible !important; /* 强制显示 */
 }
 
 .delete-image-btn:hover {
     background-color: rgba(255, 0, 0, 0.9);
+}
+
+/* 预览区域图片项样式 */
+.image-preview-item {
+    position: relative;
+    display: inline-block;
+    margin: 5px;
+}
+
+/* 确保删除按钮在预览区域也可见 */
+.image-preview-item .delete-image-btn {
+    opacity: 1;
+    visibility: visible;
 }
 
 /* 确保用户气泡中图片正确显示 */

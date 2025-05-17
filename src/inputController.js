@@ -25,8 +25,67 @@ function extractContentFromInput(element) {
     console.log("[extractContent] 开始提取内容，元素：", element);
     
     const parts = [];
+    let hasText = false;
     
-    // 处理图片元素（直接查找所有图片，不依赖于childNodes遍历）
+    // 首先收集所有文本，跳过删除按钮
+    let textContent = '';
+    
+    // 函数用于递归提取文本，同时排除删除按钮和图片包装器的文本
+    function extractTextFromNode(node) {
+        if (!node) return;
+        
+        // 跳过删除按钮
+        if (node.nodeType === Node.ELEMENT_NODE && 
+            (node.classList.contains('delete-image-btn') || 
+             node.closest('.delete-image-btn'))) {
+            console.log("[extractContent] 跳过删除按钮元素");
+            return;
+        }
+        
+        // 跳过图片和图片包装器
+        if (node.nodeType === Node.ELEMENT_NODE && 
+            (node.tagName === 'IMG' || 
+             node.classList.contains('input-image-wrapper'))) {
+            console.log("[extractContent] 跳过图片或图片包装器元素");
+            return;
+        }
+        
+        // 处理文本节点
+        if (node.nodeType === Node.TEXT_NODE) {
+            if (node.textContent.trim()) {
+                textContent += node.textContent;
+            }
+            return;
+        }
+        
+        // 处理换行元素
+        if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'BR') {
+            textContent += '\n';
+            return;
+        }
+        
+        // 对于其他元素，处理其子节点
+        if (node.childNodes && node.childNodes.length > 0) {
+            node.childNodes.forEach(childNode => {
+                extractTextFromNode(childNode);
+            });
+        }
+    }
+    
+    // 提取整个元素的文本内容
+    extractTextFromNode(element);
+    
+    // 清理文本（去除多余换行和空格）
+    textContent = textContent.replace(/\n{3,}/g, '\n\n').trim();
+    
+    // 如果有有效文本，添加为第一个部分
+    if (textContent) {
+        parts.push({ type: 'text', text: textContent });
+        hasText = true;
+        console.log("[extractContent] 提取到文本内容:", textContent);
+    }
+    
+    // 然后处理图片元素
     const images = element.querySelectorAll('img');
     if (images.length > 0) {
         console.log("[extractContent] 找到图片元素数量：", images.length);
@@ -48,59 +107,7 @@ function extractContentFromInput(element) {
         });
     }
     
-    // 处理文本内容
-    let textContent = '';
-    
-    // 函数用于递归提取文本，同时排除删除按钮的文本
-    function extractTextFromNode(node) {
-        if (!node) return;
-        
-        // 跳过删除按钮
-        if (node.nodeType === Node.ELEMENT_NODE && 
-            (node.classList.contains('delete-image-btn') || 
-             node.closest('.delete-image-btn'))) {
-            console.log("[extractContent] 跳过删除按钮元素");
-            return;
-        }
-        
-        // 处理文本节点
-        if (node.nodeType === Node.TEXT_NODE) {
-            if (node.textContent.trim()) {
-                textContent += node.textContent;
-            }
-            return;
-        }
-        
-        // 如果是图片或其包装器，跳过（已单独处理）
-        if (node.nodeType === Node.ELEMENT_NODE && 
-            (node.tagName === 'IMG' || 
-             node.classList.contains('input-image-wrapper'))) {
-            return;
-        }
-        
-        // 对于其他元素，处理其子节点
-        if (node.childNodes && node.childNodes.length > 0) {
-            node.childNodes.forEach(childNode => {
-                extractTextFromNode(childNode);
-            });
-        } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'BR') {
-            // 处理换行
-            textContent += '\n';
-        }
-    }
-    
-    // 对整个元素进行文本提取
-    extractTextFromNode(element);
-    
-    // 清理文本（去除多余换行和空格）
-    textContent = textContent.replace(/\n{3,}/g, '\n\n').trim();
-    
-    // 只在有非空文本时添加文本部分
-    if (textContent) {
-        parts.push({ type: 'text', text: textContent });
-    }
-    
-    console.log("[extractContent] 提取完成，内容部分：", parts);
+    console.log("[extractContent] 提取完成，内容部分：", hasText ? '有文本' : '无文本', images.length > 0 ? '有图片' : '无图片');
     return parts;
 }
 
@@ -432,34 +439,62 @@ function handleKeyDown(event) {
 
 // --- Delete Image Handler ---
 function handleDeleteImage(event) {
-    if (!event.target.classList.contains('delete-image-btn')) {
-        return; // Click was not on a delete button
+    console.log("[InputController] handleDeleteImage called", event);
+    
+    // 获取按钮元素
+    let button;
+    if (event.target) {
+        // 如果是事件触发，从事件目标获取按钮
+        if (event.target.classList.contains('delete-image-btn')) {
+            button = event.target;
+        } else {
+            console.warn("[InputController] handleDeleteImage: event target is not a delete button");
+            return;
+        }
+    } else if (event.currentTarget && event.currentTarget.classList.contains('delete-image-btn')) {
+        // 如果通过addEventListener传递的事件
+        button = event.currentTarget;
+    } else {
+        console.error("[InputController] handleDeleteImage: No valid button found");
+        return;
     }
-
-    const button = event.target;
+    
+    // 获取图片ID
     const imageId = button.getAttribute('data-target-id');
-    if (!imageId) return;
+    if (!imageId) {
+        console.error("[InputController] handleDeleteImage: No image ID found");
+        return;
+    }
+    
+    console.log("[InputController] 删除图片：", imageId);
 
     // 防止事件冒泡，避免触发其他点击事件
-    event.preventDefault();
-    event.stopPropagation();
+    if (event.preventDefault) event.preventDefault();
+    if (event.stopPropagation) event.stopPropagation();
 
     // Remove from preview area
     const previewItem = imagePreviewAreaElement?.querySelector(`.image-preview-item[data-image-id="${imageId}"]`);
     if (previewItem) {
+        console.log("[InputController] 从预览区域移除图片");
         previewItem.remove();
+    } else {
+        console.warn("[InputController] 预览区域未找到图片项：", imageId);
     }
 
     // Remove from input area - 同时支持直接图片和带包装器的图片
     // 先查找新的包装器结构
     const inputWrapper = chatInputElement?.querySelector(`.input-image-wrapper[data-image-id="${imageId}"]`);
     if (inputWrapper) {
+        console.log("[InputController] 从输入区域移除图片包装器");
         inputWrapper.remove();
     } else {
         // 向后兼容：查找直接的图片元素
         const inputImage = chatInputElement?.querySelector(`img[data-image-id="${imageId}"]`);
         if (inputImage) {
+            console.log("[InputController] 从输入区域移除直接图片");
             inputImage.remove();
+        } else {
+            console.warn("[InputController] 输入区域未找到图片：", imageId);
         }
     }
 

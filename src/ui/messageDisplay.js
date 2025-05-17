@@ -74,6 +74,8 @@ export function displayUserMessage(contentParts, messageIndex) {
         console.warn("[UI] displayUserMessage: aiResponseArea 元素引用为 null。");
         return;
     }
+    
+    console.log("[UI] displayUserMessage: 显示用户消息，内容部分:", contentParts);
     updateAiResponsePlaceholderVisually(); // 确保在添加消息前处理占位符
 
     const bubbleDiv = document.createElement('div');
@@ -83,27 +85,26 @@ export function displayUserMessage(contentParts, messageIndex) {
     // 提取纯文本内容用于复制/编辑
     const textContent = contentParts.filter(p => p.type === 'text').map(p => p.text).join('');
     bubbleDiv.dataset.rawContent = textContent; // 存储原始文本内容
+    
+    // 检查内容类型
+    const hasText = contentParts.some(part => part.type === 'text' && part.text.trim());
+    const hasImages = contentParts.some(part => part.type === 'image_url');
+    console.log("[UI] 消息内容:", hasText ? "有文本" : "无文本", hasImages ? "有图片" : "无图片");
 
-    // const headerDiv = document.createElement('div'); // REMOVED: Header no longer used
-    // headerDiv.className = 'message-header';
-    // const prefix = document.createElement('strong'); // REMOVED: Prefix no longer used
-    // prefix.textContent = 'You: ';
-    // headerDiv.appendChild(prefix);
-    // bubbleDiv.appendChild(headerDiv); // REMOVED: Header no longer added
-
-    // 创建内容包装器 (Content wrapper remains)
+    // 创建内容包装器
     const contentWrapper = document.createElement('div');
-    contentWrapper.className = 'user-message-content'; // 更改为与CSS选择器匹配的类名
+    contentWrapper.className = 'user-message-content'; // 确保与CSS选择器匹配
     bubbleDiv.appendChild(contentWrapper);
 
     // 将内容部分添加到包装器
     contentParts.forEach(part => {
-        if (part.type === 'text') {
+        if (part.type === 'text' && part.text.trim()) {
             // 为文本创建 span 以允许 white-space: pre-wrap
             const textSpan = document.createElement('span');
             textSpan.textContent = part.text; // 直接设置文本内容
             textSpan.style.whiteSpace = 'pre-wrap'; // 确保保留换行符
             contentWrapper.appendChild(textSpan);
+            console.log("[UI] 添加文本内容:", part.text.substring(0, 50) + (part.text.length > 50 ? "..." : ""));
         } else if (part.type === 'image_url' && part.image_url?.url) {
             // 如果是图片 URL，创建 img 元素
             const img = document.createElement('img');
@@ -111,6 +112,7 @@ export function displayUserMessage(contentParts, messageIndex) {
             img.alt = '用户发送的图片'; // 图片替代文本
             img.classList.add('message-image'); // 添加样式类
             contentWrapper.appendChild(img);
+            console.log("[UI] 添加图片内容");
         }
     });
 
