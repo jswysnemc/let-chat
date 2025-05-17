@@ -789,4 +789,81 @@
 
 #web-search-btn.active:hover {
     background-color: rgba(13, 110, 253, 0.2); /* 鼠标悬停时稍微加深背景 */
+}
+
+/* Expand Input Button */
+#expand-input-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 3; /* Above chat-input but below input-buttons-container if it overlaps */
+    background-color: transparent;
+    border: none;
+    color: #888;
+    font-size: 14px; /* Adjust icon size */
+    padding: 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: color 0.2s, background-color 0.2s;
+}
+
+#expand-input-btn:hover {
+    color: #333;
+    background-color: #f0f0f0;
+}
+
+/* Styles for expanded input mode */
+#chat-input-container.expanded-input-mode {
+    position: fixed; /* Take over screen */
+    top: 0;
+    left: 0;
+    width: 100vw; /* Full viewport width */
+    height: 100vh; /* Full viewport height */
+    background-color: rgba(255, 255, 255, 0.98); /* Slightly opaque background */
+    z-index: 2000; /* High z-index to be on top */
+    border-radius: 0; /* Remove border-radius when expanded */
+    border: none; /* Remove border when expanded */
+    padding: 20px; /* Add some padding */
+    display: flex;
+    flex-direction: column;
+}
+
+#chat-input-container.expanded-input-mode #chat-input {
+    flex-grow: 1; /* Input takes most of the space */
+    max-height: none; /* Allow it to grow beyond normal max-height */
+    font-size: 18px; /* Larger font in expanded mode */
+    padding-bottom: 60px; /* Still leave space for buttons if they are moved inside */
+    border: 1px solid #ccc; /* Add a border back for clarity in expanded mode */
+    border-radius: 8px;
+}
+
+#chat-input-container.expanded-input-mode #input-image-preview {
+    max-height: 150px; /* Limit preview height in expanded mode */
+    overflow-y: auto;
+    background-color: #f9f9f9;
+    border-top: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Adjust expand button icon when expanded */
+#chat-input-container.expanded-input-mode #expand-input-btn i {
+    transform: rotate(180deg); /* Simple visual cue, or switch to fa-compress-alt */
+    /* Consider using class toggle for icon change: .fa-expand-alt vs .fa-compress-alt */
+}
+
+/* Ensure buttons container is also visible and perhaps styled differently in expanded mode */
+#chat-input-container.expanded-input-mode .input-buttons-container {
+    position: static; /* Or adjust to be at the bottom of the expanded view */
+    border-top: 1px solid #ddd;
+    background-color: #f9f9f9;
+    padding: 10px;
+    /* Ensure its children (buttons) are visible and usable */
+}
+
+/* Hide other parts of the app when input is expanded */
+body.input-expanded-mode #sidebar,
+body.input-expanded-mode #main-content > #chat-container > #ai-response { /* Hide chat bubbles */
+    /* display: none; */ /* Or visibility: hidden; */
+    /* This needs careful handling to not break layout completely or JS refs */
+    /* A simpler approach is to rely on the z-index of the expanded input container */
 } 

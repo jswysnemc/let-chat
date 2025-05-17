@@ -9,7 +9,7 @@ import { updateChatTitle, renderSessionList } from './ui/sidebar.js'; // Removed
 import { clearChatArea, displayUserMessage, displayAssistantMessage, displayError, createAssistantMessageBubble, updateAssistantMessageContent, finalizeAssistantMessage } from './ui/messageDisplay.js'; // Added clearChatArea here
 import { scrollChatToBottom } from './ui/chatScroll.js';
 import { disableSendButton, enableSendButton } from './ui/buttonStates.js';
-import { clearInput } from './ui/inputArea.js';
+import { clearInput, initializeInputExpansion } from './ui/inputArea.js';
 import { getEditModalFormElements, getEditModalValues, hideEditModal, setEditModalValues, showEditModal } from './ui/editModal.js';
 // Import settings manager
 import { initializeSettingsManager, getTavilyApiKey, showSettingsModal } from './ui/settingsManager.js';
@@ -551,6 +551,7 @@ function main() {
     initializeWebSearchToggle(); // 初始化联网搜索按钮功能
     initializeNotificationCenter(); // 新增：初始化通知中心
     initializeBulkSessionManagement(); // 新增：初始化会话批量管理功能
+    initializeInputExpansion(); // 新增：初始化输入框展开功能
     
     // Listen for request to open settings modal (e.g., from model quick switch menu)
     document.addEventListener('openSettingsModalRequest', () => {
