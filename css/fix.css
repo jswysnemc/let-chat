@@ -764,4 +764,11 @@
         min-height: -webkit-fill-available;
         padding-bottom: env(safe-area-inset-bottom) !important;
     }
+}
+
+/* Tavily API设置组样式 */
+.tavily-group {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #e9ecef;
 } 

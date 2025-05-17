@@ -1,0 +1,9 @@
+{
+  "name": "tavily-api-tests",
+  "version": "1.0.0",
+  "description": "Tavily API 测试",
+  "type": "module",
+  "scripts": {
+    "test": "node runTest.js"
+  }
+} 

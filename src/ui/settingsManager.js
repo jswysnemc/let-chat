@@ -7,6 +7,7 @@ let serviceProviderList = null;
 let providerNameInput = null;
 let providerBaseurlInput = null;
 let providerKeyInput = null;
+let tavilyApiKeyInput = null;
 let modelsContainer = null;
 let systemPromptTextarea = null;
 let saveSettingsBtn = null;
@@ -19,6 +20,7 @@ let providers = [];
 let activeProviderId = '';
 let currentEditingProvider = null;
 let isNewProvider = false;
+let tavilyApiKey = '';
 
 /**
  * 初始化设置管理器
@@ -30,6 +32,7 @@ export function initializeSettingsManager() {
     providerNameInput = document.getElementById('provider-name');
     providerBaseurlInput = document.getElementById('provider-baseurl');
     providerKeyInput = document.getElementById('provider-key');
+    tavilyApiKeyInput = document.getElementById('tavily-api-key');
     modelsContainer = document.getElementById('models-container');
     systemPromptTextarea = document.getElementById('system-prompt');
     saveSettingsBtn = document.getElementById('save-settings-btn');
@@ -39,7 +42,7 @@ export function initializeSettingsManager() {
     
     // 检查元素是否存在
     if (!settingsModalOverlay || !serviceProviderList || !providerNameInput || 
-        !providerBaseurlInput || !providerKeyInput || !modelsContainer || 
+        !providerBaseurlInput || !providerKeyInput || !tavilyApiKeyInput || !modelsContainer || 
         !systemPromptTextarea || !saveSettingsBtn || !addProviderBtn || 
         !addModelBtn || !cancelBtn) {
         console.error('设置管理器初始化失败：部分DOM元素未找到');
@@ -63,6 +66,14 @@ function loadInitialData() {
     const result = loadProviders();
     providers = result.providers;
     activeProviderId = result.activeProviderId;
+    
+    // 从当前活动服务商中加载Tavily API密钥
+    if (activeProviderId) {
+        const activeProvider = providers.find(p => p.id === activeProviderId);
+        if (activeProvider) {
+            tavilyApiKey = activeProvider.tavily_api_key || '';
+        }
+    }
     
     refreshProviderList();
 }
@@ -211,6 +222,7 @@ function loadProviderDetails(providerId) {
     providerNameInput.value = currentEditingProvider.name || '';
     providerBaseurlInput.value = currentEditingProvider.baseurl || '';
     providerKeyInput.value = currentEditingProvider.key || '';
+    tavilyApiKeyInput.value = currentEditingProvider.tavily_api_key || '';
     systemPromptTextarea.value = currentEditingProvider.system_prompt || '';
     
     // 刷新模型列表
@@ -615,6 +627,7 @@ function createNewProvider() {
         name: '',
         baseurl: '',
         key: '',
+        tavily_api_key: '',
         system_prompt: getApiConfig().system_prompt || '',
         models: []
     };
@@ -676,6 +689,7 @@ function clearProviderForm() {
     providerNameInput.value = '';
     providerBaseurlInput.value = '';
     providerKeyInput.value = '';
+    tavilyApiKeyInput.value = '';
     systemPromptTextarea.value = getApiConfig().system_prompt || '';
     modelsContainer.innerHTML = '';
 }
@@ -733,6 +747,12 @@ function validateForm() {
         return false;
     }
     
+    if (!tavilyApiKeyInput.value.trim()) {
+        showWarning('请输入Tavily API密钥');
+        tavilyApiKeyInput.focus();
+        return false;
+    }
+    
     // 检查是否有模型
     if (!currentEditingProvider || !currentEditingProvider.models || currentEditingProvider.models.length === 0) {
         showWarning('请至少添加一个模型');
@@ -757,5 +777,21 @@ function updateCurrentProvider() {
     currentEditingProvider.name = providerNameInput.value.trim();
     currentEditingProvider.baseurl = providerBaseurlInput.value.trim();
     currentEditingProvider.key = providerKeyInput.value.trim();
+    currentEditingProvider.tavily_api_key = tavilyApiKeyInput.value.trim();
     currentEditingProvider.system_prompt = systemPromptTextarea.value.trim();
+}
+
+/**
+ * 获取当前活动服务商的Tavily API密钥
+ * @returns {string} Tavily API密钥
+ */
+export function getTavilyApiKey() {
+    // 从当前活动服务商中获取
+    if (activeProviderId) {
+        const activeProvider = providers.find(p => p.id === activeProviderId);
+        if (activeProvider && activeProvider.tavily_api_key) {
+            return activeProvider.tavily_api_key;
+        }
+    }
+    return '';
 } 
