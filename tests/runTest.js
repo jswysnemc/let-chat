@@ -4,6 +4,13 @@
  */
 
 // 由于测试文件使用ES模块，我们需要一个额外的导入层
-import('./tavilyApiTest.js').catch(error => {
-  console.error('测试运行失败:', error);
-}); 
+// import('./tavilyApiTest.js').catch(error => {
+//   console.error('测试运行失败:', error);
+// }); 
+
+
+
+
+import { functions_desc } from '../src/tools/functions_desc.js';
+
+console.log(functions_desc());
