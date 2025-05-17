@@ -1,4 +1,4 @@
-import { loadProviders, saveProviders, setActiveProvider, getApiConfig, refreshApiConfig } from '../config.js';
+import { loadProviders, saveProviders, setActiveProvider, getApiConfig, refreshApiConfig, getGlobalTavilyApiKey, saveGlobalTavilyApiKey } from '../config.js';
 import { showSuccess, showError, showWarning, showConfirm } from './notification.js';
 
 // DOM 元素引用
@@ -20,7 +20,82 @@ let providers = [];
 let activeProviderId = '';
 let currentEditingProvider = null;
 let isNewProvider = false;
-let tavilyApiKey = '';
+
+/**
+ * 初始化密码可见性切换功能
+ */
+function initializePasswordVisibilityToggle() {
+    const toggleIcons = document.querySelectorAll('.toggle-password-visibility');
+    let visibilityTimers = {}; // 用于存储每个密码框的计时器ID
+
+    toggleIcons.forEach(icon => {
+        if (icon.dataset.listenerAttached === 'true') {
+            const targetInputId = icon.dataset.target;
+            const targetInput = document.getElementById(targetInputId);
+            if (targetInput) {
+                if (targetInput.type === "password") {
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                    icon.title = "显示密码";
+                } else {
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                    icon.title = "隐藏密码";
+                }
+            }
+            return;
+        }
+        icon.dataset.listenerAttached = 'true';
+
+        icon.addEventListener('click', function () {
+            const targetInputId = this.dataset.target;
+            const targetInput = document.getElementById(targetInputId);
+
+            if (targetInput) {
+                // 清除可能存在的旧计时器
+                if (visibilityTimers[targetInputId]) {
+                    clearTimeout(visibilityTimers[targetInputId]);
+                    delete visibilityTimers[targetInputId];
+                }
+
+                if (targetInput.type === "password") {
+                    targetInput.type = "text";
+                    this.classList.remove('fa-eye');
+                    this.classList.add('fa-eye-slash');
+                    this.title = "隐藏密码";
+
+                    // 启动1秒后自动隐藏的计时器
+                    visibilityTimers[targetInputId] = setTimeout(() => {
+                        if (targetInput.type === "text") { // 再次检查，以防用户手动改回
+                            targetInput.type = "password";
+                            this.classList.remove('fa-eye-slash');
+                            this.classList.add('fa-eye');
+                            this.title = "显示密码";
+                        }
+                        delete visibilityTimers[targetInputId];
+                    }, 1000); // 1000毫秒 = 1秒
+
+                } else {
+                    targetInput.type = "password";
+                    this.classList.remove('fa-eye-slash');
+                    this.classList.add('fa-eye');
+                    this.title = "显示密码";
+                    // 如果是从text切回password，也清除计时器（虽然上面已经清了，双重保险）
+                    if (visibilityTimers[targetInputId]) {
+                        clearTimeout(visibilityTimers[targetInputId]);
+                        delete visibilityTimers[targetInputId];
+                    }
+                }
+            }
+        });
+        const initialTargetInput = document.getElementById(icon.dataset.target);
+        if (initialTargetInput && initialTargetInput.type === "password") {
+             icon.title = "显示密码";
+        } else if (initialTargetInput) {
+             icon.title = "隐藏密码";
+        }
+    });
+}
 
 /**
  * 初始化设置管理器
@@ -67,13 +142,8 @@ function loadInitialData() {
     providers = result.providers;
     activeProviderId = result.activeProviderId;
     
-    // 从当前活动服务商中加载Tavily API密钥
-    if (activeProviderId) {
-        const activeProvider = providers.find(p => p.id === activeProviderId);
-        if (activeProvider) {
-            tavilyApiKey = activeProvider.tavily_api_key || '';
-        }
-    }
+    // 加载并显示全局Tavily API Key
+    tavilyApiKeyInput.value = getGlobalTavilyApiKey(); 
     
     refreshProviderList();
 }
@@ -105,18 +175,35 @@ function addEventListeners() {
  * 显示设置模态框
  */
 export function showSettingsModal() {
-    loadInitialData(); // 刷新数据
+    loadInitialData(); // 刷新数据，包括加载全局 Tavily Key 到输入框
     settingsModalOverlay.classList.add('visible');
+    initializePasswordVisibilityToggle(); 
 }
 
 /**
  * 隐藏设置模态框
  */
 export function hideSettingsModal() {
+    if (isNewProvider && currentEditingProvider) {
+        // 如果是新服务商且未保存（比如用户直接点取消），则从列表移除
+        // 一个简单的判断：如果名称还是初始的"（新服务商）"，则认为是未完成的
+        if (currentEditingProvider.name === '（新服务商）' && !providerNameInput.value.trim()) {
+             const index = providers.findIndex(p => p.id === currentEditingProvider.id);
+             if (index !== -1) {
+                 providers.splice(index, 1);
+                 console.log("移除未保存的新服务商:", currentEditingProvider.id);
+                 // 如果移除的是当前唯一的activeProviderId，需要重置activeProviderId
+                 if (activeProviderId === currentEditingProvider.id) {
+                    activeProviderId = providers.length > 0 ? providers[0].id : '';
+                 }
+                 refreshProviderList(); // 刷新列表
+             }
+        }
+    }
+    isNewProvider = false; // 重置标志
     settingsModalOverlay.classList.remove('visible');
-    clearProviderForm(); // 清空表单
-    
-    // 强制刷新API配置，确保使用最新激活的服务商设置
+    // clearProviderForm(); // 清空表单 - 在下次打开时会由 loadProviderDetails 填充
+
     refreshApiConfig();
     console.log('关闭设置模态框，已刷新API配置');
 }
@@ -222,7 +309,6 @@ function loadProviderDetails(providerId) {
     providerNameInput.value = currentEditingProvider.name || '';
     providerBaseurlInput.value = currentEditingProvider.baseurl || '';
     providerKeyInput.value = currentEditingProvider.key || '';
-    tavilyApiKeyInput.value = currentEditingProvider.tavily_api_key || '';
     systemPromptTextarea.value = currentEditingProvider.system_prompt || '';
     
     // 刷新模型列表
@@ -621,27 +707,25 @@ function addModel(initialName = '') {
  * 创建新的服务商
  */
 function createNewProvider() {
-    // 创建新的服务商对象
+    const newProviderId = 'provider_' + Date.now();
     currentEditingProvider = {
-        id: 'provider_' + Date.now(),
-        name: '',
+        id: newProviderId,
+        name: '（新服务商）',
         baseurl: '',
         key: '',
-        tavily_api_key: '',
         system_prompt: getApiConfig().system_prompt || '',
         models: []
     };
-    
+
     isNewProvider = true;
-    
-    // 清空表单
-    clearProviderForm();
-    
-    // 自动添加一个模型
-    addModel('默认模型');
-    
-    // 确保表单区域可见
-    document.querySelector('.provider-details-container').style.display = 'block';
+    providers.push(currentEditingProvider);
+    activeProviderId = newProviderId;
+    refreshProviderList(); 
+    clearProviderForm(true);
+    providerNameInput.value = currentEditingProvider.name; 
+    providerNameInput.focus();
+    providerNameInput.select();
+    console.log("创建新服务商，已添加到列表:", currentEditingProvider);
 }
 
 /**
@@ -684,51 +768,65 @@ async function deleteProvider(providerId) {
 
 /**
  * 清空服务商表单
+ * @param {boolean} forNewProvider - 是否为新服务商清空
  */
-function clearProviderForm() {
-    providerNameInput.value = '';
+function clearProviderForm(forNewProvider = false) {
+    providerNameInput.value = forNewProvider ? providerNameInput.value : '';
     providerBaseurlInput.value = '';
     providerKeyInput.value = '';
-    tavilyApiKeyInput.value = '';
     systemPromptTextarea.value = getApiConfig().system_prompt || '';
-    modelsContainer.innerHTML = '';
+    modelsContainer.innerHTML = ''; 
+    if (currentEditingProvider && !forNewProvider) { 
+        currentEditingProvider.models = [];
+    }
 }
 
 /**
  * 保存设置
  */
 function saveSettings() {
-    // 验证表单
-    if (!validateForm()) return;
-    
-    // 更新当前编辑的服务商
-    updateCurrentProvider();
-    
-    // 如果是新服务商，添加到列表
-    if (isNewProvider) {
-        providers.push(currentEditingProvider);
-        activeProviderId = currentEditingProvider.id;
+    if (!currentEditingProvider && !isNewProvider) { // currentEditingProvider 可能在新服务商流程中被设置
+        // 如果没有当前编辑的服务商，并且也不是正在创建新服务商后首次保存的流程
+        // (额外判断isNewProvider是为了确保新服务商的保存流程能继续)
+        // 实际上，除非用户在没有选择任何服务商的情况下（例如列表为空时）能触发保存，否则此情况较少。
+        // 但作为防御性编程，如果 settings 表单是可见的，至少全局 Tavily key 应该可以保存。
+        const globalTavilyToSave = tavilyApiKeyInput.value.trim();
+        if (!globalTavilyToSave) {
+            showWarning('请输入Tavily API密钥');
+            tavilyApiKeyInput.focus();
+            return;
+        }
+        saveGlobalTavilyApiKey(globalTavilyToSave);
+        hideSettingsModal();
+        showSuccess('全局 Tavily API 密钥已保存');
+        return;
     }
+
+    // 如果是服务商相关的保存：
+    const currentModelsInForm = currentEditingProvider ? (currentEditingProvider.models || []) : [];
+    if (!validateForm(currentModelsInForm)) return; // validateForm 内部也需要调整对 Tavily Key 的处理
+
+    // 保存全局 Tavily Key
+    saveGlobalTavilyApiKey(tavilyApiKeyInput.value.trim());
+
+    // 更新服务商（不含Tavily Key）
+    updateCurrentProvider(currentModelsInForm);
     
-    // 保存到本地存储
     saveProviders(providers, activeProviderId);
-    
-    // 设置当前活动的服务商配置
     setActiveProvider(activeProviderId);
     
-    // 关闭模态框
+    isNewProvider = false;
+    refreshProviderList();
     hideSettingsModal();
-    
-    // 提示保存成功
     showSuccess('设置已保存');
 }
 
 /**
  * 验证表单
+ * @param {Array} modelsToValidate - 需要验证的模型数组
  * @returns {boolean} 表单是否有效
  */
-function validateForm() {
-    // 检查必填字段
+function validateForm(modelsToValidate) {
     if (!providerNameInput.value.trim()) {
         showWarning('请输入服务商名称');
         providerNameInput.focus();
@@ -747,51 +845,46 @@ function validateForm() {
         return false;
     }
     
-    if (!tavilyApiKeyInput.value.trim()) {
+    // 全局 Tavily API Key 验证
+    if (!tavilyApiKeyInput.value.trim()) { // 现在总是检查这个输入框，因为它代表全局key
         showWarning('请输入Tavily API密钥');
         tavilyApiKeyInput.focus();
         return false;
     }
-    
-    // 检查是否有模型
-    if (!currentEditingProvider || !currentEditingProvider.models || currentEditingProvider.models.length === 0) {
+
+    if (!currentEditingProvider) { // 如果没有选中服务商（例如列表为空时，理论上不应能到这一步保存服务商）
+        // 但如果能到，且只保存全局Tavily Key，则模型验证跳过
+        return true; // 假设这种情况下只保存Tavily Key
+    }
+
+    if (!modelsToValidate || modelsToValidate.length === 0) {
         showWarning('请至少添加一个模型');
         return false;
     }
-    
-    // 检查是否有激活的模型
-    if (!currentEditingProvider.models.some(m => m.isActive)) {
+    if (!modelsToValidate.some(m => m.isActive)) {
         showWarning('请选择一个活动模型');
         return false;
     }
-    
     return true;
 }
 
 /**
- * 更新当前编辑的服务商
+ * 更新当前编辑的服务商 (不再包含 Tavily Key)
+ * @param {Array} modelsInForm - 表单中当前的模型配置
  */
-function updateCurrentProvider() {
+function updateCurrentProvider(modelsInForm) {
     if (!currentEditingProvider) return;
-    
     currentEditingProvider.name = providerNameInput.value.trim();
     currentEditingProvider.baseurl = providerBaseurlInput.value.trim();
     currentEditingProvider.key = providerKeyInput.value.trim();
-    currentEditingProvider.tavily_api_key = tavilyApiKeyInput.value.trim();
     currentEditingProvider.system_prompt = systemPromptTextarea.value.trim();
+    currentEditingProvider.models = modelsInForm;
 }
 
 /**
- * 获取当前活动服务商的Tavily API密钥
+ * 获取当前活动服务商的Tavily API密钥 (现在从全局获取)
  * @returns {string} Tavily API密钥
  */
 export function getTavilyApiKey() {
-    // 从当前活动服务商中获取
-    if (activeProviderId) {
-        const activeProvider = providers.find(p => p.id === activeProviderId);
-        if (activeProvider && activeProvider.tavily_api_key) {
-            return activeProvider.tavily_api_key;
-        }
-    }
-    return '';
+    return getGlobalTavilyApiKey(); // 直接调用 config.js 中的新函数
 } 

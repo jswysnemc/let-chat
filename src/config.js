@@ -13,10 +13,12 @@ const defaultConfig = {
 
 // 实际使用的配置，初始为默认配置
 let currentConfig = { ...defaultConfig };
+let globalTavilyApiKey = ''; // 新增：全局Tavily API Key
 
 // 本地存储键
 const STORAGE_KEY = 'chat_api_providers';
 const ACTIVE_PROVIDER_KEY = 'chat_active_provider';
+const TAVILY_API_KEY_STORAGE = 'chat_global_tavily_api_key'; // 新增
 
 /**
  * 获取当前API配置
@@ -24,6 +26,41 @@ const ACTIVE_PROVIDER_KEY = 'chat_active_provider';
  */
 export function getApiConfig() {
     return { ...currentConfig };
+}
+
+/**
+ * 获取全局 Tavily API Key
+ * @returns {string} 全局 Tavily API Key
+ */
+export function getGlobalTavilyApiKey() {
+    return globalTavilyApiKey;
+}
+
+/**
+ * 保存全局 Tavily API Key
+ * @param {string} apiKey
+ */
+export function saveGlobalTavilyApiKey(apiKey) {
+    globalTavilyApiKey = apiKey;
+    try {
+        localStorage.setItem(TAVILY_API_KEY_STORAGE, apiKey);
+        console.log('全局 Tavily API Key 已保存');
+    } catch (error) {
+        console.error('保存全局 Tavily API Key 失败:', error);
+    }
+}
+
+/**
+ * 加载全局 Tavily API Key
+ */
+function loadGlobalTavilyApiKey() {
+    try {
+        globalTavilyApiKey = localStorage.getItem(TAVILY_API_KEY_STORAGE) || '';
+        console.log('全局 Tavily API Key 已加载:', globalTavilyApiKey ? '已设置' : '未设置');
+    } catch (error) {
+        console.error('加载全局 Tavily API Key 失败:', error);
+        globalTavilyApiKey = '';
+    }
 }
 
 /**
@@ -53,9 +90,14 @@ export function updateApiConfig(newConfig) {
  */
 export function saveProviders(providers, activeProviderId) {
     try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(providers));
+        // 在保存前，确保每个服务商对象不包含 tavily_api_key (如果之前有的话)
+        const cleanedProviders = providers.map(p => {
+            const { tavily_api_key, ...rest } = p; // 移除 tavily_api_key
+            return rest;
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanedProviders));
         localStorage.setItem(ACTIVE_PROVIDER_KEY, activeProviderId);
-        console.log('服务商配置已保存到本地存储');
+        console.log('服务商配置已保存到本地存储 (Tavily Key 全局化)');
     } catch (error) {
         console.error('保存服务商配置失败:', error);
     }
@@ -67,10 +109,15 @@ export function saveProviders(providers, activeProviderId) {
  */
 export function loadProviders() {
     try {
-        const providers = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        let providers = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
         const activeProviderId = localStorage.getItem(ACTIVE_PROVIDER_KEY) || '';
         
-        // 如果没有服务商或激活的服务商ID，创建默认服务商
+        // 确保旧的每个服务商对象中的 tavily_api_key 被移除（一次性迁移）
+        providers = providers.map(p => {
+            const { tavily_api_key, ...rest } = p;
+            return rest;
+        });
+
         if (providers.length === 0 || !activeProviderId) {
             const defaultProvider = {
                 id: 'default',
@@ -85,9 +132,11 @@ export function loadProviders() {
                         isActive: true
                     }
                 ]
+                // 不再包含 tavily_api_key
             };
             
             providers.push(defaultProvider);
+            // 首次保存时，cleanedProviders 的逻辑会处理
             saveProviders(providers, 'default');
             return { providers, activeProviderId: 'default' };
         }
@@ -113,7 +162,6 @@ export function setActiveProvider(providerId) {
         return false;
     }
     
-    // 找到激活的模型
     const activeModel = provider.models.find(m => m.isActive) || provider.models[0];
     
     if (!activeModel) {
@@ -121,20 +169,17 @@ export function setActiveProvider(providerId) {
         return false;
     }
     
-    // 更新当前配置
     updateApiConfig({
         key: provider.key,
         baseurl: provider.baseurl,
         model: activeModel.name,
         system_prompt: provider.system_prompt || ''
+        // 不再从 provider 获取 tavily_api_key
     });
     
-    // 保存激活的服务商ID
     localStorage.setItem(ACTIVE_PROVIDER_KEY, providerId);
     
-    // 确保其他配置生效
     try {
-        // 触发一个配置更改事件，通知应用其他部分
         const event = new CustomEvent('apiConfigChanged', { 
             detail: { provider, model: activeModel, config: { ...currentConfig } }
         });
@@ -147,7 +192,6 @@ export function setActiveProvider(providerId) {
     return true;
 }
 
-// 强制刷新API配置
 export function refreshApiConfig() {
     const { activeProviderId } = loadProviders();
     if (activeProviderId) {
@@ -157,8 +201,8 @@ export function refreshApiConfig() {
     return false;
 }
 
-// 初始化：从本地存储加载配置
 export function initializeConfig() {
+    loadGlobalTavilyApiKey(); // 新增：初始化时加载全局Tavily Key
     const { activeProviderId } = loadProviders();
     if (activeProviderId) {
         setActiveProvider(activeProviderId);
@@ -166,7 +210,6 @@ export function initializeConfig() {
     console.log('API配置已初始化:', currentConfig);
 }
 
-// 使用getter方式导出apiConfig，确保每次访问都获取最新值
 export const apiConfig = new Proxy({}, {
     get: (target, prop) => {
         return currentConfig[prop];

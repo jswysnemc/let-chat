@@ -70,6 +70,7 @@
 }
 
 .form-group input[type="text"],
+.form-group input[type="password"],
 .form-group textarea {
     width: 100%;
     padding: 10px 12px;
@@ -85,7 +86,39 @@
     resize: vertical; /* 只允许垂直调整大小 */
 }
 
+/* Wrapper for password inputs to contain the eye icon */
+.password-input-wrapper {
+    position: relative;
+    display: flex; /* Use flex to allow input to grow */
+    align-items: center;
+}
+
+/* Ensure input inside wrapper takes full width and has space for icon */
+.password-input-wrapper input[type="password"],
+.password-input-wrapper input[type="text"] { /* Style for when type is toggled to text */
+    flex-grow: 1;
+    /* Adjust padding-right to make space for the icon if it's absolutely positioned inside the input's space */
+    /* If icon is sibling, this might not be needed or handled by flex spacing */
+    padding-right: 35px; /* Example: space for a 20px icon + 15px padding/gap */
+}
+
+.toggle-password-visibility {
+    position: absolute; /* Position icon inside the wrapper, over the input area */
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #888; /* Default icon color */
+    padding: 5px; /* Increase clickable area */
+    z-index: 2; /* Ensure icon is above the input field */
+}
+
+.toggle-password-visibility:hover {
+    color: #333; /* Darker color on hover */
+}
+
 .form-group input[type="text"]:focus,
+.form-group input[type="password"]:focus,
 .form-group textarea:focus {
     border-color: #0d6efd;
     outline: none;
@@ -540,6 +573,7 @@
 
 /* 确保模态框内的所有表单元素一致 */
 .modal-content input[type="text"],
+.modal-content input[type="password"],
 .modal-content textarea {
     width: 100%;
     box-sizing: border-box;
@@ -623,6 +657,7 @@
     
     /* 修复移动端文本域和输入框 */
     .form-group input[type="text"],
+    .form-group input[type="password"],
     .form-group textarea {
         font-size: 15px;
         padding: 10px;
@@ -670,6 +705,7 @@
     }
 
     .form-group input[type="text"],
+    .form-group input[type="password"],
     .form-group textarea {
         padding: 8px 10px;
         font-size: 14px;
