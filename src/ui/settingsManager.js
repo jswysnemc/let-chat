@@ -1,4 +1,5 @@
 import { loadProviders, saveProviders, setActiveProvider, getApiConfig, refreshApiConfig } from '../config.js';
+import { showSuccess, showError, showWarning, showConfirm } from './notification.js';
 
 // DOM 元素引用
 let settingsModalOverlay = null;
@@ -268,13 +269,140 @@ function refreshModelsList(models) {
         editBtn.className = 'model-action-btn edit-btn';
         editBtn.innerHTML = '<i class="fas fa-pencil-alt"></i>';
         editBtn.setAttribute('title', '编辑模型');
-        editBtn.addEventListener('click', (e) => {
+        editBtn.addEventListener('click', async (e) => {
             e.stopPropagation();
-            const newName = prompt('请输入模型名称', model.name);
-            if (newName && newName.trim()) {
-                model.name = newName.trim();
-                refreshModelsList(models);
-            }
+            
+            // 创建自定义编辑模型输入框
+            const inputOverlay = document.createElement('div');
+            inputOverlay.className = 'modal-overlay';
+            inputOverlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 26000; /* 提高层级，确保显示在设置模态框之上 */
+                opacity: 0;
+                transition: opacity 0.3s;
+            `;
+            
+            const inputDialog = document.createElement('div');
+            inputDialog.className = 'input-dialog';
+            inputDialog.style.cssText = `
+                background-color: #fff;
+                border-radius: 8px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+                width: 100%;
+                max-width: 350px;
+                padding: 24px;
+                transform: scale(0.9);
+                transition: transform 0.3s;
+            `;
+            
+            inputDialog.innerHTML = `
+                <h3 style="margin-top: 0; margin-bottom: 16px; color: #333; font-size: 18px;">编辑模型名称</h3>
+                <input type="text" id="model-name-input" value="${model.name}" style="
+                    width: 100%;
+                    padding: 10px;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    margin-bottom: 20px;
+                    font-size: 14px;
+                    box-sizing: border-box;
+                ">
+                <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                    <button class="cancel-btn" style="
+                        padding: 8px 16px;
+                        border: 1px solid #ddd;
+                        background-color: #f5f5f5;
+                        color: #666;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-size: 14px;
+                        transition: background-color 0.2s;
+                    ">取消</button>
+                    <button class="confirm-btn" style="
+                        padding: 8px 16px;
+                        border: none;
+                        background-color: #0d6efd;
+                        color: white;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-size: 14px;
+                        transition: background-color 0.2s;
+                    ">确定</button>
+                </div>
+            `;
+            
+            inputOverlay.appendChild(inputDialog);
+            document.body.appendChild(inputOverlay);
+            
+            // 触发重绘并显示
+            setTimeout(() => {
+                inputOverlay.style.opacity = '1';
+                inputDialog.style.transform = 'scale(1)';
+                
+                // 自动聚焦输入框
+                const input = document.getElementById('model-name-input');
+                if (input) input.focus();
+            }, 10);
+            
+            // 添加按钮事件
+            const confirmBtn = inputDialog.querySelector('.confirm-btn');
+            const cancelBtn = inputDialog.querySelector('.cancel-btn');
+            const nameInput = inputDialog.querySelector('#model-name-input');
+            
+            // 关闭对话框函数
+            const closeDialog = (save) => {
+                inputOverlay.style.opacity = '0';
+                inputDialog.style.transform = 'scale(0.9)';
+                
+                setTimeout(() => {
+                    document.body.removeChild(inputOverlay);
+                    
+                    // 保存修改
+                    if (save) {
+                        const newName = nameInput.value.trim();
+                        if (newName) {
+                            model.name = newName;
+                            refreshModelsList(models);
+                        } else {
+                            showWarning('模型名称不能为空');
+                        }
+                    }
+                }, 300);
+            };
+            
+            // 添加事件监听器
+            confirmBtn.addEventListener('click', () => closeDialog(true));
+            cancelBtn.addEventListener('click', () => closeDialog(false));
+            
+            // 添加按钮悬停样式
+            confirmBtn.addEventListener('mouseover', () => {
+                confirmBtn.style.backgroundColor = '#0b5ed7';
+            });
+            confirmBtn.addEventListener('mouseout', () => {
+                confirmBtn.style.backgroundColor = '#0d6efd';
+            });
+            
+            cancelBtn.addEventListener('mouseover', () => {
+                cancelBtn.style.backgroundColor = '#e9e9e9';
+            });
+            cancelBtn.addEventListener('mouseout', () => {
+                cancelBtn.style.backgroundColor = '#f5f5f5';
+            });
+            
+            // 处理回车键提交
+            nameInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    closeDialog(true);
+                }
+            });
         });
         
         // 删除按钮（至少保留一个模型）
@@ -284,17 +412,28 @@ function refreshModelsList(models) {
             deleteBtn.className = 'model-action-btn delete-btn';
             deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
             deleteBtn.setAttribute('title', '删除模型');
-            deleteBtn.addEventListener('click', (e) => {
+            deleteBtn.addEventListener('click', async (e) => {
                 e.stopPropagation();
-                // 如果删除的是激活的模型，自动选择第一个模型
-                if (model.isActive && models.length > 1) {
-                    const nextActiveIndex = index === 0 ? 1 : 0;
-                    models[nextActiveIndex].isActive = true;
-                }
                 
-                // 从模型列表中移除
-                models.splice(index, 1);
-                refreshModelsList(models);
+                // 使用自定义确认对话框
+                const confirmed = await showConfirm({
+                    title: '删除模型',
+                    message: `确定要删除模型"${model.name}"吗？`,
+                    confirmText: '删除',
+                    cancelText: '取消'
+                });
+                
+                if (confirmed) {
+                    // 如果删除的是激活的模型，自动选择第一个模型
+                    if (model.isActive && models.length > 1) {
+                        const nextActiveIndex = index === 0 ? 1 : 0;
+                        models[nextActiveIndex].isActive = true;
+                    }
+                    
+                    // 从模型列表中移除
+                    models.splice(index, 1);
+                    refreshModelsList(models);
+                }
             });
             actions.appendChild(deleteBtn);
         }
@@ -314,30 +453,156 @@ function refreshModelsList(models) {
  */
 function addModel(initialName = '') {
     if (!currentEditingProvider) {
-        alert('请先选择或创建一个服务商');
+        showWarning('请先选择或创建一个服务商');
         return;
     }
     
-    const modelName = prompt('请输入模型名称', initialName);
-    if (!modelName || !modelName.trim()) return;
+    // 创建自定义输入对话框
+    const inputOverlay = document.createElement('div');
+    inputOverlay.className = 'modal-overlay';
+    inputOverlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 26000; /* 提高层级，确保显示在设置模态框之上 */
+        opacity: 0;
+        transition: opacity 0.3s;
+    `;
     
-    // 确保models数组存在
-    if (!currentEditingProvider.models) {
-        currentEditingProvider.models = [];
-    }
+    const inputDialog = document.createElement('div');
+    inputDialog.className = 'input-dialog';
+    inputDialog.style.cssText = `
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        width: 100%;
+        max-width: 350px;
+        padding: 24px;
+        transform: scale(0.9);
+        transition: transform 0.3s;
+    `;
     
-    // 创建新模型
-    const newModel = {
-        id: 'model_' + Date.now(),
-        name: modelName.trim(),
-        isActive: currentEditingProvider.models.length === 0 // 如果是第一个模型，自动设为激活
+    inputDialog.innerHTML = `
+        <h3 style="margin-top: 0; margin-bottom: 16px; color: #333; font-size: 18px;">添加新模型</h3>
+        <input type="text" id="new-model-name-input" value="${initialName}" placeholder="请输入模型名称" style="
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            box-sizing: border-box;
+        ">
+        <div style="display: flex; justify-content: flex-end; gap: 12px;">
+            <button class="cancel-btn" style="
+                padding: 8px 16px;
+                border: 1px solid #ddd;
+                background-color: #f5f5f5;
+                color: #666;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                transition: background-color 0.2s;
+            ">取消</button>
+            <button class="confirm-btn" style="
+                padding: 8px 16px;
+                border: none;
+                background-color: #0d6efd;
+                color: white;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                transition: background-color 0.2s;
+            ">添加</button>
+        </div>
+    `;
+    
+    inputOverlay.appendChild(inputDialog);
+    document.body.appendChild(inputOverlay);
+    
+    // 触发重绘并显示
+    setTimeout(() => {
+        inputOverlay.style.opacity = '1';
+        inputDialog.style.transform = 'scale(1)';
+        
+        // 自动聚焦输入框
+        const input = document.getElementById('new-model-name-input');
+        if (input) input.focus();
+    }, 10);
+    
+    // 添加按钮事件
+    const confirmBtn = inputDialog.querySelector('.confirm-btn');
+    const cancelBtn = inputDialog.querySelector('.cancel-btn');
+    const nameInput = inputDialog.querySelector('#new-model-name-input');
+    
+    // 关闭对话框函数
+    const closeDialog = (add) => {
+        inputOverlay.style.opacity = '0';
+        inputDialog.style.transform = 'scale(0.9)';
+        
+        setTimeout(() => {
+            document.body.removeChild(inputOverlay);
+            
+            // 添加新模型
+            if (add) {
+                const modelName = nameInput.value.trim();
+                if (modelName) {
+                    // 确保models数组存在
+                    if (!currentEditingProvider.models) {
+                        currentEditingProvider.models = [];
+                    }
+                    
+                    // 创建新模型
+                    const newModel = {
+                        id: 'model_' + Date.now(),
+                        name: modelName,
+                        isActive: currentEditingProvider.models.length === 0 // 如果是第一个模型，自动设为激活
+                    };
+                    
+                    // 添加到列表
+                    currentEditingProvider.models.push(newModel);
+                    
+                    // 刷新UI
+                    refreshModelsList(currentEditingProvider.models);
+                } else {
+                    showWarning('模型名称不能为空');
+                }
+            }
+        }, 300);
     };
     
-    // 添加到列表
-    currentEditingProvider.models.push(newModel);
+    // 添加事件监听器
+    confirmBtn.addEventListener('click', () => closeDialog(true));
+    cancelBtn.addEventListener('click', () => closeDialog(false));
     
-    // 刷新UI
-    refreshModelsList(currentEditingProvider.models);
+    // 添加按钮悬停样式
+    confirmBtn.addEventListener('mouseover', () => {
+        confirmBtn.style.backgroundColor = '#0b5ed7';
+    });
+    confirmBtn.addEventListener('mouseout', () => {
+        confirmBtn.style.backgroundColor = '#0d6efd';
+    });
+    
+    cancelBtn.addEventListener('mouseover', () => {
+        cancelBtn.style.backgroundColor = '#e9e9e9';
+    });
+    cancelBtn.addEventListener('mouseout', () => {
+        cancelBtn.style.backgroundColor = '#f5f5f5';
+    });
+    
+    // 处理回车键提交
+    nameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            closeDialog(true);
+        }
+    });
 }
 
 /**
@@ -370,27 +635,38 @@ function createNewProvider() {
  * 删除服务商
  * @param {string} providerId 服务商ID
  */
-function deleteProvider(providerId) {
+async function deleteProvider(providerId) {
     if (providers.length <= 1) {
-        alert('至少需要保留一个服务商');
+        showWarning('至少需要保留一个服务商');
         return;
     }
     
-    if (!confirm(`确定要删除此服务商吗？`)) return;
+    // 使用自定义确认对话框
+    const provider = providers.find(p => p.id === providerId);
+    if (!provider) return;
     
-    // 从列表中移除
-    const index = providers.findIndex(p => p.id === providerId);
-    if (index !== -1) {
-        providers.splice(index, 1);
+    const confirmed = await showConfirm({
+        title: '删除服务商',
+        message: `确定要删除服务商"${provider.name}"吗？`,
+        confirmText: '删除',
+        cancelText: '取消'
+    });
+    
+    if (confirmed) {
+        // 从列表中移除
+        const index = providers.findIndex(p => p.id === providerId);
+        if (index !== -1) {
+            providers.splice(index, 1);
+        }
+        
+        // 如果删除的是当前选中的服务商，自动选择第一个
+        if (providerId === activeProviderId) {
+            activeProviderId = providers[0].id;
+        }
+        
+        // 刷新列表
+        refreshProviderList();
     }
-    
-    // 如果删除的是当前选中的服务商，自动选择第一个
-    if (providerId === activeProviderId) {
-        activeProviderId = providers[0].id;
-    }
-    
-    // 刷新列表
-    refreshProviderList();
 }
 
 /**
@@ -430,7 +706,7 @@ function saveSettings() {
     hideSettingsModal();
     
     // 提示保存成功
-    alert('设置已保存');
+    showSuccess('设置已保存');
 }
 
 /**
@@ -440,32 +716,32 @@ function saveSettings() {
 function validateForm() {
     // 检查必填字段
     if (!providerNameInput.value.trim()) {
-        alert('请输入服务商名称');
+        showWarning('请输入服务商名称');
         providerNameInput.focus();
         return false;
     }
     
     if (!providerBaseurlInput.value.trim()) {
-        alert('请输入API基础URL');
+        showWarning('请输入API基础URL');
         providerBaseurlInput.focus();
         return false;
     }
     
     if (!providerKeyInput.value.trim()) {
-        alert('请输入API密钥');
+        showWarning('请输入API密钥');
         providerKeyInput.focus();
         return false;
     }
     
     // 检查是否有模型
     if (!currentEditingProvider || !currentEditingProvider.models || currentEditingProvider.models.length === 0) {
-        alert('请至少添加一个模型');
+        showWarning('请至少添加一个模型');
         return false;
     }
     
     // 检查是否有激活的模型
     if (!currentEditingProvider.models.some(m => m.isActive)) {
-        alert('请选择一个活动模型');
+        showWarning('请选择一个活动模型');
         return false;
     }
     

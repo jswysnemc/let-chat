@@ -21,6 +21,7 @@ import { streamAIResponse } from './apiClient.js';
 import { renderMarkdown, renderMarkdownAsync, highlightCodeBlocks } from './markdownRenderer.js';
 import { showConfirmationModal } from './ui/confirmModal.js'; // Import the new modal function
 import { copyTextFallback } from './ui/copyUtils.js'; // Import copy fallback
+import { showSuccess, showError, showWarning, showConfirm } from './ui/notification.js'; // Import notification functions
 
 
 /** Renders the chat messages for the currently active session */
@@ -294,7 +295,7 @@ function handleEditSession(sessionId) {
 
     const session = state.getSession(sessionId);
     if (!session) {
-        alert("无法加载要编辑的会话数据。");
+        showError("无法加载要编辑的会话数据。");
         return;
     }
 
@@ -303,7 +304,7 @@ function handleEditSession(sessionId) {
     const modalElements = getEditModalFormElements();
     if (!modalElements) {
         console.error("[Main] handleEditSession: Failed to get modal elements from UI module.");
-        alert("无法初始化编辑对话框。");
+        showError("无法初始化编辑对话框。");
         return;
     }
     const { form, cancelBtn } = modalElements;
@@ -330,7 +331,7 @@ function handleEditSession(sessionId) {
 
         // Validate and update name
         if (!newValues.name) { // Check for empty name
-            alert("会话名称不能为空。");
+            showWarning("会话名称不能为空。");
             // Optionally focus the name input: ui.getElement('editModalNameInput')?.focus();
             return; // Keep modal open if validation fails
         }
@@ -338,7 +339,7 @@ function handleEditSession(sessionId) {
             if (state.updateSessionName(sessionId, newValues.name)) {
                 nameChanged = true;
             } else {
-                alert("更新会话名称失败。");
+                showError("更新会话名称失败。");
                 // Decide if modal should stay open on failure
             }
         }
@@ -348,7 +349,7 @@ function handleEditSession(sessionId) {
              if (state.updateSystemPrompt(sessionId, newValues.prompt)) {
                  promptChanged = true;
              } else {
-                 alert("更新系统提示失败。");
+                 showError("更新系统提示失败。");
                   // Decide if modal should stay open on failure
              }
         }
@@ -410,7 +411,7 @@ function showEditMessageModal(messageIndex, currentContent) {
 
     if (!overlay || !textarea || !form || !cancelBtn) {
         console.error("[Main] Edit Message Modal elements not found.");
-        alert("无法打开编辑消息对话框。");
+        showError("无法打开编辑消息对话框。");
         return;
     }
 
@@ -458,14 +459,10 @@ function handleEditMessageSubmit(event) {
     const newContent = textarea.value;
     const activeId = state.getActiveSessionId();
 
-    // TODO: Add check if content actually changed?
-    // const originalContent = state.getMessageContent(activeId, currentEditingMessageIndex); // Need a function like this in state.js
-    // if (newContent !== originalContent) { ... }
-
     if (state.updateMessageInSession(activeId, currentEditingMessageIndex, newContent)) {
         renderChatForActiveSession(); // Re-render chat on success
     } else {
-        alert("更新消息失败。");
+        showError("更新消息失败。");
         // Optionally keep modal open on failure? For now, we hide it.
     }
 
@@ -568,31 +565,7 @@ function main() {
                 const sessionIdToDelete = deleteButton.dataset.sessionId;
                 console.log(`[Main] Session Delete button clicked for ID: ${sessionIdToDelete}`);
                 if (sessionIdToDelete) {
-                    const sessionToDelete = state.getSession(sessionIdToDelete);
-                    const sessionName = sessionToDelete?.name || `ID ${sessionIdToDelete.substring(0,4)}`;
-                    // Replace confirm with custom modal
-                    showConfirmationModal(
-                        `您确定要删除会话 "${sessionName}" 吗？此操作无法撤销。`,
-                        () => { // onConfirm callback
-                            if (state.deleteSession(sessionIdToDelete)) {
-                                const newActiveId = state.getActiveSessionId();
-                                renderSessionList(state.getAllSessions(), newActiveId);
-                                renderChatForActiveSession(); // Render potentially new active chat
-                            } else {
-                                alert("删除会话失败。"); // Show error if deletion fails
-                            }
-                        },
-                        "删除会话" // Optional title
-                    );
-                    /* Original confirm logic:
-                    if (confirm(`您确定要删除会话 "${sessionName}" 吗？\n此操作无法撤销。`)) {
-                        if (state.deleteSession(sessionIdToDelete)) {
-                            const newActiveId = state.getActiveSessionId();
-                            renderSessionList(state.getAllSessions(), newActiveId);
-                            // renderChatForActiveSession(); // Render potentially new active chat - Moved inside callback
-                        }
-                    }
-                    */
+                    handleDeleteSession(sessionIdToDelete);
                 } else {
                      console.error("[Main] Session Delete button clicked but session ID not found.");
                 }
@@ -656,212 +629,13 @@ function main() {
            // --- 结束调试日志 ---
 
            if (action === 'delete') {
-               // Replace confirm with custom modal
-               showConfirmationModal(
-                   "您确定要删除这条消息吗？",
-                   () => { // onConfirm callback
-                       if (state.deleteMessageFromSession(activeId, messageIndex)) {
-                           renderChatForActiveSession(); // Re-render the chat
-                       } else {
-                           alert("删除消息失败。");
-                       }
-                   },
-                   "删除消息" // Optional title
-               );
-               /* Original confirm logic:
-               if (confirm("您确定要删除这条消息吗？")) {
-                   if (state.deleteMessageFromSession(activeId, messageIndex)) {
-                       renderChatForActiveSession(); // Re-render the chat
-                   } else {
-                       alert("删除消息失败。");
-                   }
-               }
-               */
+               handleDeleteMessage(activeId, messageIndex);
            } else if (action === 'edit') {
-               const rawContent = bubble.dataset.rawContent;
-                if (typeof rawContent === 'undefined') { // 增加检查
-                    console.error(`[Main] Edit action failed: rawContent is undefined for index ${messageIndex}.`);
-                    alert("无法编辑此消息：缺少原始内容数据。");
-                    return;
-                }
-               // Use the new custom modal instead of prompt()
-               showEditMessageModal(messageIndex, rawContent);
-               // The logic for updating state and UI is now handled by handleEditMessageSubmit
-               /*
-               const newContent = prompt("编辑消息:", rawContent); // Simple prompt for now
-               if (newContent !== null && newContent !== rawContent) { // Check if changed and not cancelled
-                    // ... (old update logic) ...
-               }
-               */
+               editButtonClickHandler(event);
            } else if (action === 'retry') {
-                // 1. Find the preceding user message index (already done above, messageIndex is the AI's index)
-                const userMessageIndex = messageIndex - 1;
-                const messages = state.getMessages(activeId); // Re-fetch messages to be safe
-                if (userMessageIndex < 1 || messages[userMessageIndex]?.role !== 'user') {
-                     alert("无法找到有效的用户消息进行重试。");
-                     return;
-                }
-                // 不需要获取旧的用户消息内容，因为我们不再调用 handleSend
-
-                // 2. Delete the current AI message from state
-                if (!state.deleteMessageFromSession(activeId, messageIndex)) {
-                    alert("删除旧的 AI 回复失败，无法重试。");
-                    return;
-                }
-
-                // 3. Re-render chat to remove the AI bubble visually
-                renderChatForActiveSession();
-
-                // 4. Get the current history (ending with the user message to retry)
-                const currentHistory = state.getActiveSessionMessages(); // Fetch history AFTER deleting AI msg
-                if (!currentHistory || currentHistory.length === 0 || currentHistory[currentHistory.length - 1]?.role !== 'user') {
-                    alert("无法获取有效的消息历史记录以进行重试。");
-                    return;
-                }
-
-                // 5. Directly call the API and handle the stream (similar to handleSend's latter half)
-                console.log(`[Main] Retrying AI response for session ${activeId}`);
-                disableSendButton(); // Disable button during retry
-                let assistantBubbleRefs = null;
-                let accumulatedContent = '';
-                let assistantMessageIndex = -1; // Will be set after adding to state
-
-                try {
-                    // Calculate the expected index for the new AI message
-                    assistantMessageIndex = currentHistory.length; // New message will be at the end
-                    assistantBubbleRefs = createAssistantMessageBubble(assistantMessageIndex); // Create bubble with expected index
-                    if (!assistantBubbleRefs) {
-                        throw new Error("UI Error: 无法创建助手消息气泡以进行重试。");
-                    }
-
-                    // Stream and render AI response
-                    for await (const chunk of streamAIResponse(currentHistory)) {
-                        accumulatedContent += chunk;
-                        
-                        // 渲染内容
-                        let htmlContent = "";
-                        
-                        // 特殊情况：直接识别以**开头的文本
-                        if (accumulatedContent.trim().startsWith("**") && accumulatedContent.includes("**")) {
-                            console.log("[Main] 检测到重试内容以**开头，使用特殊处理");
-                            try {
-                                // 首先尝试完整的Markdown渲染
-                                htmlContent = renderMarkdown(accumulatedContent);
-                            } catch (err) {
-                                console.error("重试时Markdown渲染失败，使用直接替换:", err);
-                                // 直接替换**文本**为<strong>文本</strong>
-                                htmlContent = accumulatedContent;
-                                htmlContent = htmlContent.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-                                // 转义其余HTML
-                                htmlContent = htmlContent.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                                // 还原strong标签
-                                htmlContent = htmlContent.replace(/&lt;strong&gt;/g, "<strong>").replace(/&lt;\/strong&gt;/g, "</strong>");
-                                // 包装在<p>标签中
-                                if (!htmlContent.startsWith("<p>")) {
-                                    htmlContent = `<p>${htmlContent}</p>`;
-                                }
-                            }
-                        } else {
-                            // 常规内容处理
-                            try {
-                                // 尝试完整的Markdown渲染
-                                htmlContent = renderMarkdown(accumulatedContent);
-                            } catch (err) {
-                                console.error("重试时Markdown渲染失败，使用基本处理:", err);
-                                // 确保至少渲染一些内容和粗体文本
-                                htmlContent = accumulatedContent;
-                                htmlContent = htmlContent.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-                                htmlContent = htmlContent.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                                htmlContent = htmlContent.replace(/&lt;strong&gt;/g, "<strong>").replace(/&lt;\/strong&gt;/g, "</strong>");
-                                if (!htmlContent.startsWith("<p>")) {
-                                    htmlContent = `<p>${htmlContent}</p>`;
-                                }
-                            }
-                        }
-                        
-                        updateAssistantMessageContent(assistantBubbleRefs.contentContainer, htmlContent);
-                        try {
-                             highlightCodeBlocks(assistantBubbleRefs.contentContainer);
-                        } catch(e) { console.error("Error highlighting during retry stream:", e); }
-                    }
-
-                    // Finalize after stream ends successfully
-                    const finalMessages = state.getMessages(activeId);
-                    if (finalMessages.length !== assistantMessageIndex) {
-                         console.warn(`State mismatch during retry: Expected AI message index ${assistantMessageIndex}, but current message count is ${finalMessages.length}. Attempting to add anyway.`);
-                    }
-                    if (!state.addMessageToSession(activeId, 'assistant', accumulatedContent)) {
-                         console.error("Failed to add retried assistant message to state.");
-                    } else {
-                         // Update the bubble's index if state addition was successful
-                         const updatedMessages = state.getMessages(activeId);
-                         assistantMessageIndex = updatedMessages.length - 1;
-                         if (assistantBubbleRefs.bubbleElement) {
-                              assistantBubbleRefs.bubbleElement.dataset.messageIndex = assistantMessageIndex;
-                         }
-                    }
-                    finalizeAssistantMessage(assistantBubbleRefs.bubbleElement, accumulatedContent);
-
-                } catch (error) {
-                    console.error("Error during AI response retry:", error);
-                    displayError(error.message || "重试 AI 通信时发生未知错误");
-                } finally {
-                    enableSendButton(); // Re-enable button
-                    // Re-render one last time to ensure retry button logic is correct
-                    renderChatForActiveSession();
-                }
-
+               retryButtonClickHandler(event);
            } else if (action === 'copy') {
-               // Handle copy action here for both user and assistant messages
-               const textToCopy = bubble.dataset.rawContent || '';
-               if (!textToCopy) {
-                   console.error("[Main] Copy action failed: rawContent is empty or missing.");
-                   alert("无法复制：消息内容为空。");
-                   return;
-               }
-
-               const copyBtn = actionButton; // The button that was clicked
-
-               const handleCopySuccess = () => {
-                   const originalHTML = copyBtn.innerHTML;
-                   const originalTitle = copyBtn.title;
-                   copyBtn.innerHTML = '<i class="fas fa-check"></i>';
-                   copyBtn.title = '已复制!';
-                   copyBtn.disabled = true;
-                   setTimeout(() => {
-                       copyBtn.innerHTML = originalHTML;
-                       copyBtn.title = originalTitle;
-                       copyBtn.disabled = false;
-                   }, 2000);
-               };
-
-               const handleCopyFailure = (methodUsed) => {
-                   console.error(`Copy failed using ${methodUsed}.`);
-                   if (methodUsed === 'navigator.clipboard' && !window.isSecureContext) {
-                       alert('复制失败：此功能需要安全连接 (HTTPS) 或在 localhost 上运行。');
-                   } else if (methodUsed === 'document.execCommand') {
-                       alert('复制失败！浏览器不支持或禁止了后备复制方法。');
-                   } else {
-                       alert('复制失败！您的浏览器可能不支持此操作或权限不足。');
-                   }
-               };
-
-               // --- Main Copy Logic ---
-               if (window.isSecureContext && navigator.clipboard && navigator.clipboard.writeText) {
-                   navigator.clipboard.writeText(textToCopy).then(() => {
-                       handleCopySuccess();
-                   }).catch(err => {
-                       console.error('navigator.clipboard.writeText failed:', err);
-                       handleCopyFailure('navigator.clipboard');
-                   });
-               } else {
-                   if (copyTextFallback(textToCopy)) {
-                       handleCopySuccess();
-                   } else {
-                       handleCopyFailure('document.execCommand');
-                   }
-               }
-               // --- End Main Copy Logic ---
+               copyButtonClickHandler(event);
            }
        });
    } else {
@@ -878,3 +652,302 @@ enableSendButton(); // Ensure button is enabled and loader is hidden on startup
 
 // Wait for the DOM to be fully loaded before running the main script
 document.addEventListener('DOMContentLoaded', main);
+
+/**
+ * 处理删除会话
+ * @param {string} sessionId 会话ID
+ */
+function handleDeleteSession(sessionId) {
+    if (!sessionId) {
+        console.error("[Main] handleDeleteSession: No session ID provided.");
+        return;
+    }
+    
+    // 获取会话名称用于显示
+    const session = state.getSession(sessionId);
+    if (!session) {
+        console.error("[Main] handleDeleteSession: Session not found:", sessionId);
+        return;
+    }
+    const sessionName = session.name;
+    
+    // 使用自定义确认对话框替代
+    showConfirm({
+        title: '删除会话',
+        message: `您确定要删除会话 "${sessionName}" 吗？\n此操作无法撤销。`,
+        confirmText: '删除',
+        cancelText: '取消',
+        onConfirm: () => {
+            console.log(`[Main] Deleting session: ${sessionId} (${sessionName})`);
+            if (!state.deleteSession(sessionId)) {
+                showError("删除会话失败。");
+                return;
+            }
+            
+            // 刷新会话列表
+            const sessions = state.getAllSessions();
+            const currentActiveId = state.getActiveSessionId();
+            renderSessionList(sessions, currentActiveId);
+            
+            // 如果删除的会话是当前活动会话，重新加载聊天区域
+            if (sessionId === currentActiveId) {
+                renderChatForActiveSession();
+            }
+        }
+    });
+}
+
+/**
+ * 处理删除消息
+ * @param {string} sessionId 会话ID
+ * @param {number} messageIndex 消息索引
+ */
+function handleDeleteMessage(sessionId, messageIndex) {
+    // 使用自定义确认对话框替代
+    showConfirm({
+        title: '删除消息',
+        message: '您确定要删除这条消息吗？',
+        confirmText: '删除',
+        cancelText: '取消',
+        onConfirm: () => {
+            console.log(`[Main] Deleting message at index ${messageIndex} from session ${sessionId}`);
+            
+            if (state.deleteMessageFromSession(sessionId, messageIndex)) {
+                renderChatForActiveSession(); // 重新渲染聊天区域
+            } else {
+                showError("删除消息失败。");
+            }
+        }
+    });
+}
+
+/**
+ * 处理复制按钮点击
+ * @param {Event} event 点击事件
+ */
+const copyButtonClickHandler = async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    // 获取气泡元素 (所在DOM树上最近的带有 message-bubble 类的祖先元素)
+    const bubbleElement = event.target.closest('.message-bubble');
+    if (!bubbleElement || !bubbleElement.dataset.rawContent) {
+        console.error("[Main] copyButtonClickHandler: No bubble found or no raw content.");
+        showWarning("无法复制：消息内容为空。");
+        return;
+    }
+    
+    // 获取原始文本内容
+    const content = bubbleElement.dataset.rawContent;
+    if (!content) {
+        console.error("[Main] copyButtonClickHandler: Bubble has empty raw content.");
+        showWarning("无法复制：消息内容为空。");
+        return;
+    }
+    
+    // 尝试复制文本
+    try {
+        const successful = await copyTextToClipboard(content);
+        if (successful) {
+            showSuccess("已复制到剪贴板");
+        }
+    } catch (error) {
+        console.error("复制失败:", error);
+        showError("复制失败，请手动选择文本复制。");
+    }
+};
+
+/**
+ * 将文本复制到剪贴板
+ * @param {string} text 要复制的文本
+ * @returns {Promise<boolean>} 是否复制成功
+ */
+async function copyTextToClipboard(text) {
+    // 定义处理成功/失败的函数
+    const handleCopySuccess = () => {
+        console.log("[Main] Copy successful.");
+        return true;
+    };
+    
+    const handleCopyFailure = (methodUsed) => {
+        console.error(`[Main] Copy failed using ${methodUsed}.`);
+        if (methodUsed === 'clipboard API') {
+            if (!window.isSecureContext) {
+                showError('复制失败：此功能需要安全连接 (HTTPS) 或在 localhost 上运行。');
+            } else {
+                showError('复制失败！浏览器不支持或禁止了后备复制方法。');
+            }
+        } else {
+            showError('复制失败！您的浏览器可能不支持此操作或权限不足。');
+        }
+        return false;
+    };
+    
+    // 尝试使用 Clipboard API (现代浏览器)
+    if (navigator.clipboard && window.isSecureContext) {
+        try {
+            await navigator.clipboard.writeText(text);
+            return handleCopySuccess();
+        } catch (error) {
+            console.error("[Main] Clipboard API copy failed:", error);
+            return copyTextFallback(text) ? handleCopySuccess() : handleCopyFailure('fallback');
+        }
+    } else {
+        // 执行后备复制方法
+        return copyTextFallback(text) ? handleCopySuccess() : handleCopyFailure('clipboard API');
+    }
+}
+
+/**
+ * 处理删除按钮点击
+ * @param {Event} event 点击事件
+ */
+const deleteButtonClickHandler = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    // 获取气泡元素 (所在DOM树上最近的带有 message-bubble 类的祖先元素)
+    const bubbleElement = event.target.closest('.message-bubble');
+    if (!bubbleElement || !bubbleElement.dataset.messageIndex) {
+        console.error("[Main] deleteButtonClickHandler: No bubble found or no message index.");
+        return;
+    }
+    
+    // 获取消息索引，并确认删除
+    const messageIndex = parseInt(bubbleElement.dataset.messageIndex);
+    if (isNaN(messageIndex)) {
+        console.error("[Main] deleteButtonClickHandler: Invalid message index.");
+        return;
+    }
+    
+    const activeId = state.getActiveSessionId();
+    handleDeleteMessage(activeId, messageIndex);
+};
+
+/**
+ * 处理编辑按钮点击
+ * @param {Event} event 点击事件
+ */
+const editButtonClickHandler = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    // 获取气泡元素 (所在DOM树上最近的带有 message-bubble 类的祖先元素)
+    const bubbleElement = event.target.closest('.message-bubble');
+    if (!bubbleElement || !bubbleElement.dataset.messageIndex || !bubbleElement.dataset.rawContent) {
+        console.error("[Main] editButtonClickHandler: Missing required bubble data.");
+        return;
+    }
+    
+    // 获取消息索引和原始内容
+    const messageIndex = parseInt(bubbleElement.dataset.messageIndex);
+    const rawContent = bubbleElement.dataset.rawContent;
+    
+    if (isNaN(messageIndex) || !rawContent) {
+        console.error("[Main] editButtonClickHandler: Invalid message index or no raw content.");
+        showError("无法编辑此消息：缺少原始内容数据。");
+        return;
+    }
+    
+    // 显示编辑对话框
+    showEditMessageModal(messageIndex, rawContent);
+};
+
+/**
+ * 处理重试按钮点击
+ * @param {Event} event 点击事件
+ */
+const retryButtonClickHandler = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    console.log("[Main] Retry button clicked, looking for user message to retry...");
+    // 获取当前点击的AI消息的索引
+    const aiBubble = event.target.closest('.assistant-bubble');
+    const activeId = state.getActiveSessionId();
+    
+    if (!aiBubble || !aiBubble.dataset.messageIndex || !activeId) {
+        console.error("[Main] retryButtonClickHandler: Missing required data.");
+        return;
+    }
+    
+    const aiMessageIndex = parseInt(aiBubble.dataset.messageIndex);
+    if (isNaN(aiMessageIndex)) {
+        console.error("[Main] retryButtonClickHandler: Invalid AI message index.");
+        return;
+    }
+    
+    // 我们假设用户消息在AI消息之前，因此索引是AI消息索引减1
+    const userMessageIndex = aiMessageIndex - 1;
+    if (userMessageIndex < 1) { // 小于1因为0通常是系统消息
+        console.error("[Main] retryButtonClickHandler: Cannot find valid user message index.");
+        showWarning("无法找到有效的用户消息进行重试。");
+        return;
+    }
+    
+    console.log(`[Main] Attempting to retry with user message at index ${userMessageIndex}...`);
+    
+    // 删除旧的AI回复
+    if (!state.deleteMessageFromSession(activeId, aiMessageIndex)) {
+        console.error("[Main] retryButtonClickHandler: Failed to delete old AI message.");
+        showError("删除旧的 AI 回复失败，无法重试。");
+        return;
+    }
+    
+    // 获取更新后的消息列表（确认删除成功）
+    const messages = state.getMessages(activeId);
+    if (!messages || userMessageIndex >= messages.length) {
+        console.error("[Main] retryButtonClickHandler: Invalid message array or user index after deletion.");
+        showError("无法获取有效的消息历史记录以进行重试。");
+        return;
+    }
+    
+    // 准备用户消息的内容用于重新发送
+    const userMessage = messages[userMessageIndex];
+    if (!userMessage || userMessage.role !== 'user') {
+        console.error("[Main] retryButtonClickHandler: Message at index is not a user message.");
+        return;
+    }
+    
+    // 使用与handleSend相同的逻辑，但获取内容从state而不是输入区域
+    const contentParts = userMessage.content; // 用户消息的内容部分
+    
+    // 重新渲染聊天区域（移除旧的AI回复）
+    renderChatForActiveSession();
+    
+    // 重新处理我们的请求（使用现有的处理逻辑）
+    handleSend(contentParts);
+};
+
+// 修复messageControlsClickHandler函数中的错误，增加对handleDeleteMessage的引用
+function messageControlsClickHandler(event) {
+    const actionButton = event.target.closest('.message-control-button');
+    if (!actionButton) return; // Clicked on the controls div but not a button
+    
+    const action = actionButton.dataset.action; // 'copy', 'edit', 'delete', 'retry'
+    if (!action) return; // No action defined
+    
+    const bubble = actionButton.closest('.message-bubble');
+    if (!bubble) return; // No bubble found (shouldn't happen)
+    
+    const activeId = state.getActiveSessionId();
+    const messageIndex = parseInt(bubble.dataset.messageIndex);
+    
+    if (!activeId || isNaN(messageIndex)) {
+        console.error(`[Main] Cannot process ${action} action: Invalid session ID or message index.`);
+        return;
+    }
+    
+    console.log(`[Main] Message ${action} action clicked for message index ${messageIndex}.`);
+    
+    // Handle based on action type
+    if (action === 'delete') {
+        handleDeleteMessage(activeId, messageIndex);
+    } else if (action === 'edit') {
+        editButtonClickHandler(event);
+    } else if (action === 'retry') {
+        retryButtonClickHandler(event);
+    } else if (action === 'copy') {
+        copyButtonClickHandler(event);
+    }
+}
