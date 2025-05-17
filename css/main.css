@@ -1160,3 +1160,17 @@ h2 { /* Removed h1 styling */
     font-weight: 600;
     padding-left: 0; /* Reset if it was from general h3 */
 }
+
+/* Site Logo Container */
+#site-logo-container {
+    padding: 15px 0 10px 0; /* Vertical padding, less at bottom */
+    text-align: center; /* Center the SVG */
+    border-bottom: 1px solid #e9ecef; /* Light separator line */
+    margin-bottom: 10px; /* Space below logo area */
+}
+
+#site-logo-container svg#site-logo-svg {
+    width: 130px; /* Adjust width as needed */
+    height: auto; /* Maintain aspect ratio */
+    display: inline-block;
+}
