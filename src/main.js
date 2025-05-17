@@ -24,6 +24,7 @@ import { copyTextFallback } from './ui/copyUtils.js'; // Import copy fallback
 import { showSuccess, showError, showWarning, showConfirm } from './ui/notification.js'; // Import notification functions
 // 导入联网搜索相关模块
 import { initializeWebSearchToggle } from './ui/webSearchToggle.js';
+import { initializeNotificationCenter } from './ui/notificationCenter.js';
 
 
 /**
@@ -547,6 +548,7 @@ function main() {
     
     console.log("Main: Initializing web search toggle...");
     initializeWebSearchToggle(); // 初始化联网搜索按钮功能
+    initializeNotificationCenter(); // 新增：初始化通知中心
     
     // 监听API配置更改事件
     document.addEventListener('apiConfigChanged', (event) => {

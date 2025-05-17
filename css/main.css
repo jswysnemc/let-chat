@@ -984,3 +984,179 @@ h2 { /* Removed h1 styling */
 .hidden {
     display: none !important; /* 使用!important确保隐藏 */
 }
+
+/* Sidebar Header for Notifications and Title */
+.sidebar-header {
+    display: flex;
+    justify-content: space-between; /* Pushes bell to one side, title to other if they were siblings */
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    /* border-bottom: 1px solid #e0e0e0; */ /* Optional separator */
+}
+
+#notification-bell-area {
+    position: relative; /* For unread indicator positioning */
+    /* margin-right: auto; */ /* Pushes bell to the left if title is also flex item */
+}
+
+#sidebar .sidebar-header h3 {
+    margin-top: 0;
+    margin-bottom: 0; /* Reset margin as it's now in a flex container */
+    padding-bottom: 0;
+    flex-grow: 1; /* Allow title to take space */
+    text-align: left; /* Align title to left */
+     margin-left: 10px; /* Space between bell and title if bell is on left */
+}
+
+/* Notification Bell Button */
+#notification-bell-btn {
+    background: none;
+    border: none;
+    color: #6c757d;
+    font-size: 1.3em; /* Larger bell */
+    padding: 8px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    position: relative; /* For unread indicator positioning */
+    line-height: 1;
+}
+
+#notification-bell-btn:hover {
+    background-color: rgba(0, 0, 0, 0.08);
+    color: #0d6efd;
+}
+
+.unread-indicator {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 10px;
+    height: 10px;
+    background-color: red;
+    border-radius: 50%;
+    border: 2px solid #f8f9fa; /* Match sidebar background for better look */
+    display: block; /* Initially hidden by inline style, JS will show */
+}
+
+/* Notification Panel */
+.notification-panel {
+    background-color: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-bottom: 15px;
+    /* position: absolute; */ /* If needs to overlay */
+    /* top: 50px; */ /* Adjust based on bell position */
+    /* left: 15px; */
+    /* width: calc(100% - 30px); */ /* Adjust width */
+    /* z-index: 1010; */ /* Above sidebar content */
+    max-height: 400px; /* Limit height */
+    display: flex;
+    flex-direction: column;
+}
+
+.notification-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    border-bottom: 1px solid #e9ecef;
+    background-color: #f8f9fa;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.notification-panel-header h4 {
+    margin: 0;
+    font-size: 1.1em;
+    color: #343a40;
+}
+
+#close-notification-panel-btn {
+    background: none;
+    border: none;
+    font-size: 1.5em;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 0 5px;
+    line-height: 1;
+}
+#close-notification-panel-btn:hover {
+    color: #343a40;
+}
+
+#notification-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+#notification-list li {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f1f1f1;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#notification-list li:last-child {
+    border-bottom: none;
+}
+
+#notification-list li:hover {
+    background-color: #f8f9fa;
+}
+
+#notification-list li.unread {
+    background-color: #e9f5ff; /* Light blue for unread */
+    font-weight: bold;
+}
+
+#notification-list .notification-title {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+    display: block;
+}
+
+#notification-list .notification-content {
+    font-size: 0.9em;
+    color: #555;
+    line-height: 1.4;
+    margin-bottom: 6px;
+    white-space: pre-wrap; /* Allow wrapping and preserve newlines in content */
+}
+
+#notification-list .notification-date {
+    font-size: 0.8em;
+    color: #777;
+    text-align: right;
+    display: block;
+}
+
+#notification-list .no-notifications {
+    text-align: center;
+    color: #888;
+    padding: 20px;
+    cursor: default;
+}
+#notification-list .no-notifications:hover {
+    background-color: transparent;
+}
+
+/* Adjustments for sidebar button if it's a generic class */
+.sidebar-button.notification-button {
+    /* any specific overrides if .sidebar-button is too generic */
+}
+
+/* Ensure h3 in sidebar-header is styled correctly */
+#sidebar .sidebar-header h3 {
+    /* Ensure styles from general #sidebar h3 are applied or overridden as needed */
+    color: #495057;
+    font-size: 1.15em;
+    font-weight: 600;
+    padding-left: 0; /* Reset if it was from general h3 */
+}
