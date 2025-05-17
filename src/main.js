@@ -25,6 +25,7 @@ import { showSuccess, showError, showWarning, showConfirm } from './ui/notificat
 // 导入联网搜索相关模块
 import { initializeWebSearchToggle } from './ui/webSearchToggle.js';
 import { initializeNotificationCenter } from './ui/notificationCenter.js';
+import { initializeBulkSessionManagement, renderSessionList as renderSessionListFromSidebar } from './ui/sidebar.js'; // 导入批量管理初始化和会话列表渲染
 
 
 /**
@@ -231,7 +232,7 @@ async function handleSend(contentParts) {
                 if (state.updateSessionName(activeId, newTitle)) {
                     console.log(`[Main] Session ${activeId} auto-renamed to "${newTitle}"`);
                     // Update UI immediately
-                    renderSessionList(state.getAllSessions(), activeId);
+                    renderSessionListFromSidebar(state.getAllSessions(), activeId);
                     updateChatTitle(newTitle);
                 } else {
                     console.warn(`[Main] Failed to auto-rename session ${activeId}`);
@@ -408,7 +409,7 @@ function handleEditSession(sessionId) {
         if (nameChanged || promptChanged) {
              console.log("[Main] Session updated, refreshing UI...");
              const currentActiveId = state.getActiveSessionId();
-             renderSessionList(state.getAllSessions(), currentActiveId);
+             renderSessionListFromSidebar(state.getAllSessions(), currentActiveId);
              // Update chat title ONLY if the edited session is the currently active one
              if (sessionId === currentActiveId) {
                  const updatedSession = state.getSession(sessionId); // Re-fetch session data for updated name
@@ -549,6 +550,7 @@ function main() {
     console.log("Main: Initializing web search toggle...");
     initializeWebSearchToggle(); // 初始化联网搜索按钮功能
     initializeNotificationCenter(); // 新增：初始化通知中心
+    initializeBulkSessionManagement(); // 新增：初始化会话批量管理功能
     
     // 监听API配置更改事件
     document.addEventListener('apiConfigChanged', (event) => {
@@ -585,7 +587,7 @@ function main() {
     console.log("Main: Performing initial render...");
     const initialSessions = state.getAllSessions();
     const initialActiveId = state.getActiveSessionId();
-    renderSessionList(initialSessions, initialActiveId);
+    renderSessionListFromSidebar(initialSessions, initialActiveId);
     renderChatForActiveSession(); // Render messages for the initially active session
     // 确保初始渲染后重试按钮可见性正确
     ensureRetryButtonsVisibility();
@@ -638,7 +640,7 @@ function main() {
                 if (sessionIdToSwitch && sessionIdToSwitch !== currentActiveId) {
                     console.log(`[Main] Switching to session: ${sessionIdToSwitch}`);
                     if (state.setActiveSessionId(sessionIdToSwitch)) {
-                        renderSessionList(state.getAllSessions(), sessionIdToSwitch);
+                        renderSessionListFromSidebar(state.getAllSessions(), sessionIdToSwitch);
                         renderChatForActiveSession();
                     }
                 }
@@ -655,7 +657,7 @@ function main() {
             const newSessionId = state.addSession(); // Add session with default name
             if (newSessionId) {
                 state.setActiveSessionId(newSessionId); // Make the new one active
-                renderSessionList(state.getAllSessions(), newSessionId); // Update sidebar
+                renderSessionListFromSidebar(state.getAllSessions(), newSessionId); // Update sidebar
                 renderChatForActiveSession(); // Render the new empty chat
             } else {
                  console.error("Failed to add new session in state module.");
@@ -745,7 +747,7 @@ function handleDeleteSession(sessionId) {
             // 刷新会话列表
             const sessions = state.getAllSessions();
             const currentActiveId = state.getActiveSessionId();
-            renderSessionList(sessions, currentActiveId);
+            renderSessionListFromSidebar(sessions, currentActiveId);
             
             // 如果删除的会话是当前活动会话，重新加载聊天区域
             if (sessionId === currentActiveId) {
@@ -1039,3 +1041,6 @@ function ensureRetryButtonsVisibility() {
         console.log(`[Main] 最后一次调用(1000ms)获得按钮: ${btn4 ? '成功' : '失败'}`);
     }, 1000);
 }
+
+// Make sure renderChatForActiveSession is available for sidebar.js to import or call
+export { renderChatForActiveSession }; // If it's defined in main.js and sidebar needs it.

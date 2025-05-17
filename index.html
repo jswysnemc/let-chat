@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Snemc 多模态聊天</title> <!-- Updated title -->
+    <title>let chat 多模态聊天</title> <!-- Updated title -->
     <!-- Highlight.js CSS (例如：GitHub 主题) -->
     <link rel="stylesheet" href="./css/main.css">
     <link rel="stylesheet" href="./css/markdown-style.css">
@@ -59,7 +59,28 @@
                 <li class="no-notifications">暂无新通知</li>
             </ul>
         </div>
-        <button type="button" id="add-session-btn" class="sidebar-button"><i class="fas fa-plus"></i> 新会话</button> <!-- Added icon -->
+
+        <div id="session-toolbar" class="session-toolbar">
+            <button type="button" id="bulk-edit-sessions-btn" class="sidebar-button compact-button" title="批量管理">
+                <i class="fas fa-check-double"></i> 编辑
+            </button>
+            <!-- 批量操作按钮将在这里动态显示 -->
+        </div>
+
+        <div id="bulk-actions-container" class="bulk-actions-container" style="display:none;">
+            <label class="bulk-select-all-label">
+                <input type="checkbox" id="select-all-sessions-checkbox">
+                全选
+            </label>
+            <button type="button" id="bulk-delete-selected-btn" class="sidebar-button danger-button compact-button" title="删除选中">
+                <i class="fas fa-trash-alt"></i> 删除选中
+            </button>
+            <button type="button" id="cancel-bulk-edit-btn" class="sidebar-button secondary-button compact-button" title="完成">
+                <i class="fas fa-times"></i> 完成
+            </button>
+        </div>
+
+        <button type="button" id="add-session-btn" class="sidebar-button"><i class="fas fa-plus"></i> 新会话</button>
         <ul id="session-list">
             <!-- Session list items will be populated by JS -->
             <li class="placeholder-text">加载中...</li>

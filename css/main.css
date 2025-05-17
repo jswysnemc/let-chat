@@ -1174,3 +1174,91 @@ h2 { /* Removed h1 styling */
     height: auto; /* Maintain aspect ratio */
     display: inline-block;
 }
+
+/* Session Toolbar and Bulk Actions */
+.session-toolbar {
+    display: flex;
+    justify-content: flex-end; /* Align button to the right or space-between if more buttons */
+    margin-bottom: 10px;
+}
+
+.bulk-actions-container {
+    display: flex; /* Will be switched to flex by JS */
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 5px;
+    margin-bottom: 10px;
+    background-color: #e9ecef;
+    border-radius: 6px;
+}
+
+.bulk-select-all-label {
+    display: flex;
+    align-items: center;
+    font-size: 0.9em;
+    color: #333;
+    cursor: pointer;
+}
+
+.bulk-select-all-label input[type="checkbox"] {
+    margin-right: 6px;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+/* Compact button style for toolbar */
+.sidebar-button.compact-button {
+    padding: 6px 10px;
+    font-size: 0.85em;
+}
+.sidebar-button.compact-button i {
+    margin-right: 5px;
+}
+
+.sidebar-button.danger-button {
+    background-color: #dc3545;
+    color: white;
+}
+.sidebar-button.danger-button:hover {
+    background-color: #c82333;
+}
+
+.sidebar-button.secondary-button {
+    background-color: #6c757d;
+    color: white;
+}
+.sidebar-button.secondary-button:hover {
+    background-color: #5a6268;
+}
+
+/* Styles for session items in bulk edit mode */
+#session-list.bulk-edit-mode li {
+    /* Optional: Slightly different style in bulk edit mode */
+}
+
+#session-list li .session-item-checkbox-wrapper {
+    display: none; /* Hidden by default, shown in bulk edit mode */
+    margin-right: 10px;
+    flex-shrink: 0; /* Prevent checkbox from shrinking */
+}
+
+#session-list.bulk-edit-mode li .session-item-checkbox-wrapper {
+    display: inline-flex; /* Show in bulk edit mode */
+    align-items: center;
+}
+
+#session-list li .session-item-checkbox {
+    cursor: pointer;
+    width: 16px; /* Adjust size as needed */
+    height: 16px;
+}
+
+/* In bulk edit mode, hide individual session controls */
+#session-list.bulk-edit-mode li .session-controls {
+    display: none !important; 
+}
+
+/* Adjust session name area when checkbox is visible */
+#session-list.bulk-edit-mode li .session-name {
+    /* Potentially adjust flex-grow or max-width if needed */
+}
