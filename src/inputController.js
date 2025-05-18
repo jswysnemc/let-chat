@@ -34,15 +34,22 @@ function extractContentFromInput(element) {
     function extractTextFromNode(node) {
         if (!node) return;
         
-        // 跳过删除按钮
-        if (node.nodeType === Node.ELEMENT_NODE && 
-            (node.classList.contains('delete-image-btn') || 
-             node.closest('.delete-image-btn'))) {
-            console.log("[extractContent] 跳过删除按钮元素");
+        // Priority 1: Skip the entire delete button and its descendants
+        if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains('delete-image-btn')) {
+            console.log("[extractContent] 跳过 .delete-image-btn 元素及其所有子内容");
+            return;
+        }
+        // Priority 2: If the node itself has data-ignore-content, skip it and its descendants (more generic)
+        if (node.nodeType === Node.ELEMENT_NODE && node.dataset.ignoreContent === 'true') {
+            console.log("[extractContent] 跳过 data-ignore-content='true' 元素及其所有子内容");
+            return;
+        }
+        // Priority 3: Skip any node whose closest ancestor is a delete button (covers text nodes inside it)
+        if (node.parentNode && typeof node.parentNode.closest === 'function' && node.parentNode.closest('.delete-image-btn')) {
+            console.log("[extractContent] 跳过 .delete-image-btn 的子孙节点");
             return;
         }
         
-        // 跳过图片和图片包装器
         if (node.nodeType === Node.ELEMENT_NODE && 
             (node.tagName === 'IMG' || 
              node.classList.contains('input-image-wrapper'))) {
@@ -50,21 +57,22 @@ function extractContentFromInput(element) {
             return;
         }
         
-        // 处理文本节点
         if (node.nodeType === Node.TEXT_NODE) {
-            if (node.textContent.trim()) {
-                textContent += node.textContent;
-            }
+            // The checks above should prevent text from delete buttons from reaching here.
+            // We can be extra cautious, but it might be redundant.
+            // if (node.parentNode && typeof node.parentNode.closest === 'function' && node.parentNode.closest('.delete-image-btn')) {
+            //     console.log("[extractContent] (Redundant Check) 跳过删除按钮内的文本节点");
+            //     return;
+            // }
+            textContent += node.textContent; // Collect all text, trim later
             return;
         }
         
-        // 处理换行元素
         if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'BR') {
             textContent += '\n';
             return;
         }
         
-        // 对于其他元素，处理其子节点
         if (node.childNodes && node.childNodes.length > 0) {
             node.childNodes.forEach(childNode => {
                 extractTextFromNode(childNode);
@@ -72,11 +80,12 @@ function extractContentFromInput(element) {
         }
     }
     
-    // 提取整个元素的文本内容
     extractTextFromNode(element);
     
-    // 清理文本（去除多余换行和空格）
-    textContent = textContent.replace(/\n{3,}/g, '\n\n').trim();
+    // Refined trimming: compress multiple spaces/newlines, then trim ends.
+    if (textContent) {
+        textContent = textContent.replace(/\s+/g, ' ').replace(/\n\s*\n/g, '\n\n').trim();
+    }
     
     // 如果有有效文本，添加为第一个部分
     if (textContent) {
